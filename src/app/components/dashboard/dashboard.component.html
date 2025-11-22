@@ -1,0 +1,23 @@
+<div class="dashboard-container">
+  <header class="dashboard-header">
+    <h1>Dashboard - Sistema de Parking</h1>
+    <div class="user-info">
+      <span *ngIf="userData">{{ userData.firstName }} {{ userData.lastName }}</span>
+      <button class="logout-button" (click)="logout()">Cerrar Sesión</button>
+    </div>
+  </header>
+
+  <main class="dashboard-content">
+    <div class="welcome-card">
+      <h2>¡Bienvenido!</h2>
+      <p *ngIf="userData">
+        Has iniciado sesión correctamente como <strong>{{ userData.firstName }} {{ userData.lastName }}</strong>
+      </p>
+      <p *ngIf="!userData">Has iniciado sesión correctamente en el sistema de gestión de parking.</p>
+      <div *ngIf="userData?.roles && userData.roles.length > 0" class="roles-info">
+        <p><strong>Roles:</strong> {{ userData.roles.join(', ') }}</p>
+      </div>
+    </div>
+  </main>
+</div>
+

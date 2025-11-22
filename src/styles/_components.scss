@@ -1,0 +1,124 @@
+// ============================================
+// Estilos Globales de Componentes
+// ============================================
+
+@use './variables' as *;
+
+// Botones base
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: $spacing-sm $spacing-md;
+  font-size: $font-size-base;
+  font-weight: $font-weight-medium;
+  line-height: $line-height-normal;
+  border-radius: $border-radius-md;
+  border: none;
+  cursor: pointer;
+  transition: all $transition-base $transition-ease;
+  text-decoration: none;
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  &:focus {
+    outline: 2px solid $color-primary;
+    outline-offset: 2px;
+  }
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  color: $color-text-inverse;
+
+  &:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: $shadow-lg;
+  }
+}
+
+.btn-secondary {
+  background-color: $color-bg-tertiary;
+  color: $color-text-primary;
+
+  &:hover:not(:disabled) {
+    background-color: #e5e7eb; // Versión más oscura de $color-bg-tertiary
+  }
+}
+
+.btn-danger {
+  background-color: $color-error;
+  color: $color-text-inverse;
+
+  &:hover:not(:disabled) {
+    background-color: #dc2626; // Versión más oscura de $color-error
+  }
+}
+
+// Inputs base
+.input {
+  width: 100%;
+  padding: $spacing-sm $spacing-md;
+  font-size: $font-size-base;
+  line-height: $line-height-normal;
+  color: $color-text-primary;
+  background-color: $color-bg-primary;
+  border: $border-width solid $border-color;
+  border-radius: $border-radius-md;
+  transition: border-color $transition-base $transition-ease;
+
+  &:focus {
+    outline: none;
+    border-color: $color-primary;
+  }
+
+  &.error {
+    border-color: $color-error;
+  }
+
+  &::placeholder {
+    color: $color-text-tertiary;
+  }
+}
+
+// Cards
+.card {
+  background-color: $color-bg-primary;
+  border-radius: $border-radius-lg;
+  padding: $spacing-lg;
+  box-shadow: $shadow-md;
+}
+
+// Contenedores
+.container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 $spacing-md;
+}
+
+// Mensajes de error
+.error-message {
+  color: $color-error;
+  font-size: $font-size-sm;
+  margin-top: $spacing-xs;
+}
+
+// Loading spinner
+.loading {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 3px solid rgba($color-primary, 0.3);
+  border-radius: 50%;
+  border-top-color: $color-primary;
+  animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+

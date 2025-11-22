@@ -1,0 +1,54 @@
+<div class="login-container">
+  <div class="login-card">
+    <h2>Iniciar Sesión</h2>
+    <p class="subtitle">Sistema de Gestión de Parking</p>
+
+    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-form">
+      <div class="form-group">
+        <label for="numberIdentity">Usuario (Número de Identidad)</label>
+        <input
+          type="text"
+          id="numberIdentity"
+          formControlName="numberIdentity"
+          placeholder="Ingrese su número de identidad"
+          [class.error]="loginForm.get('numberIdentity')?.invalid && loginForm.get('numberIdentity')?.touched"
+        />
+        <div class="error-message" *ngIf="loginForm.get('numberIdentity')?.invalid && loginForm.get('numberIdentity')?.touched">
+          El número de identidad es requerido
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="password">Contraseña (AccesKey)</label>
+        <input
+          type="password"
+          id="password"
+          formControlName="password"
+          placeholder="Ingrese su contraseña"
+          [class.error]="loginForm.get('password')?.invalid && loginForm.get('password')?.touched"
+        />
+        <div class="error-message" *ngIf="loginForm.get('password')?.invalid && loginForm.get('password')?.touched">
+          La contraseña es requerida (mínimo 4 caracteres)
+        </div>
+      </div>
+
+      <div class="error-message" *ngIf="errorMessage">
+        {{ errorMessage }}
+      </div>
+
+      <button
+        type="submit"
+        class="login-button"
+        [disabled]="isLoading"
+      >
+        <span *ngIf="!isLoading">Iniciar Sesión</span>
+        <span *ngIf="isLoading">Cargando...</span>
+      </button>
+
+      <div class="register-link">
+        <p>¿No tienes una cuenta? <a routerLink="/register">Crea una aquí</a></p>
+      </div>
+    </form>
+  </div>
+</div>
+

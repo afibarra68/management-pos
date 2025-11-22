@@ -1,0 +1,151 @@
+<div class="register-container">
+  <div class="register-card">
+    <h2>Crear Cuenta</h2>
+    <p class="subtitle">Regístrate en el Sistema de Gestión de Parking</p>
+
+    <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="register-form">
+      <div class="form-row">
+        <div class="form-group">
+          <label for="firstName">Primer Nombre *</label>
+          <input
+            type="text"
+            id="firstName"
+            formControlName="firstName"
+            placeholder="Ingrese su primer nombre"
+            class="input"
+            [class.error]="registerForm.get('firstName')?.invalid && registerForm.get('firstName')?.touched"
+          />
+          <div class="error-message" *ngIf="registerForm.get('firstName')?.invalid && registerForm.get('firstName')?.touched">
+            El primer nombre es requerido (mínimo 2 caracteres)
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="secondName">Segundo Nombre *</label>
+          <input
+            type="text"
+            id="secondName"
+            formControlName="secondName"
+            placeholder="Ingrese su segundo nombre"
+            class="input"
+            [class.error]="registerForm.get('secondName')?.invalid && registerForm.get('secondName')?.touched"
+          />
+          <div class="error-message" *ngIf="registerForm.get('secondName')?.invalid && registerForm.get('secondName')?.touched">
+            El segundo nombre es requerido (mínimo 2 caracteres)
+          </div>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="lastName">Primer Apellido *</label>
+          <input
+            type="text"
+            id="lastName"
+            formControlName="lastName"
+            placeholder="Ingrese su primer apellido"
+            class="input"
+            [class.error]="registerForm.get('lastName')?.invalid && registerForm.get('lastName')?.touched"
+          />
+          <div class="error-message" *ngIf="registerForm.get('lastName')?.invalid && registerForm.get('lastName')?.touched">
+            El primer apellido es requerido (mínimo 2 caracteres)
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="secondLastName">Segundo Apellido</label>
+          <input
+            type="text"
+            id="secondLastName"
+            formControlName="secondLastName"
+            placeholder="Ingrese su segundo apellido (opcional)"
+            class="input"
+          />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="numberIdentity">Número de Identidad *</label>
+        <input
+          type="text"
+          id="numberIdentity"
+          formControlName="numberIdentity"
+          placeholder="Ingrese su número de identidad"
+          class="input"
+          [class.error]="registerForm.get('numberIdentity')?.invalid && registerForm.get('numberIdentity')?.touched"
+        />
+        <div class="error-message" *ngIf="registerForm.get('numberIdentity')?.invalid && registerForm.get('numberIdentity')?.touched">
+          El número de identidad es requerido (mínimo 5 caracteres)
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="phoneNumber">Teléfono</label>
+        <input
+          type="text"
+          id="phoneNumber"
+          formControlName="phoneNumber"
+          placeholder="Ingrese su número de teléfono (opcional)"
+          class="input"
+        />
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="password">Contraseña *</label>
+          <input
+            type="password"
+            id="password"
+            formControlName="password"
+            placeholder="Mínimo 6 caracteres"
+            class="input"
+            [class.error]="registerForm.get('password')?.invalid && registerForm.get('password')?.touched"
+          />
+          <div class="error-message" *ngIf="registerForm.get('password')?.invalid && registerForm.get('password')?.touched">
+            La contraseña es requerida (mínimo 6 caracteres)
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="confirmPassword">Confirmar Contraseña *</label>
+          <input
+            type="password"
+            id="confirmPassword"
+            formControlName="confirmPassword"
+            placeholder="Confirme su contraseña"
+            class="input"
+            [class.error]="(registerForm.get('confirmPassword')?.invalid || registerForm.hasError('passwordMismatch')) && registerForm.get('confirmPassword')?.touched"
+          />
+          <div class="error-message" *ngIf="registerForm.get('confirmPassword')?.invalid && registerForm.get('confirmPassword')?.touched">
+            Debe confirmar su contraseña
+          </div>
+          <div class="error-message" *ngIf="registerForm.hasError('passwordMismatch') && registerForm.get('confirmPassword')?.touched && !registerForm.get('confirmPassword')?.hasError('required')">
+            Las contraseñas no coinciden
+          </div>
+        </div>
+      </div>
+
+      <div class="error-message" *ngIf="errorMessage">
+        {{ errorMessage }}
+      </div>
+
+      <div class="success-message" *ngIf="successMessage">
+        {{ successMessage }}
+      </div>
+
+      <button
+        type="submit"
+        class="btn btn-primary register-button"
+        [disabled]="isLoading"
+      >
+        <span *ngIf="!isLoading">Crear Cuenta</span>
+        <span *ngIf="isLoading">Creando...</span>
+      </button>
+
+      <div class="login-link">
+        <p>¿Ya tienes una cuenta? <a routerLink="/login">Inicia sesión aquí</a></p>
+      </div>
+    </form>
+  </div>
+</div>
+

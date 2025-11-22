@@ -1,0 +1,84 @@
+.dashboard-container {
+  min-height: 100vh;
+  background: #f5f5f5;
+}
+
+.dashboard-header {
+  background: white;
+  padding: 20px 40px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+  h1 {
+    margin: 0;
+    color: #333;
+    font-size: 24px;
+  }
+
+  .user-info {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+
+    span {
+      color: #666;
+      font-size: 14px;
+    }
+  }
+}
+
+.logout-button {
+  padding: 10px 20px;
+  background: #e74c3c;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background 0.3s;
+
+  &:hover {
+    background: #c0392b;
+  }
+}
+
+.dashboard-content {
+  padding: 40px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.welcome-card {
+  background: white;
+  padding: 40px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+
+  h2 {
+    margin: 0 0 16px 0;
+    color: #333;
+    font-size: 28px;
+  }
+
+  p {
+    margin: 0 0 12px 0;
+    color: #666;
+    font-size: 16px;
+  }
+
+  .roles-info {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid #e0e0e0;
+
+    p {
+      margin: 0;
+      color: #555;
+      font-size: 14px;
+    }
+  }
+}
+

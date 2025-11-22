@@ -1,0 +1,50 @@
+// ============================================
+// Estilos Globales - Sistema de Parking
+// ============================================
+
+// Importar variables primero (usando @use en lugar de @import)
+@use './styles/variables' as *;
+
+// Importar reset
+@use './styles/reset';
+
+// Importar tipografía
+@use './styles/typography';
+
+// Importar utilidades
+@use './styles/utilities';
+
+// Importar componentes globales
+@use './styles/components';
+
+// Estilos globales adicionales
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: $font-family-primary;
+  background-color: $color-bg-secondary;
+  color: $color-text-primary;
+}
+
+// Scrollbar personalizado
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: $color-bg-tertiary;
+}
+
+::-webkit-scrollbar-thumb {
+  background: $color-text-tertiary;
+  border-radius: $border-radius-full;
+
+  &:hover {
+    background: $color-text-secondary;
+  }
+}

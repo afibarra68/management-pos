@@ -1,0 +1,130 @@
+@use '../../../styles/variables' as *;
+
+.register-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  padding: $spacing-md;
+}
+
+.register-card {
+  background: $color-bg-primary;
+  border-radius: $border-radius-lg;
+  padding: $spacing-xl;
+  width: 100%;
+  max-width: 700px;
+  box-shadow: $shadow-xl;
+
+  h2 {
+    margin: 0 0 $spacing-xs 0;
+    color: $color-text-primary;
+    font-size: $font-size-3xl;
+    font-weight: $font-weight-semibold;
+  }
+
+  .subtitle {
+    margin: 0 0 $spacing-lg 0;
+    color: $color-text-secondary;
+    font-size: $font-size-sm;
+  }
+}
+
+.register-form {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: $spacing-md;
+
+  @media (max-width: $breakpoint-sm) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-xs;
+
+  label {
+    font-weight: $font-weight-medium;
+    color: $color-text-primary;
+    font-size: $font-size-sm;
+  }
+
+  .input {
+    padding: $spacing-sm $spacing-md;
+    border: $border-width solid $border-color;
+    border-radius: $border-radius-md;
+    font-size: $font-size-base;
+    transition: border-color $transition-base $transition-ease;
+
+    &:focus {
+      outline: none;
+      border-color: $color-primary;
+    }
+
+    &.error {
+      border-color: $color-error;
+    }
+  }
+
+  .error-message {
+    color: $color-error;
+    font-size: $font-size-xs;
+    margin-top: -$spacing-xs;
+  }
+}
+
+.error-message {
+  color: $color-error;
+  font-size: $font-size-sm;
+  padding: $spacing-sm;
+  background: #fee;
+  border-radius: $border-radius-md;
+  border: 1px solid #fcc;
+}
+
+.success-message {
+  color: $color-success;
+  font-size: $font-size-sm;
+  padding: $spacing-sm;
+  background: #f0fdf4;
+  border-radius: $border-radius-md;
+  border: 1px solid #bbf7d0;
+}
+
+.register-button {
+  padding: $spacing-md;
+  font-size: $font-size-base;
+  font-weight: $font-weight-semibold;
+  margin-top: $spacing-sm;
+}
+
+.login-link {
+  text-align: center;
+  margin-top: $spacing-md;
+
+  p {
+    color: $color-text-secondary;
+    font-size: $font-size-sm;
+    margin: 0;
+
+    a {
+      color: $color-primary;
+      font-weight: $font-weight-medium;
+      text-decoration: none;
+
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+  }
+}
+
