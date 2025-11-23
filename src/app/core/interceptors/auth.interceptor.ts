@@ -7,7 +7,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   }
 
   // Solo agregar token a peticiones que van al API (y no son públicas)
-  if (req.url.startsWith('/api')) {
+  if (req.url.startsWith('/api') || req.url.startsWith('/mt-api')) {
     const token = localStorage.getItem('auth_token');
     
     if (token) {
@@ -22,4 +22,6 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   
   return next(req);
 };
+
+
 

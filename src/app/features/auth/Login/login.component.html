@@ -1,0 +1,20 @@
+<div class="login-wrapper">
+  <form [formGroup]="form" (ngSubmit)="submit()" class="login-form">
+    <h2>Iniciar sesión</h2>
+    @if (error) {
+      <div class="error">{{ error }}</div>
+    }
+
+    <div class="field">
+      <label for="username">Usuario</label>
+      <input id="username" formControlName="username" />
+    </div>
+
+    <div class="field">
+      <label for="accesKey">Contraseña</label>
+      <input id="accesKey" type="password" formControlName="accesKey" />
+    </div>
+
+    <button type="submit" [disabled]="loading">Entrar</button>
+  </form>
+</div>

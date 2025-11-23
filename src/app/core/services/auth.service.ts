@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, tap, catchError, throwError } from 'rxjs';
 import { Router } from '@angular/router';
+import { environment } from '../../environments/environment';
 
 export interface LoginRequest {
   username: string;
@@ -47,7 +48,7 @@ export interface CreateUserResponse {
 export class AuthService {
   private http = inject(HttpClient);
   private router = inject(Router);
-  private apiUrl = '/api'; // Usar proxy - redirige a http://localhost:9000
+  private apiUrl = environment.apiAuthJwt; // Usar proxy - redirige a http://localhost:9000
   private tokenKey = 'auth_token';
   private userKey = 'user_data';
 
@@ -112,4 +113,6 @@ export class AuthService {
       );
   }
 }
+
+
 

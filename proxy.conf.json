@@ -7,6 +7,17 @@
     "pathRewrite": {
       "^/api": ""
     }
+  },
+  "/mt-api": {
+    "target": "http://localhost:9000",
+    "secure": false,
+    "changeOrigin": true,
+    "logLevel": "debug",
+    "pathRewrite": {
+      "^/mt-api": ""
+    }
   }
 }
+
+
 
