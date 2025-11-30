@@ -1,16 +1,24 @@
-<aside [class.collapsed]="collapsed" class="sidebar">
+<aside 
+  [class.collapsed]="collapsed()" 
+  class="sidebar"
+  role="complementary"
+  [attr.aria-label]="'Barra lateral de navegación'">
   <div class="sidebar-header">
-    <h2 *ngIf="!collapsed" class="sidebar-title">T-Parking</h2>
+    @if (!collapsed()) {
+      <h2 class="sidebar-title">Parking System</h2>
+    }
     <p-button 
       icon="pi pi-bars" 
-      [text]="true"
-      [rounded]="true"
-      (onClick)="toggleSidebar()"
-      class="toggle-btn">
+      [text]="true" 
+      [rounded]="true" 
+      (onClick)="toggleSidebar()" 
+      class="toggle-btn"
+      [attr.aria-label]="ariaLabel()"
+      [attr.aria-expanded]="ariaExpanded()"
+      type="button">
     </p-button>
   </div>
-  <nav class="sidebar-nav">
+  <nav class="sidebar-nav" role="navigation" [attr.aria-label]="'Navegación principal'">
     <app-dynamic-menu></app-dynamic-menu>
   </nav>
 </aside>
-

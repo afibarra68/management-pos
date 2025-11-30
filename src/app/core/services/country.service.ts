@@ -31,7 +31,6 @@ export class CountryService {
     return this.http.get<Country[]>(`${this.apiUrl}/countries`, { params })
       .pipe(
         catchError(error => {
-          console.error('Error al obtener países:', error);
           return throwError(() => error);
         })
       );
@@ -41,7 +40,6 @@ export class CountryService {
     return this.http.post<Country>(`${this.apiUrl}/countries`, country)
       .pipe(
         catchError(error => {
-          console.error('Error al crear país:', error);
           return throwError(() => error);
         })
       );
@@ -51,7 +49,6 @@ export class CountryService {
     return this.http.put<Country>(`${this.apiUrl}/countries`, country)
       .pipe(
         catchError(error => {
-          console.error('Error al actualizar país:', error);
           return throwError(() => error);
         })
       );

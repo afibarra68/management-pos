@@ -89,7 +89,6 @@ export class CountriesComponent implements OnInit, OnDestroy {
       )
       .subscribe({
         next: (data) => {
-          console.log('Países recibidos:', data);
           this.countries = Array.isArray(data) ? data : [];
           this.tableData = {
             data: this.countries,
@@ -99,10 +98,8 @@ export class CountriesComponent implements OnInit, OnDestroy {
           // Ocultar spinner inmediatamente y forzar detección de cambios
           this.loading = false;
           this.cdr.detectChanges();
-          console.log('Países asignados:', this.countries.length);
         },
         error: (err) => {
-          console.error('Error completo:', err);
           this.error = err?.error?.message || err?.message || 'Error al cargar los países';
           this.countries = [];
           // Ocultar spinner inmediatamente en caso de error y forzar detección de cambios
@@ -178,7 +175,6 @@ export class CountriesComponent implements OnInit, OnDestroy {
       error: (err) => {
         this.error = err?.error?.message || 'Error al guardar el país';
         this.loading = false;
-        console.error('Error:', err);
       }
     });
   }
@@ -198,7 +194,6 @@ export class CountriesComponent implements OnInit, OnDestroy {
 
   onTablePagination(event: any): void {
     // Para países no hay paginación server-side, pero se puede implementar aquí
-    console.log('Página solicitada:', event);
   }
 
   deleteCountry(country: Country): void {

@@ -11,6 +11,10 @@
   top: 0;
   z-index: 1000;
   box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+  will-change: width;
+  transform: translateZ(0); // Forzar aceleración por hardware
+  contain: layout style paint; // Aislar el sidebar del resto del layout
+  isolation: isolate; // Crear un nuevo contexto de apilamiento
 
   &.collapsed {
     width: 60px;

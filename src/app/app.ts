@@ -1,9 +1,9 @@
-import { Component, signal, inject, afterNextRender, effect } from '@angular/core';
+import { Component, signal, inject, afterNextRender, computed, ChangeDetectionStrategy } from '@angular/core';
 import { RouterOutlet, Router, NavigationEnd } from '@angular/router';
 import { SidebarComponent } from './core/components/sidebar/sidebar.component';
 import { UserControlComponent } from './core/components/user-control/user-control.component';
 import { CommonModule } from '@angular/common';
-import { filter } from 'rxjs/operators';
+import { filter, distinctUntilChanged } from 'rxjs/operators';
 import { AuthService } from './core/services/auth.service';
 import { SidebarService } from './core/services/sidebar.service';
 
@@ -11,45 +11,58 @@ import { SidebarService } from './core/services/sidebar.service';
   selector: 'app-root',
   imports: [RouterOutlet, SidebarComponent, UserControlComponent, CommonModule],
   templateUrl: './app.html',
-  styleUrl: './app.scss'
+  styleUrl: './app.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class App {
   protected readonly title = signal('t-parking');
   private router = inject(Router);
   private authService = inject(AuthService);
   private sidebarService = inject(SidebarService);
-  showSidebar = signal(false);
-  sidebarCollapsed = signal(false);
+  
+  // Usar computed para derivar el estado del sidebar colapsado directamente del servicio
+  readonly sidebarCollapsed = computed(() => this.sidebarService.collapsed());
+  
+  // Signal para controlar la visibilidad del sidebar
+  private readonly isAuthenticated = signal(false);
+  private readonly currentRoute = signal<string>('');
+  
+  // Computed signal para mostrar/ocultar sidebar
+  readonly showSidebar = computed(() => {
+    const auth = this.isAuthenticated();
+    const route = this.currentRoute();
+    const isAuthPage = route.startsWith('/auth') || route === '/login';
+    return auth && !isAuthPage;
+  });
 
   constructor() {
-    // Reaccionar a cambios en el estado del sidebar
-    effect(() => {
-      this.sidebarCollapsed.set(this.sidebarService.collapsed());
-    });
-
     // Usar afterNextRender para ejecutar código solo en el navegador
     afterNextRender(() => {
       // Función para verificar y actualizar el estado del sidebar
       const updateSidebarState = () => {
         const currentUrl = this.router.url;
-        // Verificar si estamos en cualquier ruta de autenticación
-        const isAuthPage = currentUrl.startsWith('/auth') || currentUrl === '/login';
         const isAuthenticated = this.authService.isAuthenticated();
-        // Solo mostrar sidebar si está autenticado Y no está en página de auth
-        this.showSidebar.set(isAuthenticated && !isAuthPage);
+        
+        // Solo actualizar si los valores han cambiado para evitar re-renderizados innecesarios
+        if (this.currentRoute() !== currentUrl) {
+          this.currentRoute.set(currentUrl);
+        }
+        if (this.isAuthenticated() !== isAuthenticated) {
+          this.isAuthenticated.set(isAuthenticated);
+        }
       };
 
       // Verificar estado inicial
       updateSidebarState();
 
-      // Mostrar sidebar solo si el usuario está autenticado y no está en login
+      // Suscribirse a cambios de ruta con distinctUntilChanged para evitar actualizaciones duplicadas
       this.router.events
-        .pipe(filter(event => event instanceof NavigationEnd))
+        .pipe(
+          filter(event => event instanceof NavigationEnd),
+          distinctUntilChanged((prev: NavigationEnd, curr: NavigationEnd) => prev.url === curr.url)
+        )
         .subscribe(() => {
-          // Usar requestAnimationFrame para asegurar que la navegación esté completa
-          requestAnimationFrame(() => {
-            updateSidebarState();
-          });
+          updateSidebarState();
         });
     });
   }

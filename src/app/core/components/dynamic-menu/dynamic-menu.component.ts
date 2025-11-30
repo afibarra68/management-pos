@@ -1,5 +1,4 @@
-import { Component, OnInit, inject, effect } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, inject, computed, ChangeDetectionStrategy } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { MenuService } from '../../services/menu.service';
 import { MenuItem } from '../../models/menu-item.model';
@@ -7,25 +6,19 @@ import { MenuItem } from '../../models/menu-item.model';
 @Component({
   selector: 'app-dynamic-menu',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [RouterModule],
   templateUrl: './dynamic-menu.component.html',
-  styleUrls: ['./dynamic-menu.component.scss']
+  styleUrls: ['./dynamic-menu.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class DynamicMenuComponent implements OnInit {
-  private menuService = inject(MenuService);
-  menuItems: MenuItem[] = [];
-
-  constructor() {
-    // Reaccionar a cambios en el menú
-    effect(() => {
-      const items = this.menuService.getMenuItems()();
-      this.menuItems = items.filter(item => item.visible !== false);
-    });
-  }
-
-  ngOnInit(): void {
+export class DynamicMenuComponent {
+  private readonly menuService = inject(MenuService);
+  
+  // Usar computed signal para derivar los items visibles del menú
+  // Esto evita re-renderizados innecesarios y mantiene el componente estático
+  readonly menuItems = computed(() => {
     const items = this.menuService.getMenuItems()();
-    this.menuItems = items.filter(item => item.visible !== false);
-  }
+    return items.filter(item => item.visible !== false);
+  });
 }
 

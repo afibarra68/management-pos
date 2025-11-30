@@ -1,27 +1,39 @@
 <ul class="menu-list">
-  <li *ngFor="let item of menuItems" class="menu-item">
-    <a 
-      [routerLink]="item.routerLink" 
-      routerLinkActive="active"
-      [routerLinkActiveOptions]="{exact: false}"
-      class="menu-link">
-      <i *ngIf="item.icon" [class]="item.icon" class="menu-icon"></i>
-      <span class="menu-label">{{ item.label }}</span>
-      <span *ngIf="item.badge" [class]="item.badgeClass || 'menu-badge'">
-        {{ item.badge }}
-      </span>
-    </a>
-    <ul *ngIf="item.items && item.items.length > 0" class="submenu">
-      <li *ngFor="let subItem of item.items" class="submenu-item">
-        <a 
-          [routerLink]="subItem.routerLink" 
-          routerLinkActive="active"
-          class="submenu-link">
-          <i *ngIf="subItem.icon" [class]="subItem.icon" class="menu-icon"></i>
-          <span>{{ subItem.label }}</span>
-        </a>
-      </li>
-    </ul>
-  </li>
+  @for (item of menuItems(); track item.routerLink) {
+    <li class="menu-item">
+      <a 
+        [routerLink]="item.routerLink" 
+        routerLinkActive="active"
+        [routerLinkActiveOptions]="{exact: false}"
+        class="menu-link">
+        @if (item.icon) {
+          <i [class]="item.icon" class="menu-icon"></i>
+        }
+        <span class="menu-label">{{ item.label }}</span>
+        @if (item.badge) {
+          <span [class]="item.badgeClass || 'menu-badge'">
+            {{ item.badge }}
+          </span>
+        }
+      </a>
+      @if (item.items && item.items.length > 0) {
+        <ul class="submenu">
+          @for (subItem of item.items; track subItem.routerLink) {
+            <li class="submenu-item">
+              <a 
+                [routerLink]="subItem.routerLink" 
+                routerLinkActive="active"
+                class="submenu-link">
+                @if (subItem.icon) {
+                  <i [class]="subItem.icon" class="menu-icon"></i>
+                }
+                <span>{{ subItem.label }}</span>
+              </a>
+            </li>
+          }
+        </ul>
+      }
+    </li>
+  }
 </ul>
 

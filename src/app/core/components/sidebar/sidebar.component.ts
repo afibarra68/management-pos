@@ -1,5 +1,4 @@
-import { Component, inject, effect } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, inject, computed, ChangeDetectionStrategy } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { DynamicMenuComponent } from '../dynamic-menu/dynamic-menu.component';
 import { ButtonModule } from 'primeng/button';
@@ -8,21 +7,24 @@ import { SidebarService } from '../../services/sidebar.service';
 @Component({
   selector: 'app-sidebar',
   standalone: true,
-  imports: [CommonModule, RouterModule, DynamicMenuComponent, ButtonModule],
+  imports: [RouterModule, DynamicMenuComponent, ButtonModule],
   templateUrl: './sidebar.component.html',
-  styleUrls: ['./sidebar.component.scss']
+  styleUrls: ['./sidebar.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class SidebarComponent {
-  private sidebarService = inject(SidebarService);
+  private readonly sidebarService = inject(SidebarService);
   
-  collapsed = this.sidebarService.collapsed();
+  // Exponer directamente el ReadonlySignal del servicio
+  // Angular 20: Uso directo de signals sin necesidad de effect() o computed()
+  readonly collapsed = this.sidebarService.collapsed;
 
-  constructor() {
-    // Reaccionar a cambios en el estado del sidebar
-    effect(() => {
-      this.collapsed = this.sidebarService.collapsed();
-    });
-  }
+  // Computed signal para mejorar la accesibilidad y legibilidad del template
+  readonly ariaLabel = computed(() => 
+    this.collapsed() ? 'Expandir sidebar' : 'Colapsar sidebar'
+  );
+
+  readonly ariaExpanded = computed(() => !this.collapsed());
 
   toggleSidebar(): void {
     this.sidebarService.toggle();
