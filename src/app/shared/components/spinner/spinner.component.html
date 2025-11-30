@@ -1,0 +1,14 @@
+@if (loading) {
+  <div [class.overlay]="overlay" [class]="'spinner-container size-' + size">
+    <div class="spinner-content">
+      <p-progressSpinner 
+        [styleClass]="'spinner-' + size"
+        [strokeWidth]="size === 'small' ? '3' : size === 'large' ? '6' : '4'">
+      </p-progressSpinner>
+      @if (message) {
+        <p class="spinner-message">{{ message }}</p>
+      }
+    </div>
+  </div>
+}
+

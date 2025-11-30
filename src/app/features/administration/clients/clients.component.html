@@ -1,0 +1,157 @@
+<div class="clients-container">
+  <div class="header">
+    <h1>Clientes</h1>
+    <p-button 
+      label="Nuevo Cliente" 
+      icon="pi pi-plus" 
+      (onClick)="openCreateForm()" 
+      [disabled]="loading">
+    </p-button>
+  </div>
+
+  <div class="search-bar" *ngIf="!showForm">
+    <span class="p-input-icon-left">
+      <i class="pi pi-search"></i>
+      <input 
+        type="text" 
+        pInputText 
+        [(ngModel)]="searchDocument"
+        placeholder="Buscar por número de identidad..."
+        (keyup.enter)="search()"
+      />
+    </span>
+    <p-button 
+      label="Buscar" 
+      icon="pi pi-search" 
+      (onClick)="search()" 
+      [disabled]="loading"
+      styleClass="p-button-secondary">
+    </p-button>
+    <p-button 
+      label="Limpiar" 
+      icon="pi pi-times" 
+      (onClick)="searchDocument = ''; loadClients()" 
+      [disabled]="loading"
+      styleClass="p-button-text">
+    </p-button>
+  </div>
+
+  <p-message 
+    *ngIf="error" 
+    severity="error" 
+    [text]="error"
+    [closable]="true"
+    (onClose)="error = null">
+  </p-message>
+
+  <p-dialog 
+    [(visible)]="showForm" 
+    [header]="editingClient ? 'Editar Cliente' : 'Nuevo Cliente'"
+    [modal]="true"
+    [style]="{width: '600px'}"
+    [closable]="true"
+    (onHide)="cancelForm()">
+    <form [formGroup]="form" (ngSubmit)="submitForm()">
+      <div class="form-group">
+        <label for="fullName">Nombre Completo *</label>
+        <input 
+          id="fullName"
+          type="text" 
+          pInputText 
+          formControlName="fullName"
+          [class.ng-invalid]="form.get('fullName')?.invalid && form.get('fullName')?.touched"
+        />
+        <small 
+          class="p-error" 
+          *ngIf="form.get('fullName')?.invalid && form.get('fullName')?.touched">
+          El nombre completo es requerido
+        </small>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="typeIdentity">Tipo de Identidad</label>
+          <input 
+            id="typeIdentity"
+            type="text" 
+            pInputText 
+            formControlName="typeIdentity"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="numberIdentity">Número de Identidad</label>
+          <input 
+            id="numberIdentity"
+            type="text" 
+            pInputText 
+            formControlName="numberIdentity"
+          />
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="people">Personas</label>
+          <input 
+            id="people"
+            type="text" 
+            pInputText 
+            formControlName="people"
+          />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="clientCompanyId">ID de Compañía</label>
+        <input 
+          id="clientCompanyId"
+          type="number" 
+          pInputText 
+          formControlName="clientCompanyId"
+        />
+      </div>
+
+      <div class="form-actions">
+        <p-button 
+          type="submit"
+          [label]="loading ? 'Guardando...' : (editingClient ? 'Actualizar' : 'Crear')"
+          icon="pi pi-check"
+          [disabled]="form.invalid || loading"
+          [loading]="loading">
+        </p-button>
+        <p-button 
+          type="button"
+          label="Cancelar" 
+          icon="pi pi-times"
+          (onClick)="cancelForm()" 
+          [disabled]="loading"
+          styleClass="p-button-secondary">
+        </p-button>
+      </div>
+    </form>
+  </p-dialog>
+
+  <div *ngIf="!showForm" class="table-container">
+    <app-spinner 
+      [loading]="loading"
+      size="normal"
+      message="Cargando clientes..."
+      [overlay]="true">
+    </app-spinner>
+    
+    <app-table-lib
+      *ngIf="!loading"
+      [cols]="cols"
+      [dataTable]="tableData"
+      [hasEdit]="true"
+      [hasDelete]="false"
+      [hasDetail]="false"
+      [hasReport]="false"
+      (onEdit)="onTableEdit($event)"
+      (onDelete)="onTableDelete($event)"
+      (pagination)="onTablePagination($event)">
+    </app-table-lib>
+  </div>
+</div>
+
