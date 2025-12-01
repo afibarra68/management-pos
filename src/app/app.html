@@ -1,4 +1,6 @@
 <div class="app-container">
+  <p-toast></p-toast>
+  <p-confirmDialog></p-confirmDialog>
   <app-sidebar [class.hidden]="!showSidebar()"></app-sidebar>
   <div class="content-wrapper" [class.with-sidebar]="showSidebar()" [class.sidebar-collapsed]="sidebarCollapsed()">
     <header class="app-header" [class.hidden]="!showSidebar()">

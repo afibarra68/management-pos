@@ -3,7 +3,7 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "t-parking": {
+    "management-pos": {
       "projectType": "application",
       "schematics": {
         "@schematics/angular:component": {
@@ -66,10 +66,10 @@
           },
           "configurations": {
             "production": {
-              "buildTarget": "t-parking:build:production"
+              "buildTarget": "management-pos:build:production"
             },
             "development": {
-              "buildTarget": "t-parking:build:development"
+              "buildTarget": "management-pos:build:development"
             }
           },
           "defaultConfiguration": "development"

@@ -14,9 +14,9 @@ export const routes: Routes = [
     loadChildren: () => import('./features/auth/auth-module').then(m => m.AuthModule)
   },
   {
-    path: 'administration',
+    path: 'pos',
     canActivate: [authGuard],
-    loadChildren: () => import('./features/administration/administration-module').then(m => m.AdministrationModule),
+    loadChildren: () => import('./features/pos/pos-module').then(m => m.PosModule),
   },
   {
     path: '**',

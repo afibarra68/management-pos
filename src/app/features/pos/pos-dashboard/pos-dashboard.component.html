@@ -1,0 +1,38 @@
+<div class="pos-dashboard-container">
+  <div class="header">
+    <h1>Punto de Venta</h1>
+    <p class="subtitle" *ngIf="currentView === 'dashboard'">Seleccione una operación</p>
+  </div>
+
+  <div class="actions-buttons">
+    <p-card 
+      class="action-card" 
+      [class.active]="currentView === 'ingresar'"
+      (click)="showIngresar()" 
+      [styleClass]="currentView === 'ingresar' ? 'cursor-pointer active-card' : 'cursor-pointer'">
+      <div class="card-content">
+        <i class="pi pi-sign-in card-icon"></i>
+        <h2>Ingresar Vehículo</h2>
+        <p>Registrar la entrada de un vehículo al estacionamiento</p>
+      </div>
+    </p-card>
+
+    <p-card 
+      class="action-card" 
+      [class.active]="currentView === 'salida'"
+      (click)="showSalida()" 
+      [styleClass]="currentView === 'salida' ? 'cursor-pointer active-card' : 'cursor-pointer'">
+      <div class="card-content">
+        <i class="pi pi-sign-out card-icon"></i>
+        <h2>Registrar Salida</h2>
+        <p>Registrar la salida de un vehículo y procesar el pago</p>
+      </div>
+    </p-card>
+  </div>
+
+  <div class="content-area">
+    <app-registrar-placa *ngIf="currentView === 'ingresar'"></app-registrar-placa>
+    <app-registrar-salida *ngIf="currentView === 'salida'"></app-registrar-salida>
+  </div>
+</div>
+

@@ -1,13 +1,13 @@
 {
-  "name": "t-parking",
+  "name": "management-pos",
   "version": "0.0.1-SNAPSHOT",
   "scripts": {
     "ng": "ng",
-    "start": "ng serve",
+    "start": "ng serve --port 4202",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
-    "serve:ssr:t-parking": "node dist/t-parking/server/server.mjs"
+    "serve:ssr:management-pos": "node dist/management-pos/server/server.mjs"
   },
   "prettier": {
     "printWidth": 100,

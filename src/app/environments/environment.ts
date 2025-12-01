@@ -7,7 +7,8 @@ export const environment = {
     applicationTimeout: 300000,
     rowsPerPage: 10,
     activeMocks: false,
-    apiAuthJwt: '/mt-api'
+    apiAuthJwt: '/mt-api',
+    apiUrl: '/mt-api'
 };
 
 /*

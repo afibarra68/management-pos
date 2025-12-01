@@ -7,33 +7,9 @@ import { MenuItem } from '../models/menu-item.model';
 export class MenuService {
   private menuItems = signal<MenuItem[]>([
     {
-      label: 'Países',
-      icon: 'pi pi-globe',
-      routerLink: '/administration/countries',
-      visible: true
-    },
-    {
-      label: 'Empresas',
-      icon: 'pi pi-building',
-      routerLink: '/administration/companies',
-      visible: true
-    },
-    {
-      label: 'Clientes',
-      icon: 'pi pi-users',
-      routerLink: '/administration/clients',
-      visible: true
-    },
-    {
-      label: 'Servicios de Negocio',
-      icon: 'pi pi-briefcase',
-      routerLink: '/administration/business-service',
-      visible: true
-    },
-    {
-      label: 'Empresa - Servicios',
-      icon: 'pi pi-link',
-      routerLink: '/administration/company-business-service',
+      label: 'Punto de Venta',
+      icon: 'pi pi-shopping-cart',
+      routerLink: '/pos',
       visible: true
     }
     // Aquí se pueden agregar más items del menú dinámicamente

@@ -51,7 +51,7 @@ export class LoginComponent {
         this.loading = false;
         // Pequeño delay antes de navegar para evitar que el sidebar aparezca brevemente
         setTimeout(() => {
-          this.router.navigate(['/administration/countries']);
+          this.router.navigate(['/pos']);
         }, 100);
       },
       error: (err) => {

@@ -1,0 +1,77 @@
+.registrar-placa-container {
+  padding: 1.5rem;
+  height: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+  width: 100%;
+
+  .header {
+    margin-bottom: 2rem;
+    text-align: center;
+
+    h1 {
+      margin: 0 0 0.5rem 0;
+      color: var(--text-color);
+      font-size: 2rem;
+    }
+
+    .subtitle {
+      margin: 0;
+      color: var(--text-color-secondary);
+      font-size: 1rem;
+    }
+  }
+
+  .form-card {
+    margin-bottom: 1.5rem;
+
+    ::ng-deep .p-card-body {
+      padding: 2rem;
+    }
+
+    ::ng-deep .p-card-content {
+      padding: 0;
+    }
+  }
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 1.5rem;
+
+    label {
+      margin-bottom: 0.5rem;
+      font-weight: 500;
+      color: var(--text-color);
+      font-size: 1rem;
+    }
+
+    input {
+      width: 100%;
+      font-size: 1.2rem;
+      padding: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    small {
+      margin-top: 0.5rem;
+      display: block;
+    }
+
+    .p-text-secondary {
+      color: var(--text-color-secondary);
+      font-style: italic;
+    }
+  }
+
+  .form-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--surface-border);
+  }
+}
+

@@ -1,0 +1,104 @@
+<div class="registrar-salida-container">
+  <div class="header">
+    <h1>Registrar Salida</h1>
+    <p class="subtitle">Busque el vehículo por placa para procesar su salida</p>
+  </div>
+
+  <p-card class="form-card">
+    <form [formGroup]="form" (ngSubmit)="buscarVehiculo()">
+      <div class="form-group">
+        <label for="vehiclePlate">Placa del Vehículo *</label>
+        <input 
+          id="vehiclePlate"
+          type="text" 
+          pInputText 
+          formControlName="vehiclePlate"
+          placeholder="Ej: ABC123"
+          [class.ng-invalid]="form.get('vehiclePlate')?.invalid && form.get('vehiclePlate')?.touched"
+          (input)="form.patchValue({vehiclePlate: form.value.vehiclePlate.toUpperCase()})"
+          maxlength="20">
+        <small 
+          class="p-error" 
+          *ngIf="form.get('vehiclePlate')?.invalid && form.get('vehiclePlate')?.touched">
+          <span *ngIf="form.get('vehiclePlate')?.errors?.['required']">
+            La placa es requerida
+          </span>
+          <span *ngIf="form.get('vehiclePlate')?.errors?.['minlength']">
+            La placa debe tener al menos 3 caracteres
+          </span>
+          <span *ngIf="form.get('vehiclePlate')?.errors?.['maxlength']">
+            La placa no puede tener más de 20 caracteres
+          </span>
+        </small>
+      </div>
+
+      <div class="form-actions">
+        <p-button 
+          type="submit"
+          label="Buscar Vehículo"
+          icon="pi pi-search"
+          [disabled]="form.invalid || buscando"
+          [loading]="buscando">
+        </p-button>
+      </div>
+    </form>
+  </p-card>
+
+  <p-card *ngIf="vehiculoEncontrado" class="vehiculo-info-card">
+    <div class="vehiculo-info">
+      <h3>Información del Vehículo</h3>
+      <div class="info-grid">
+        <div class="info-item">
+          <label>Placa:</label>
+          <span>{{ vehiculoEncontrado.vehiclePlate }}</span>
+        </div>
+        <div class="info-item">
+          <label>Fecha Entrada:</label>
+          <span>{{ vehiculoEncontrado.startDay }}</span>
+        </div>
+        <div class="info-item">
+          <label>Hora Entrada:</label>
+          <span>{{ vehiculoEncontrado.startTime }}</span>
+        </div>
+        <div class="info-item">
+          <label>Tiempo Transcurrido:</label>
+          <span>{{ vehiculoEncontrado.timeElapsed || 'Calculando...' }}</span>
+        </div>
+        <div class="info-item">
+          <label>Estado:</label>
+          <span>{{ vehiculoEncontrado.status }}</span>
+        </div>
+      </div>
+      
+      <div class="salida-actions">
+        <p-button 
+          label="Procesar Salida"
+          icon="pi pi-check"
+          (onClick)="procesarSalida()"
+          [disabled]="loading"
+          [loading]="loading"
+          styleClass="p-button-success">
+        </p-button>
+      </div>
+    </div>
+  </p-card>
+
+  <p-message 
+    *ngIf="error" 
+    severity="error" 
+    [text]="error"
+    [closable]="true"
+    (onClose)="error = null"
+    [style]="{'margin-top': '1rem'}">
+  </p-message>
+
+  <p-message 
+    *ngIf="success" 
+    severity="success" 
+    [text]="success"
+    [closable]="true"
+    (onClose)="success = null"
+    [style]="{'margin-top': '1rem'}">
+  </p-message>
+</div>
+

@@ -6,10 +6,12 @@ import { CommonModule } from '@angular/common';
 import { filter, distinctUntilChanged } from 'rxjs/operators';
 import { AuthService } from './core/services/auth.service';
 import { SidebarService } from './core/services/sidebar.service';
+import { ToastModule } from 'primeng/toast';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, SidebarComponent, UserControlComponent, CommonModule],
+  imports: [RouterOutlet, SidebarComponent, UserControlComponent, CommonModule, ToastModule, ConfirmDialogModule],
   templateUrl: './app.html',
   styleUrl: './app.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
