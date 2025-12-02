@@ -35,6 +35,25 @@
         </small>
       </div>
 
+      <div class="form-group">
+        <label for="tipoVehiculo">Tipo de Vehículo *</label>
+        <div class="select-wrapper">
+          <app-select-lib
+            formControlName="tipoVehiculo"
+            [options]="tipoVehiculoOptions"
+            label=""
+            [showClear]="false">
+          </app-select-lib>
+        </div>
+        <small 
+          class="p-error" 
+          *ngIf="form.get('tipoVehiculo')?.invalid && form.get('tipoVehiculo')?.touched">
+          <span *ngIf="form.get('tipoVehiculo')?.errors?.['required']">
+            El tipo de vehículo es requerido
+          </span>
+        </small>
+      </div>
+
       <div class="form-actions">
         <p-button 
           type="submit"

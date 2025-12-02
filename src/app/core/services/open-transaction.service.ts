@@ -21,6 +21,7 @@ export interface OpenTransaction {
   serviceTypeServiceTypeId?: number | null;
   appUserAppUserSeller?: number | null;
   vehiclePlate?: string;
+  tipoVehiculo?: string;
 }
 
 @Injectable({

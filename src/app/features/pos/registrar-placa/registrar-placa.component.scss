@@ -54,6 +54,40 @@
       letter-spacing: 0.1em;
     }
 
+    .select-wrapper {
+      width: 50%;
+
+      ::ng-deep {
+        app-select-lib {
+          width: 100%;
+          display: block;
+        }
+
+        .p-field {
+          width: 100% !important;
+          max-width: 100% !important;
+          padding: 0 !important;
+        }
+
+        .p-col-12 {
+          width: 100% !important;
+          flex: 0 0 100% !important;
+        }
+
+        .p-float-label {
+          width: 100%;
+
+          label {
+            display: none;
+          }
+
+          p-select {
+            width: 100% !important;
+          }
+        }
+      }
+    }
+
     small {
       margin-top: 0.5rem;
       display: block;
