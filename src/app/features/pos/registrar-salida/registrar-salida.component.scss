@@ -69,58 +69,62 @@
     border-top: 1px solid var(--surface-border);
   }
 
-  .vehiculo-info-card {
-    margin-top: 1.5rem;
+  .vehicle-info-dialog {
+    padding: 0;
+  }
 
-    ::ng-deep .p-card-body {
-      padding: 2rem;
+  .info-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .info-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+
+    label {
+      font-weight: 600;
+      color: var(--text-color-secondary);
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
 
-    ::ng-deep .p-card-content {
-      padding: 0;
-    }
+    .value {
+      font-size: 1.1rem;
+      color: var(--text-color);
+      font-weight: 500;
 
-    .vehiculo-info {
-      h3 {
-        margin: 0 0 1.5rem 0;
-        color: var(--text-color);
-        font-size: 1.5rem;
-        border-bottom: 2px solid var(--primary-color);
-        padding-bottom: 0.5rem;
+      &.highlight {
+        color: var(--primary-color);
+        font-size: 1.3rem;
+        font-weight: 600;
       }
 
-      .info-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 1rem;
-        margin-bottom: 2rem;
+      &.status-badge {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 12px;
+        background-color: #e9ecef;
+        color: #495057;
+        font-size: 0.85rem;
+        font-weight: 600;
 
-        .info-item {
-          display: flex;
-          flex-direction: column;
-          gap: 0.25rem;
-
-          label {
-            font-weight: 600;
-            color: var(--text-color-secondary);
-            font-size: 0.875rem;
-          }
-
-          span {
-            color: var(--text-color);
-            font-size: 1rem;
-            font-weight: 500;
-          }
+        &.status-open {
+          background-color: #d4edda;
+          color: #155724;
         }
       }
-
-      .salida-actions {
-        display: flex;
-        justify-content: center;
-        padding-top: 1.5rem;
-        border-top: 1px solid var(--surface-border);
-      }
     }
+  }
+
+  .dialog-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
   }
 }
 

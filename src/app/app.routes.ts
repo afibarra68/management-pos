@@ -1,12 +1,12 @@
 import { Routes } from '@angular/router';
 import { redirectIfAuthenticatedGuard } from './core/guards/redirect-if-authenticated.guard';
 import { authGuard } from './core/guards/auth.guard';
+import { UnderConstructionComponent } from './features/under-construction/under-construction.component';
 
 export const routes: Routes = [
   {
     path: '',
-    canActivate: [redirectIfAuthenticatedGuard],
-    loadChildren: () => import('./features/auth/auth-module').then(m => m.AuthModule)
+    component: UnderConstructionComponent
   },
   {
     path: 'auth',
@@ -19,7 +19,11 @@ export const routes: Routes = [
     loadChildren: () => import('./features/pos/pos-module').then(m => m.PosModule),
   },
   {
+    path: 'under-construction',
+    component: UnderConstructionComponent
+  },
+  {
     path: '**',
-    redirectTo: '/auth/login'
+    component: UnderConstructionComponent
   }
 ];

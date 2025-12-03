@@ -1,0 +1,40 @@
+<div class="construction-container">
+  <div class="construction-content">
+    <p-card class="construction-card">
+      <ng-template pTemplate="header">
+        <div class="construction-header">
+          <i class="pi pi-wrench" style="font-size: 4rem; color: #ffa726;"></i>
+        </div>
+      </ng-template>
+      
+      <div class="construction-body">
+        <h1>Sitio en Construcción</h1>
+        <p class="message">
+          Estamos trabajando para mejorar nuestros servicios.
+          Esta sección estará disponible próximamente.
+        </p>
+        <p class="submessage">
+          Disculpe las molestias.
+        </p>
+      </div>
+
+      <ng-template pTemplate="footer">
+        <div class="construction-footer">
+          <p-button 
+            label="Ir al Login" 
+            icon="pi pi-sign-in"
+            [styleClass]="'p-button-outlined'"
+            (click)="goToLogin()">
+          </p-button>
+          <p-button 
+            label="Ir al POS" 
+            icon="pi pi-home"
+            [styleClass]="'p-button-primary'"
+            (click)="goToPOS()">
+          </p-button>
+        </div>
+      </ng-template>
+    </p-card>
+  </div>
+</div>
+

@@ -20,8 +20,9 @@ export interface LoginResponse {
   appUserId: number;
   numberIdentity?: string;
   roles: string[];
-  companyName?: number;
-  companyDescription?: number;
+  companyName?: string;
+  companyDescription?: string;
+  companyId?: number;
   pwdMsgToExpire?: boolean;
   accessLevel?: string;
 }
@@ -75,7 +76,9 @@ export class AuthService {
               appUserId: response.appUserId,
               numberIdentity: response.numberIdentity,
               roles: response.roles,
-              companyName: response.companyName
+              companyName: response.companyName,
+              companyDescription: response.companyDescription,
+              companyId: response.companyId
             }));
           }
         }),

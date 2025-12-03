@@ -44,45 +44,6 @@
     </form>
   </p-card>
 
-  <p-card *ngIf="vehiculoEncontrado" class="vehiculo-info-card">
-    <div class="vehiculo-info">
-      <h3>Información del Vehículo</h3>
-      <div class="info-grid">
-        <div class="info-item">
-          <label>Placa:</label>
-          <span>{{ vehiculoEncontrado.vehiclePlate }}</span>
-        </div>
-        <div class="info-item">
-          <label>Fecha Entrada:</label>
-          <span>{{ vehiculoEncontrado.startDay }}</span>
-        </div>
-        <div class="info-item">
-          <label>Hora Entrada:</label>
-          <span>{{ vehiculoEncontrado.startTime }}</span>
-        </div>
-        <div class="info-item">
-          <label>Tiempo Transcurrido:</label>
-          <span>{{ vehiculoEncontrado.timeElapsed || 'Calculando...' }}</span>
-        </div>
-        <div class="info-item">
-          <label>Estado:</label>
-          <span>{{ vehiculoEncontrado.status }}</span>
-        </div>
-      </div>
-      
-      <div class="salida-actions">
-        <p-button 
-          label="Procesar Salida"
-          icon="pi pi-check"
-          (onClick)="procesarSalida()"
-          [disabled]="loading"
-          [loading]="loading"
-          styleClass="p-button-success">
-        </p-button>
-      </div>
-    </div>
-  </p-card>
-
   <p-message 
     *ngIf="error" 
     severity="error" 
@@ -92,13 +53,75 @@
     [style]="{'margin-top': '1rem'}">
   </p-message>
 
-  <p-message 
-    *ngIf="success" 
-    severity="success" 
-    [text]="success"
+  <p-dialog 
+    [visible]="showModal"
+    [header]="'Vehículo: ' + (vehiculoEncontrado?.vehiclePlate || '')"
+    [modal]="true"
     [closable]="true"
-    (onClose)="success = null"
-    [style]="{'margin-top': '1rem'}">
-  </p-message>
+    [dismissableMask]="true"
+    [style]="{width: '600px'}"
+    (onHide)="cerrarModal()">
+    <div class="vehicle-info-dialog" *ngIf="vehiculoEncontrado">
+      <div class="info-grid">
+        <div class="info-item">
+          <label>Placa:</label>
+          <span class="value">{{ vehiculoEncontrado.vehiclePlate }}</span>
+        </div>
+        <div class="info-item">
+          <label>Fecha Entrada:</label>
+          <span class="value">{{ vehiculoEncontrado.startDay }}</span>
+        </div>
+        <div class="info-item">
+          <label>Hora Entrada:</label>
+          <span class="value">{{ vehiculoEncontrado.startTime }}</span>
+        </div>
+        <div class="info-item">
+          <label>Tiempo Transcurrido:</label>
+          <span class="value highlight">{{ tiempoTranscurrido || vehiculoEncontrado.timeElapsed || 'Calculando...' }}</span>
+        </div>
+        <div class="info-item" *ngIf="vehiculoEncontrado.tipoVehiculo">
+          <label>Tipo de Vehículo:</label>
+          <span class="value">{{ vehiculoEncontrado.tipoVehiculo }}</span>
+        </div>
+        <div class="info-item">
+          <label>Estado:</label>
+          <span class="value status-badge" [class.status-open]="vehiculoEncontrado.status === 'OPEN'">
+            {{ vehiculoEncontrado.status }}
+          </span>
+        </div>
+      </div>
+
+      <p-message 
+        *ngIf="error" 
+        severity="error" 
+        [text]="error"
+        [closable]="true"
+        (onClose)="error = null"
+        [style]="{'margin-top': '1rem'}">
+      </p-message>
+    </div>
+
+    <ng-template pTemplate="footer">
+      <div class="dialog-footer">
+        <p-button 
+          label="Cancelar"
+          icon="pi pi-times"
+          (onClick)="cancelar()"
+          [disabled]="loading"
+          styleClass="p-button-secondary">
+        </p-button>
+        <p-button 
+          label="Procesar Salida"
+          icon="pi pi-check"
+          (onClick)="procesarSalida()"
+          [disabled]="loading"
+          [loading]="loading"
+          styleClass="p-button-success">
+        </p-button>
+      </div>
+    </ng-template>
+  </p-dialog>
+
+  <p-toast></p-toast>
 </div>
 

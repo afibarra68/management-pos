@@ -11,7 +11,7 @@ import { SharedModule } from '../../../shared/shared-module';
 import { OpenTransactionService } from '../../../core/services/open-transaction.service';
 import { OpenTransaction } from '../../../core/services/open-transaction.service';
 import { TipoVehiculoService } from '../../../core/services/tipo-vehiculo.service';
-import { UtilsService } from '../services/utils.service';
+import { UtilsService } from '../../../core/services/utils.service';
 import { ConfirmationService } from 'primeng/api';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ToastModule } from 'primeng/toast';

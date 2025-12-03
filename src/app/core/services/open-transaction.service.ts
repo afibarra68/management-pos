@@ -47,5 +47,11 @@ export class OpenTransactionService {
   getAll(): Observable<OpenTransaction[]> {
     return this.http.get<OpenTransaction[]>(this.apiUrl);
   }
+
+  findByVehiclePlate(vehiclePlate: string): Observable<OpenTransaction> {
+    return this.http.get<OpenTransaction>(`${this.apiUrl}/by-plate`, {
+      params: { vehiclePlate }
+    });
+  }
 }
 
