@@ -1,38 +1,125 @@
 <div class="pos-dashboard-container">
   <div class="header">
     <h1>Punto de Venta</h1>
-    <p class="subtitle" *ngIf="currentView === 'dashboard'">Seleccione una operación</p>
+    @if (currentView === 'dashboard') {
+      <p class="subtitle">Dashboard del día de hoy</p>
+    }
   </div>
 
-  <div class="actions-buttons">
-    <p-card 
-      class="action-card" 
-      [class.active]="currentView === 'ingresar'"
-      (click)="showIngresar()" 
-      [styleClass]="currentView === 'ingresar' ? 'cursor-pointer active-card' : 'cursor-pointer'">
-      <div class="card-content">
-        <i class="pi pi-sign-in card-icon"></i>
-        <h2>Ingresar Vehículo</h2>
-        <p>Registrar la entrada de un vehículo al estacionamiento</p>
-      </div>
-    </p-card>
+  <!-- Dashboard View -->
+  @if (currentView === 'dashboard') {
+    <div class="dashboard-content">
+      <!-- Loading State (solo cuando está cargando y no hay datos previos) -->
+      @if (loading && !stats) {
+        <div class="loading-state">
+          <i class="pi pi-spin pi-spinner" style="font-size: 2rem"></i>
+          <p>Cargando estadísticas...</p>
+        </div>
+      }
 
-    <p-card 
-      class="action-card" 
-      [class.active]="currentView === 'salida'"
-      (click)="showSalida()" 
-      [styleClass]="currentView === 'salida' ? 'cursor-pointer active-card' : 'cursor-pointer'">
-      <div class="card-content">
-        <i class="pi pi-sign-out card-icon"></i>
-        <h2>Registrar Salida</h2>
-        <p>Registrar la salida de un vehículo y procesar el pago</p>
-      </div>
-    </p-card>
-  </div>
+      <!-- Error State -->
+      @if (error && !loading) {
+        <div class="error-state">
+          <i class="pi pi-exclamation-triangle" style="font-size: 2rem; color: var(--red-500)"></i>
+          <p>{{ error }}</p>
+          <p-button label="Reintentar" icon="pi pi-refresh" (onClick)="loadStats()"></p-button>
+        </div>
+      }
 
-  <div class="content-area">
-    <app-registrar-placa *ngIf="currentView === 'ingresar'"></app-registrar-placa>
-    <app-registrar-salida *ngIf="currentView === 'salida'"></app-registrar-salida>
-  </div>
+      <!-- Stats Cards (mostrar siempre, incluso si está cargando con datos previos) -->
+      @if (!error) {
+        <div class="stats-cards">
+          <p-card class="stat-card">
+            <div class="stat-content">
+              <div class="stat-icon total">
+                <i class="pi pi-chart-line"></i>
+              </div>
+              <div class="stat-info">
+                <h3 class="stat-label">Total Operaciones</h3>
+                <p class="stat-value">{{ stats?.totalTransactions || 0 }}</p>
+              </div>
+            </div>
+          </p-card>
+
+          <p-card class="stat-card">
+            <div class="stat-content">
+              <div class="stat-icon amount">
+                <i class="pi pi-money-bill"></i>
+              </div>
+              <div class="stat-info">
+                <h3 class="stat-label">Total Recaudado</h3>
+                <p class="stat-value">
+                  {{ stats ? formatCurrency(stats.totalAmount, stats.currency) : formatCurrency(0, 'USD') }}
+                </p>
+              </div>
+            </div>
+          </p-card>
+        </div>
+      }
+
+      <!-- Transactions Table (mostrar si hay datos) -->
+      @if (stats && !error) {
+        <div class="transactions-section">
+          <h2 class="section-title">Transacciones del Día</h2>
+          <p-card>
+            <p-table 
+              [value]="stats.transactions" 
+              [paginator]="true" 
+              [rows]="10"
+              [showCurrentPageReport]="true"
+              currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} transacciones"
+              [loading]="loading"
+              styleClass="p-datatable-sm">
+              <ng-template pTemplate="header">
+                <tr>
+                  <th>Hora</th>
+                  <th>Tiempo Estacionado</th>
+                  <th>Monto</th>
+                  <th>Vendedor</th>
+                </tr>
+              </ng-template>
+              <ng-template pTemplate="body" let-transaction>
+                <tr>
+                  <td>{{ formatDate(transaction.operationDate) }}</td>
+                  <td>{{ transaction.timeElapsed || 'N/A' }}</td>
+                  <td>{{ formatCurrency(transaction.totalAmount, transaction.currency) }}</td>
+                  <td>{{ transaction.sellerName || 'N/A' }}</td>
+                </tr>
+              </ng-template>
+              <ng-template pTemplate="emptymessage">
+                <tr>
+                  <td colspan="4" class="text-center">No hay transacciones registradas hoy</td>
+                </tr>
+              </ng-template>
+            </p-table>
+          </p-card>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Actions Buttons (shown when not in dashboard view) -->
+  @if (currentView !== 'dashboard') {
+    <div class="actions-buttons">
+      <p-button 
+        label="Volver al Dashboard" 
+        icon="pi pi-arrow-left"
+        (onClick)="showDashboard()"
+        styleClass="p-button-secondary">
+      </p-button>
+    </div>
+  }
+
+  <!-- Content Area for Forms -->
+  @if (currentView !== 'dashboard') {
+    <div class="content-area">
+      @if (currentView === 'ingresar') {
+        <app-registrar-placa></app-registrar-placa>
+      }
+      @if (currentView === 'salida') {
+        <app-registrar-salida></app-registrar-salida>
+      }
+    </div>
+  }
 </div>
 

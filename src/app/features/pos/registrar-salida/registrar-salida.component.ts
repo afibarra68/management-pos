@@ -4,7 +4,6 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angula
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { MessageModule } from 'primeng/message';
-import { CardModule } from 'primeng/card';
 import { DialogModule } from 'primeng/dialog';
 import { FormsModule } from '@angular/forms';
 import { ToastModule } from 'primeng/toast';
@@ -24,7 +23,6 @@ import { MessageService } from 'primeng/api';
     ButtonModule,
     InputTextModule,
     MessageModule,
-    CardModule,
     DialogModule,
     SharedModule,
     ToastModule
@@ -141,6 +139,8 @@ export class RegistrarSalidaComponent implements OnInit, OnDestroy {
         });
         this.cerrarModal();
         this.form.reset();
+        // Emitir evento para actualizar el dashboard
+        window.dispatchEvent(new CustomEvent('transactionClosed'));
       },
       error: (err) => {
         this.loading = false;

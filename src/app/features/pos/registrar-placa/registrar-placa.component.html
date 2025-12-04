@@ -4,75 +4,73 @@
     <p class="subtitle">Ingrese la placa del vehículo para iniciar el proceso de estacionamiento</p>
   </div>
 
-  <p-card class="form-card">
-    <form [formGroup]="form" (ngSubmit)="submit()">
-      <div class="form-group">
-        <label for="vehiclePlate">Placa del Vehículo *</label>
-        <input 
-          id="vehiclePlate"
-          type="text" 
-          pInputText 
-          formControlName="vehiclePlate"
-          placeholder="Ej: ABC123"
-          [class.ng-invalid]="form.get('vehiclePlate')?.invalid && form.get('vehiclePlate')?.touched"
-          (input)="form.patchValue({vehiclePlate: form.value.vehiclePlate.toUpperCase()})"
-          maxlength="20">
-        <small 
-          class="p-error" 
-          *ngIf="form.get('vehiclePlate')?.invalid && form.get('vehiclePlate')?.touched">
-          <span *ngIf="form.get('vehiclePlate')?.errors?.['required']">
-            La placa es requerida
-          </span>
-          <span *ngIf="form.get('vehiclePlate')?.errors?.['minlength']">
-            La placa debe tener al menos 3 caracteres
-          </span>
-          <span *ngIf="form.get('vehiclePlate')?.errors?.['maxlength']">
-            La placa no puede tener más de 20 caracteres
-          </span>
-        </small>
-        <small class="p-text-secondary" *ngIf="form.get('vehiclePlate')?.valid">
-          La fecha y hora de inicio se registrarán automáticamente
-        </small>
-      </div>
+  <form [formGroup]="form" (ngSubmit)="submit()" class="form-container">
+    <div class="form-group">
+      <label for="vehiclePlate">Placa del Vehículo *</label>
+      <input 
+        id="vehiclePlate"
+        type="text" 
+        pInputText 
+        formControlName="vehiclePlate"
+        placeholder="Ej: ABC123"
+        [class.ng-invalid]="form.get('vehiclePlate')?.invalid && form.get('vehiclePlate')?.touched"
+        (input)="form.patchValue({vehiclePlate: form.value.vehiclePlate.toUpperCase()})"
+        maxlength="20">
+      <small 
+        class="p-error" 
+        *ngIf="form.get('vehiclePlate')?.invalid && form.get('vehiclePlate')?.touched">
+        <span *ngIf="form.get('vehiclePlate')?.errors?.['required']">
+          La placa es requerida
+        </span>
+        <span *ngIf="form.get('vehiclePlate')?.errors?.['minlength']">
+          La placa debe tener al menos 3 caracteres
+        </span>
+        <span *ngIf="form.get('vehiclePlate')?.errors?.['maxlength']">
+          La placa no puede tener más de 20 caracteres
+        </span>
+      </small>
+      <small class="p-text-secondary" *ngIf="form.get('vehiclePlate')?.valid">
+        La fecha y hora de inicio se registrarán automáticamente
+      </small>
+    </div>
 
-      <div class="form-group">
-        <label for="tipoVehiculo">Tipo de Vehículo *</label>
-        <div class="select-wrapper">
-          <app-select-lib
-            formControlName="tipoVehiculo"
-            [options]="tipoVehiculoOptions"
-            label=""
-            [showClear]="false">
-          </app-select-lib>
-        </div>
-        <small 
-          class="p-error" 
-          *ngIf="form.get('tipoVehiculo')?.invalid && form.get('tipoVehiculo')?.touched">
-          <span *ngIf="form.get('tipoVehiculo')?.errors?.['required']">
-            El tipo de vehículo es requerido
-          </span>
-        </small>
+    <div class="form-group">
+      <label for="tipoVehiculo">Tipo de Vehículo *</label>
+      <div class="select-wrapper">
+        <app-select-lib
+          formControlName="tipoVehiculo"
+          [options]="tipoVehiculoOptions"
+          label=""
+          [showClear]="false">
+        </app-select-lib>
       </div>
+      <small 
+        class="p-error" 
+        *ngIf="form.get('tipoVehiculo')?.invalid && form.get('tipoVehiculo')?.touched">
+        <span *ngIf="form.get('tipoVehiculo')?.errors?.['required']">
+          El tipo de vehículo es requerido
+        </span>
+      </small>
+    </div>
 
-      <div class="form-actions">
-        <p-button 
-          type="submit"
-          label="Registrar Placa"
-          icon="pi pi-check"
-          [disabled]="form.invalid || loading"
-          [loading]="loading">
-        </p-button>
-        <p-button 
-          type="button"
-          label="Limpiar" 
-          icon="pi pi-times"
-          (onClick)="form.reset()"
-          [disabled]="loading"
-          styleClass="p-button-secondary">
-        </p-button>
-      </div>
-    </form>
-  </p-card>
+    <div class="form-actions">
+      <p-button 
+        type="submit"
+        label="Registrar Placa"
+        icon="pi pi-check"
+        [disabled]="form.invalid || loading"
+        [loading]="loading">
+      </p-button>
+      <p-button 
+        type="button"
+        label="Limpiar" 
+        icon="pi pi-times"
+        (onClick)="form.reset()"
+        [disabled]="loading"
+        styleClass="p-button-secondary">
+      </p-button>
+    </div>
+  </form>
 
   <p-message 
     *ngIf="error" 

@@ -5,7 +5,6 @@ import { Router } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { MessageModule } from 'primeng/message';
-import { CardModule } from 'primeng/card';
 import { FormsModule } from '@angular/forms';
 import { SharedModule } from '../../../shared/shared-module';
 import { OpenTransactionService } from '../../../core/services/open-transaction.service';
@@ -27,7 +26,6 @@ import { SelectItem } from 'primeng/api';
     ButtonModule,
     InputTextModule,
     MessageModule,
-    CardModule,
     ConfirmDialogModule,
     ToastModule,
     SharedModule
@@ -109,6 +107,7 @@ export class RegistrarPlacaComponent implements OnInit {
     this.success = null;
 
     // Enviamos la placa y el tipo de vehículo, el backend agrega el resto de la información
+    // El servicio de negocio se asociará cuando se cierre la transacción a través de la tarifa aplicada
     const transactionData: OpenTransaction = {
       vehiclePlate: vehiclePlate,
       tipoVehiculo: tipoVehiculo

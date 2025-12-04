@@ -4,45 +4,43 @@
     <p class="subtitle">Busque el vehículo por placa para procesar su salida</p>
   </div>
 
-  <p-card class="form-card">
-    <form [formGroup]="form" (ngSubmit)="buscarVehiculo()">
-      <div class="form-group">
-        <label for="vehiclePlate">Placa del Vehículo *</label>
-        <input 
-          id="vehiclePlate"
-          type="text" 
-          pInputText 
-          formControlName="vehiclePlate"
-          placeholder="Ej: ABC123"
-          [class.ng-invalid]="form.get('vehiclePlate')?.invalid && form.get('vehiclePlate')?.touched"
-          (input)="form.patchValue({vehiclePlate: form.value.vehiclePlate.toUpperCase()})"
-          maxlength="20">
-        <small 
-          class="p-error" 
-          *ngIf="form.get('vehiclePlate')?.invalid && form.get('vehiclePlate')?.touched">
-          <span *ngIf="form.get('vehiclePlate')?.errors?.['required']">
-            La placa es requerida
-          </span>
-          <span *ngIf="form.get('vehiclePlate')?.errors?.['minlength']">
-            La placa debe tener al menos 3 caracteres
-          </span>
-          <span *ngIf="form.get('vehiclePlate')?.errors?.['maxlength']">
-            La placa no puede tener más de 20 caracteres
-          </span>
-        </small>
-      </div>
+  <form [formGroup]="form" (ngSubmit)="buscarVehiculo()" class="form-container">
+    <div class="form-group">
+      <label for="vehiclePlate">Placa del Vehículo *</label>
+      <input 
+        id="vehiclePlate"
+        type="text" 
+        pInputText 
+        formControlName="vehiclePlate"
+        placeholder="Ej: ABC123"
+        [class.ng-invalid]="form.get('vehiclePlate')?.invalid && form.get('vehiclePlate')?.touched"
+        (input)="form.patchValue({vehiclePlate: form.value.vehiclePlate.toUpperCase()})"
+        maxlength="20">
+      <small 
+        class="p-error" 
+        *ngIf="form.get('vehiclePlate')?.invalid && form.get('vehiclePlate')?.touched">
+        <span *ngIf="form.get('vehiclePlate')?.errors?.['required']">
+          La placa es requerida
+        </span>
+        <span *ngIf="form.get('vehiclePlate')?.errors?.['minlength']">
+          La placa debe tener al menos 3 caracteres
+        </span>
+        <span *ngIf="form.get('vehiclePlate')?.errors?.['maxlength']">
+          La placa no puede tener más de 20 caracteres
+        </span>
+      </small>
+    </div>
 
-      <div class="form-actions">
-        <p-button 
-          type="submit"
-          label="Buscar Vehículo"
-          icon="pi pi-search"
-          [disabled]="form.invalid || buscando"
-          [loading]="buscando">
-        </p-button>
-      </div>
-    </form>
-  </p-card>
+    <div class="form-actions">
+      <p-button 
+        type="submit"
+        label="Buscar Vehículo"
+        icon="pi pi-search"
+        [disabled]="form.invalid || buscando"
+        [loading]="buscando">
+      </p-button>
+    </div>
+  </form>
 
   <p-message 
     *ngIf="error" 
