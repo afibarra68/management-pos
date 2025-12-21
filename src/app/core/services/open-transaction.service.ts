@@ -3,6 +3,13 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 
+export interface BuildTicket {
+  template?: string;
+  printerName?: string | null;
+  printerType?: string | null;
+  conectionString?: string | null;
+}
+
 export interface OpenTransaction {
   openTransactionId?: number;
   startTime?: string;
@@ -22,6 +29,7 @@ export interface OpenTransaction {
   appUserAppUserSeller?: number | null;
   vehiclePlate?: string;
   tipoVehiculo?: string;
+  buildTicket?: BuildTicket;
 }
 
 @Injectable({
@@ -30,7 +38,7 @@ export interface OpenTransaction {
 export class OpenTransactionService {
   private apiUrl = `${environment.apiUrl}/open-transactions`;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   create(transaction: OpenTransaction): Observable<OpenTransaction> {
     return this.http.post<OpenTransaction>(this.apiUrl, transaction);

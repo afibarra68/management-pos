@@ -51,7 +51,7 @@ export class AuthService {
   private http = inject(HttpClient);
   private router = inject(Router);
   private platformId = inject(PLATFORM_ID);
-  private apiUrl = environment.apiAuthJwt; // Usar proxy - redirige a http://localhost:9000
+  private apiUrl = environment.apiAuthJwt; // Usa proxy en desarrollo (/mt-api) o URL directa en producción
   private tokenKey = 'auth_token';
   private userKey = 'user_data';
 

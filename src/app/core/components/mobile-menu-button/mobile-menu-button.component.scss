@@ -1,0 +1,65 @@
+:host {
+  // Ocultar en desktop
+  @media (min-width: 769px) {
+    display: none !important;
+    visibility: hidden !important;
+  }
+  
+  // Mostrar en móviles
+  @media (max-width: 768px) {
+    display: block !important;
+    visibility: visible !important;
+  }
+}
+
+.mobile-menu-btn {
+  min-width: 40px;
+  width: 40px;
+  height: 40px;
+  margin-right: 1rem;
+  background-color: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  position: relative;
+  z-index: 1;
+  
+  i {
+    font-size: 1.25rem;
+    color: #495057;
+  }
+  
+  &:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+    border-color: rgba(0, 0, 0, 0.3);
+    
+    i {
+      color: #212529;
+    }
+  }
+  
+  &:active {
+    background-color: rgba(0, 0, 0, 0.1);
+    transform: scale(0.95);
+  }
+  
+  &:focus {
+    outline: 2px solid rgba(0, 0, 0, 0.5);
+    outline-offset: 2px;
+  }
+  
+  // Asegurar visibilidad en móviles
+  @media (max-width: 768px) {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+}
+

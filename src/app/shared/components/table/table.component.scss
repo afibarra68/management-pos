@@ -6,6 +6,57 @@
   .p-datatable table {
     font-size: 1rem;
   }
+
+  // Scroll horizontal para tablas en móviles
+  .p-datatable-wrapper {
+    overflow-x: auto;
+    overflow-y: visible;
+    -webkit-overflow-scrolling: touch;
+
+    @media (max-width: 768px) {
+      overflow-x: auto !important;
+      overflow-y: visible !important;
+      max-width: 100%;
+
+      // Forzar scroll horizontal en móviles
+      .p-datatable {
+        min-width: 100%;
+        display: block;
+        overflow-x: auto;
+        overflow-y: visible;
+      }
+
+      .p-datatable-scrollable-body {
+        overflow-x: auto !important;
+        overflow-y: visible !important;
+      }
+
+      .p-datatable-scrollable-header {
+        overflow-x: auto !important;
+        overflow-y: hidden !important;
+      }
+
+      table {
+        min-width: 600px; // Ancho mínimo para forzar scroll horizontal
+        width: 100%;
+      }
+    }
+  }
+
+  // Asegurar que la tabla tenga scroll horizontal en móviles
+  .p-datatable {
+    @media (max-width: 768px) {
+      display: block;
+      overflow-x: auto;
+      overflow-y: visible;
+      -webkit-overflow-scrolling: touch;
+
+      .p-datatable-scrollable-wrapper {
+        overflow-x: auto !important;
+        overflow-y: visible !important;
+      }
+    }
+  }
 }
 
 .table-actions {
@@ -15,5 +66,21 @@
   gap: 0.5rem;
   margin-top: 1rem;
   padding: 0.5rem 0;
-}
 
+  // En móviles, hacer los botones más pequeños y ajustar layout
+  @media (max-width: 768px) {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.5rem;
+
+    ::ng-deep .p-button {
+      flex: 1;
+      min-width: 120px;
+      font-size: 0.875rem;
+
+      .p-button-label {
+        font-size: 0.875rem;
+      }
+    }
+  }
+}

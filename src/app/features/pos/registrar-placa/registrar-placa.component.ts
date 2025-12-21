@@ -9,8 +9,9 @@ import { FormsModule } from '@angular/forms';
 import { SharedModule } from '../../../shared/shared-module';
 import { OpenTransactionService } from '../../../core/services/open-transaction.service';
 import { OpenTransaction } from '../../../core/services/open-transaction.service';
-import { TipoVehiculoService } from '../../../core/services/tipo-vehiculo.service';
+import { EnumService, EnumResource } from '../../../core/services/enum.service';
 import { UtilsService } from '../../../core/services/utils.service';
+import { PrintService } from '../../../core/services/print.service';
 import { ConfirmationService } from 'primeng/api';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ToastModule } from 'primeng/toast';
@@ -44,9 +45,10 @@ export class RegistrarPlacaComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private openTransactionService: OpenTransactionService,
-    private tipoVehiculoService: TipoVehiculoService,
+    private enumService: EnumService,
     public router: Router,
-    private utilsService: UtilsService
+    private utilsService: UtilsService,
+    private printService: PrintService
   ) {
     this.form = this.fb.group({
       vehiclePlate: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(20)]],
@@ -60,17 +62,17 @@ export class RegistrarPlacaComponent implements OnInit {
 
   private loadTiposVehiculo(): void {
     this.loadingTipos = true;
-    this.tipoVehiculoService.getAll().subscribe({
-      next: (tipos) => {
+    this.enumService.getEnumByName('ETipoVehiculo').subscribe({
+      next: (tipos: EnumResource[]) => {
         this.tipoVehiculoOptions = tipos.map(tipo => ({
-          label: tipo.description,
+          label: tipo.description || tipo.id,
           value: tipo.id
         }));
         this.loadingTipos = false;
       },
       error: (err) => {
-        console.error('Error al cargar tipos de vehículo:', err);
         this.loadingTipos = false;
+        console.error('Error al cargar tipos de vehículo:', err);
         // Fallback a valores por defecto si falla la carga
         this.tipoVehiculoOptions = [
           { label: 'Automóvil', value: 'AUTOMOVIL' },
@@ -121,6 +123,11 @@ export class RegistrarPlacaComponent implements OnInit {
           'Ingreso Confirmado'
         );
         this.form.reset();
+
+        // Enviar ticket a imprimir si viene en la respuesta
+        if (response.buildTicket) {
+          this.printTicket(response.buildTicket);
+        }
       },
       error: (err) => {
         this.loading = false;
@@ -129,6 +136,28 @@ export class RegistrarPlacaComponent implements OnInit {
           err?.error?.message || 'Error al registrar la placa',
           'Error en el Registro'
         );
+      }
+    });
+  }
+
+  /**
+   * Envía el ticket a imprimir al servicio parking-printing
+   * @param buildTicket Objeto con el template y datos de la impresora
+   */
+  private printTicket(buildTicket: any): void {
+    if (!buildTicket || !buildTicket.template) {
+      console.warn('No se puede imprimir: buildTicket o template no disponible');
+      return;
+    }
+
+    this.printService.printTicket(buildTicket).subscribe({
+      next: () => {
+        console.log('Ticket enviado a imprimir exitosamente');
+      },
+      error: (err) => {
+        console.error('Error al enviar ticket a imprimir:', err);
+        // No mostramos error al usuario ya que el registro fue exitoso
+        // Solo lo registramos en consola
       }
     });
   }

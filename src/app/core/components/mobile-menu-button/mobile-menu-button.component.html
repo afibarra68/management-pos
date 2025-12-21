@@ -1,0 +1,9 @@
+<button 
+  type="button"
+  (click)="toggleMobileMenu()" 
+  class="mobile-menu-btn"
+  [attr.aria-label]="mobileMenuOpen() ? 'Cerrar menú' : 'Abrir menú'"
+  [attr.aria-expanded]="mobileMenuOpen()">
+  <i [class]="mobileMenuOpen() ? 'pi pi-times' : 'pi pi-bars'"></i>
+</button>
+

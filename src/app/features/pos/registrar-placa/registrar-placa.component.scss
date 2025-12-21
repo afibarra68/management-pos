@@ -115,3 +115,76 @@
   }
 }
 
+// Responsive para resoluciones pequeñas
+@media (max-width: 768px) {
+  .registrar-placa-container {
+    padding: 1rem 0.75rem;
+    height: auto;
+    min-height: calc(100vh - 64px);
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+
+    .header {
+      margin-bottom: 1.5rem;
+
+      h1 {
+        font-size: 1.75rem;
+        margin-bottom: 0.5rem;
+      }
+
+      .subtitle {
+        font-size: 1rem;
+      }
+    }
+
+    .form-container {
+      padding: 1.5rem 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .form-group {
+      margin-bottom: 1.5rem;
+
+      label {
+        font-size: 1rem;
+        margin-bottom: 0.5rem;
+      }
+
+      input {
+        font-size: 1.1rem;
+        padding: 0.75rem;
+      }
+
+      .select-wrapper {
+        ::ng-deep {
+          .p-float-label {
+            p-select {
+              font-size: 1.1rem;
+            }
+          }
+        }
+      }
+
+      small {
+        font-size: 0.85rem;
+        margin-top: 0.5rem;
+      }
+    }
+
+    .form-actions {
+      flex-direction: column;
+      gap: 0.75rem;
+      margin-top: 1.5rem;
+      padding-top: 1.5rem;
+
+      ::ng-deep .p-button {
+        width: 100%;
+        font-size: 1rem;
+        padding: 0.75rem 1.5rem;
+        min-width: auto;
+      }
+    }
+  }
+}
+

@@ -2,6 +2,7 @@ import { Component, signal, inject, afterNextRender, computed, ChangeDetectionSt
 import { RouterOutlet, Router, NavigationEnd } from '@angular/router';
 import { SidebarComponent } from './core/components/sidebar/sidebar.component';
 import { UserControlComponent } from './core/components/user-control/user-control.component';
+import { MobileMenuButtonComponent } from './core/components/mobile-menu-button/mobile-menu-button.component';
 import { CommonModule } from '@angular/common';
 import { filter, distinctUntilChanged } from 'rxjs/operators';
 import { AuthService } from './core/services/auth.service';
@@ -11,7 +12,7 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, SidebarComponent, UserControlComponent, CommonModule, ToastModule, ConfirmDialogModule],
+  imports: [RouterOutlet, SidebarComponent, UserControlComponent, MobileMenuButtonComponent, CommonModule, ToastModule, ConfirmDialogModule],
   templateUrl: './app.html',
   styleUrl: './app.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -21,14 +22,14 @@ export class App {
   private router = inject(Router);
   private authService = inject(AuthService);
   private sidebarService = inject(SidebarService);
-  
+
   // Usar computed para derivar el estado del sidebar colapsado directamente del servicio
   readonly sidebarCollapsed = computed(() => this.sidebarService.collapsed());
-  
+
   // Signal para controlar la visibilidad del sidebar
   private readonly isAuthenticated = signal(false);
   private readonly currentRoute = signal<string>('');
-  
+
   // Computed signal para mostrar/ocultar sidebar
   readonly showSidebar = computed(() => {
     const auth = this.isAuthenticated();
@@ -44,7 +45,7 @@ export class App {
       const updateSidebarState = () => {
         const currentUrl = this.router.url;
         const isAuthenticated = this.authService.isAuthenticated();
-        
+
         // Solo actualizar si los valores han cambiado para evitar re-renderizados innecesarios
         if (this.currentRoute() !== currentUrl) {
           this.currentRoute.set(currentUrl);
@@ -65,6 +66,8 @@ export class App {
         )
         .subscribe(() => {
           updateSidebarState();
+          // Cerrar el menú móvil al navegar
+          this.sidebarService.closeMobileMenu();
         });
     });
   }

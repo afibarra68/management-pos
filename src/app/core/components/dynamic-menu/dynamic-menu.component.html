@@ -1,42 +1,34 @@
-<ul class="menu-list" [class.collapsed]="collapsed()">
+<ul class="menu-list" [class.collapsed]="collapsed() && !isMobile()">
   @for (item of menuItems(); track item.routerLink) {
-    <li class="menu-item">
-      <a 
-        [routerLink]="item.routerLink" 
-        routerLinkActive="active"
-        [routerLinkActiveOptions]="{exact: false}"
-        class="menu-link"
-        [title]="collapsed() ? item.label : ''">
-        @if (item.icon) {
-          <i [class]="item.icon" class="menu-icon"></i>
-        }
-        @if (!collapsed()) {
-          <span class="menu-label">{{ item.label }}</span>
-        }
-        @if (item.badge && !collapsed()) {
-          <span [class]="item.badgeClass || 'menu-badge'">
-            {{ item.badge }}
-          </span>
-        }
-      </a>
-      @if (item.items && item.items.length > 0 && !collapsed()) {
-        <ul class="submenu">
-          @for (subItem of item.items; track subItem.routerLink) {
-            <li class="submenu-item">
-              <a 
-                [routerLink]="subItem.routerLink" 
-                routerLinkActive="active"
-                class="submenu-link">
-                @if (subItem.icon) {
-                  <i [class]="subItem.icon" class="menu-icon"></i>
-                }
-                <span>{{ subItem.label }}</span>
-              </a>
-            </li>
-          }
-        </ul>
+  <li class="menu-item">
+    <a [routerLink]="item.routerLink" routerLinkActive="active" [routerLinkActiveOptions]="{exact: false}"
+      class="menu-link" [title]="(collapsed() && !isMobile()) ? item.label : ''" (click)="onMenuClick()">
+      @if (item.icon) {
+      <i [class]="item.icon" class="menu-icon"></i>
       }
-    </li>
+      @if (!collapsed() || isMobile()) {
+      <span class="menu-label">{{ item.label }}</span>
+      }
+      @if (item.badge && (!collapsed() || isMobile())) {
+      <span [class]="item.badgeClass || 'menu-badge'">
+        {{ item.badge }}
+      </span>
+      }
+    </a>
+    @if (item.items && item.items.length > 0 && (!collapsed() || isMobile())) {
+    <ul class="submenu">
+      @for (subItem of item.items; track subItem.routerLink) {
+      <li class="submenu-item">
+        <a [routerLink]="subItem.routerLink" routerLinkActive="active" class="submenu-link" (click)="onMenuClick()">
+          @if (subItem.icon) {
+          <i [class]="subItem.icon" class="menu-icon"></i>
+          }
+          <span>{{ subItem.label }}</span>
+        </a>
+      </li>
+      }
+    </ul>
+    }
+  </li>
   }
 </ul>
-

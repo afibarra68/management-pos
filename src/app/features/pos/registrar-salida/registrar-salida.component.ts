@@ -72,20 +72,15 @@ export class RegistrarSalidaComponent implements OnInit, OnDestroy {
     this.error = null;
 
     const placa = this.form.value.vehiclePlate.toUpperCase().trim();
-    
+
     this.openTransactionService.findByVehiclePlate(placa).subscribe({
       next: (transaction) => {
-        console.log('Vehículo encontrado:', transaction);
         this.buscando = false;
         this.vehiculoEncontrado = transaction;
         this.calcularTiempoTranscurrido();
-        // Forzar detección de cambios antes de mostrar el modal
         this.cdr.detectChanges();
-        // Usar setTimeout para asegurar que el modal se muestre después de la detección de cambios
-        setTimeout(() => {
-          this.showModal = true;
-          this.cdr.detectChanges();
-        }, 0);
+        this.showModal = true;
+        this.cdr.detectChanges();
         // Actualizar tiempo cada minuto
         if (this.intervalId) {
           clearInterval(this.intervalId);
@@ -95,7 +90,6 @@ export class RegistrarSalidaComponent implements OnInit, OnDestroy {
         }, 60000); // Cada minuto
       },
       error: (err) => {
-        console.error('Error al buscar vehículo:', err);
         this.buscando = false;
         this.error = err?.error?.message || 'No se encontró un vehículo con esa placa en estado abierto';
         this.cdr.detectChanges();
@@ -112,10 +106,10 @@ export class RegistrarSalidaComponent implements OnInit, OnDestroy {
     const startDate = new Date(`${this.vehiculoEncontrado.startDay}T${this.vehiculoEncontrado.startTime}`);
     const now = new Date();
     const diffMs = now.getTime() - startDate.getTime();
-    
+
     const hours = Math.floor(diffMs / (1000 * 60 * 60));
     const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
-    
+
     this.tiempoTranscurrido = `${hours}h ${minutes}m`;
   }
 

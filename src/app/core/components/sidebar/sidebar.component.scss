@@ -55,21 +55,21 @@
     transition: all 0.2s ease;
     padding: 0;
     flex-shrink: 0;
-    
+
     i {
       font-size: 1.25rem;
       color: #495057;
     }
-    
+
     &:hover {
       background-color: #e9ecef;
       border-color: #adb5bd;
-      
+
       i {
         color: #212529;
       }
     }
-    
+
     &:active {
       background-color: #dee2e6;
       transform: scale(0.95);
@@ -81,7 +81,7 @@
   flex: 1;
   overflow-y: auto;
   padding: 1rem 0.5rem;
-  
+
   &::-webkit-scrollbar {
     width: 6px;
   }
@@ -100,15 +100,63 @@
   }
 }
 
-// Responsive
-@media (max-width: 768px) {
-  .sidebar {
-    transform: translateX(-100%);
+// Overlay de fondo oscuro para móviles
+.mobile-menu-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 999;
+  animation: fadeIn 0.3s ease;
+  backdrop-filter: blur(2px);
+}
 
-    &.collapsed {
-      transform: translateX(0);
-      width: 60px;
-    }
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
   }
 }
 
+// Responsive - Modo móvil con overlay
+@media (max-width: 768px) {
+  .sidebar {
+    width: 280px;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+    z-index: 1000;
+    box-shadow: 4px 0 20px rgba(0, 0, 0, 0.3);
+
+    // Cuando está abierto en móvil
+    &.mobile-open {
+      transform: translateX(0);
+    }
+
+    // Cuando está cerrado en móvil
+    &.mobile-closed {
+      transform: translateX(-100%);
+    }
+
+    // En móvil, siempre mostrar el título
+    .sidebar-title {
+      display: block !important;
+    }
+
+    // En móvil, no usar estado colapsado
+    &.collapsed {
+      width: 280px;
+    }
+  }
+
+  .sidebar-nav {
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    max-height: calc(100vh - 64px);
+  }
+}

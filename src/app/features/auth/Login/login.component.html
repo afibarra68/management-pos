@@ -69,7 +69,7 @@
             type="submit"
             label="Entrar" 
             icon="pi pi-sign-in"
-            [disabled]="form.invalid || loading"
+            [disabled]="!isFormValid"
             [loading]="loading"
             styleClass="login-button">
           </p-button>

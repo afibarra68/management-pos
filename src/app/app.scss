@@ -1,8 +1,19 @@
 .app-container {
   display: flex;
+  min-height: 100vh;
   height: 100vh;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
   position: relative;
+
+  // En resoluciones pequeñas, permitir scroll
+  @media (max-width: 768px) {
+    height: auto;
+    min-height: 100vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+  }
 }
 
 .hidden {
@@ -15,18 +26,52 @@
   flex: 1;
   display: flex;
   flex-direction: column;
+  min-height: 100vh;
   height: 100vh;
   transition: margin-left 0.3s ease, width 0.3s ease;
   will-change: margin-left, width;
   transform: translateZ(0); // Forzar aceleración por hardware
+  overflow-x: hidden;
+  overflow-y: auto;
+  position: relative;
+  z-index: 1; // Asegurar que esté por debajo del sidebar
 
+  // Solo agregar padding-top cuando hay sidebar (header visible)
   &.with-sidebar {
     margin-left: 260px;
     width: calc(100% - 260px);
+    padding-top: 64px; // Espacio para el header absolute
 
     &.sidebar-collapsed {
       margin-left: 60px;
       width: calc(100% - 60px);
+    }
+  }
+
+  // Sin sidebar (página de login), no padding-top
+  &:not(.with-sidebar) {
+    padding-top: 0;
+  }
+
+  // En resoluciones pequeñas, permitir scroll
+  @media (max-width: 768px) {
+    height: auto;
+    min-height: calc(100vh - 64px);
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    margin-left: 0 !important;
+    width: 100% !important;
+    z-index: 1; // Mantener por debajo del sidebar móvil
+
+    // En móviles, solo padding-top si hay sidebar
+    &.with-sidebar {
+      padding-top: 64px;
+    }
+
+    &:not(.with-sidebar) {
+      padding-top: 0;
+      min-height: 100vh;
     }
   }
 }
@@ -34,34 +79,99 @@
 .app-header {
   background-color: #ffffff;
   border-bottom: 1px solid #e9ecef;
-  padding: 0;
+  padding: 0 1rem;
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
   align-items: center;
   height: 64px;
-  position: sticky;
+  position: absolute;
   top: 0;
-  z-index: 100;
+  left: 0;
+  right: 0;
+  width: 100%;
+  z-index: 100; // Por debajo del sidebar (z-index: 1000)
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  transition: left 0.3s ease, width 0.3s ease;
+
+  // Estado inicial: sin sidebar
+  &:not(.with-sidebar) {
+    left: 0;
+    width: 100%;
+  }
+
+  // Con sidebar expandido (260px)
+  &.with-sidebar {
+    left: 260px;
+    width: calc(100% - 260px);
+    transition: left 0.3s ease, width 0.3s ease;
+
+    // Cuando el sidebar se colapsa (60px), el header se expande para ocupar más espacio
+    // El header se mueve de left: 260px a left: 60px, ganando 200px de ancho
+    &.sidebar-collapsed {
+      left: 60px;
+      width: calc(100% - 60px);
+      transition: left 0.3s ease, width 0.3s ease;
+      // El header ahora ocupa 200px más de ancho (de 260px a 60px de margen izquierdo)
+    }
+  }
+
+  // En móviles, el header siempre está a la izquierda y ocupa todo el ancho
+  @media (max-width: 768px) {
+    left: 0 !important;
+    width: 100% !important;
+    padding: 0 0.75rem;
+    justify-content: flex-start; // Alinear a la izquierda para que el botón aparezca primero
+    gap: 0.5rem;
+    z-index: 100; // Mantener por debajo del sidebar móvil (z-index: 1000)
+
+    // Asegurar que el botón del menú sea visible
+    app-mobile-menu-button {
+      display: block !important;
+      visibility: visible !important;
+      opacity: 1 !important;
+      flex-shrink: 0;
+    }
+  }
 }
 
 .main-content {
   flex: 1;
-  height: calc(100vh - 64px);
-  overflow-y: auto;
+  min-height: calc(100vh - 64px);
+  height: auto;
   overflow-x: hidden;
+  overflow-y: visible;
   background-color: #ffffff;
   padding: 0;
+
+  // En resoluciones pequeñas, permitir scroll
+  @media (max-width: 768px) {
+    min-height: calc(100vh - 64px);
+    height: auto;
+    overflow-y: visible;
+    overflow-x: hidden;
+  }
 }
 
 // Responsive
 @media (max-width: 768px) {
+  .app-container {
+    height: auto;
+    min-height: 100vh;
+    overflow-y: auto;
+  }
+
   .content-wrapper {
     margin-left: 0 !important;
     width: 100% !important;
+    height: auto;
+    min-height: calc(100vh - 64px);
+    overflow-y: auto;
   }
 
   .main-content {
     padding: 0;
+    height: auto;
+    min-height: auto;
+    overflow-y: visible;
   }
 }
