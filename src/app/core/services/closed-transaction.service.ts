@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
+import { BuildTicket } from './open-transaction.service';
 
 export interface ClosedTransaction {
   closedTransactionId?: number;
@@ -22,6 +23,7 @@ export interface ClosedTransaction {
   sellerAppUserId?: number | null;
   sellerName?: string | null;
   contractor?: number | null;
+  buildTicket?: BuildTicket;
 }
 
 @Injectable({
@@ -52,6 +54,10 @@ export class ClosedTransactionService {
     return this.http.post<ClosedTransaction>(`${this.apiUrl}/close/${openTransactionId}`, {});
   }
 
+  closeTransactionWithModel(finalizeTransaction: FinalizeTransaction): Observable<ClosedTransaction> {
+    return this.http.post<ClosedTransaction>(`${this.apiUrl}/close`, finalizeTransaction);
+  }
+
   getTodayStats(): Observable<ClosedTransactionStats> {
     return this.http.get<ClosedTransactionStats>(`${this.apiUrl}/today-stats`);
   }
@@ -73,3 +79,8 @@ export interface ClosedTransactionSummary {
   sellerName: string;
 }
 
+export interface FinalizeTransaction {
+  receiptModel: string; // "LIQUID"
+  vehiclePlate: string;
+  codeService: string;
+}

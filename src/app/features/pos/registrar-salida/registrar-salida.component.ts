@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
@@ -8,10 +8,15 @@ import { DialogModule } from 'primeng/dialog';
 import { FormsModule } from '@angular/forms';
 import { ToastModule } from 'primeng/toast';
 import { SharedModule } from '../../../shared/shared-module';
-import { OpenTransactionService } from '../../../core/services/open-transaction.service';
+import { OpenTransactionService, ParamVenta } from '../../../core/services/open-transaction.service';
 import { OpenTransaction } from '../../../core/services/open-transaction.service';
-import { ClosedTransactionService } from '../../../core/services/closed-transaction.service';
+import { EnumResource } from '../../../core/services/enum.service';
+import { ClosedTransactionService, FinalizeTransaction } from '../../../core/services/closed-transaction.service';
 import { MessageService } from 'primeng/api';
+import { AuthService } from '../../../core/services/auth.service';
+import { PrintService } from '../../../core/services/print.service';
+import { environment } from '../../../environments/environment';
+import { Subject, takeUntil, finalize, catchError, of } from 'rxjs';
 
 @Component({
   selector: 'app-registrar-salida',
@@ -33,19 +38,24 @@ import { MessageService } from 'primeng/api';
 export class RegistrarSalidaComponent implements OnInit, OnDestroy {
   form: FormGroup;
   loading = false;
+  loadingParams = false;
   error: string | null = null;
   buscando = false;
   showModal = false;
   vehiculoEncontrado: OpenTransaction | null = null;
   tiempoTranscurrido: string = '';
+  params: ParamVenta | null = null;
   private intervalId: any;
+  private destroy$ = new Subject<void>();
+  private cdr = inject(ChangeDetectorRef);
 
   constructor(
     private fb: FormBuilder,
     private openTransactionService: OpenTransactionService,
     private closedTransactionService: ClosedTransactionService,
     private messageService: MessageService,
-    private cdr: ChangeDetectorRef
+    private authService: AuthService,
+    private printService: PrintService
   ) {
     this.form = this.fb.group({
       vehiclePlate: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(20)]]
@@ -53,13 +63,44 @@ export class RegistrarSalidaComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    // Cargar vehículo si viene de algún lugar
+    this.loadParams();
   }
 
   ngOnDestroy(): void {
     if (this.intervalId) {
       clearInterval(this.intervalId);
     }
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  private loadParams(): void {
+    this.loadingParams = true;
+    this.error = null;
+    this.cdr.detectChanges();
+
+    const serviceCode = environment.serviceCode;
+
+    this.openTransactionService.getParams(serviceCode)
+      .pipe(
+        takeUntil(this.destroy$),
+        finalize(() => {
+          this.loadingParams = false;
+          this.cdr.detectChanges();
+        }),
+        catchError((err) => {
+          console.error('Error al cargar parámetros:', err);
+          this.error = err?.error?.message || 'Error al cargar la configuración del servicio. Por favor, recargue la página.';
+          return of(null);
+        })
+      )
+      .subscribe({
+        next: (params: ParamVenta | null) => {
+          if (params) {
+            this.params = params;
+          }
+        }
+      });
   }
 
   buscarVehiculo(): void {
@@ -114,33 +155,63 @@ export class RegistrarSalidaComponent implements OnInit, OnDestroy {
   }
 
   procesarSalida(): void {
-    if (!this.vehiculoEncontrado || !this.vehiculoEncontrado.openTransactionId) {
+    if (!this.vehiculoEncontrado || !this.vehiculoEncontrado.vehiclePlate) {
       this.error = 'Información de transacción inválida';
+      return;
+    }
+
+    if (!this.params) {
+      this.error = 'No se han cargado los parámetros del servicio. Por favor, recargue la página.';
       return;
     }
 
     this.loading = true;
     this.error = null;
 
-    this.closedTransactionService.closeTransaction(this.vehiculoEncontrado.openTransactionId).subscribe({
-      next: (closedTransaction) => {
-        this.loading = false;
-        this.messageService.add({
-          severity: 'success',
-          summary: 'Éxito',
-          detail: `Salida registrada exitosamente. Total a pagar: $${closedTransaction.totalAmount || 0}`,
-          life: 5000
-        });
-        this.cerrarModal();
-        this.form.reset();
-        // Emitir evento para actualizar el dashboard
-        window.dispatchEvent(new CustomEvent('transactionClosed'));
-      },
-      error: (err) => {
-        this.loading = false;
-        this.error = err?.error?.message || 'Error al procesar la salida del vehículo';
-      }
-    });
+    // Preparar el objeto FinalizeTransaction según el nuevo endpoint
+    const finalizeTransaction: FinalizeTransaction = {
+      receiptModel: 'LIQUID',
+      vehiclePlate: this.vehiculoEncontrado.vehiclePlate.toUpperCase().trim(),
+      codeService: this.params.serviceCode
+    };
+
+    this.closedTransactionService.closeTransactionWithModel(finalizeTransaction)
+      .pipe(
+        takeUntil(this.destroy$),
+        finalize(() => {
+          this.loading = false;
+          this.cdr.detectChanges();
+        })
+      )
+      .subscribe({
+        next: (closedTransaction) => {
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Éxito',
+            detail: `Salida registrada exitosamente. Total a pagar: $${closedTransaction.totalAmount || 0}`,
+            life: 5000
+          });
+
+          // Enviar ticket a imprimir si viene en la respuesta
+          if (closedTransaction.buildTicket) {
+            this.printTicket(closedTransaction.buildTicket);
+          }
+
+          this.cerrarModal();
+          this.form.reset();
+          // Emitir evento para actualizar el dashboard
+          window.dispatchEvent(new CustomEvent('transactionClosed'));
+        },
+        error: (err) => {
+          this.error = err?.error?.message || 'Error al procesar la salida del vehículo';
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: err?.error?.message || 'Error al procesar la salida del vehículo',
+            life: 5000
+          });
+        }
+      });
   }
 
   cancelar(): void {
@@ -157,6 +228,94 @@ export class RegistrarSalidaComponent implements OnInit, OnDestroy {
     }
   }
 
+  /**
+   * Obtiene la descripción del estado para mostrar en el modal
+   * @param status Estado que puede ser string o EnumResource
+   * @returns Descripción del estado o el valor como string
+   */
+  getStatusDisplay(status: string | EnumResource | null | undefined): string {
+    if (!status) {
+      return 'No disponible';
+    }
+
+    if (typeof status === 'string') {
+      // Si es string, retornar directamente
+      return status;
+    }
+
+    // Si es EnumResource, retornar description o id
+    if (typeof status === 'object' && 'description' in status) {
+      return status.description || status.id || 'No disponible';
+    }
+
+    return 'No disponible';
+  }
+
+  /**
+   * Obtiene la descripción del tipo de vehículo para mostrar en el modal
+   * @param tipoVehiculo Tipo de vehículo que puede ser string o EnumResource
+   * @returns Descripción del tipo de vehículo o el valor como string
+   */
+  getTipoVehiculoDisplay(tipoVehiculo: string | EnumResource | null | undefined): string {
+    if (!tipoVehiculo) {
+      return 'No disponible';
+    }
+
+    if (typeof tipoVehiculo === 'string') {
+      return tipoVehiculo;
+    }
+
+    if (typeof tipoVehiculo === 'object' && 'description' in tipoVehiculo) {
+      return tipoVehiculo.description || tipoVehiculo.id || 'No disponible';
+    }
+
+    return 'No disponible';
+  }
+
+  /**
+   * Verifica si el estado es "OPEN" para aplicar estilos
+   * @param status Estado que puede ser string o EnumResource
+   * @returns true si el estado es "OPEN"
+   */
+  isStatusOpen(status: string | EnumResource | null | undefined): boolean {
+    if (!status) {
+      return false;
+    }
+
+    if (typeof status === 'string') {
+      return status === 'OPEN';
+    }
+
+    if (typeof status === 'object' && 'id' in status) {
+      return status.id === 'OPEN';
+    }
+
+    return false;
+  }
+
+  /**
+   * Envía el ticket a imprimir al servicio parking-printing
+   * @param buildTicket Objeto con el template y datos de la impresora
+   */
+  private printTicket(buildTicket: any): void {
+    if (!buildTicket || !buildTicket.template) {
+      console.warn('No se puede imprimir: buildTicket o template no disponible');
+      return;
+    }
+
+    this.printService.printTicket(buildTicket)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          console.log('Ticket de salida enviado a imprimir exitosamente');
+        },
+        error: (err) => {
+          console.error('Error al enviar ticket de salida a imprimir:', err);
+          // No mostramos error al usuario ya que el registro fue exitoso
+          // Solo lo registramos en consola
+        }
+      });
+  }
 
 }
 

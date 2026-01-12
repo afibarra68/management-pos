@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
+import { EnumResource } from './enum.service';
 
 export interface BuildTicket {
   template?: string;
@@ -18,7 +19,7 @@ export interface OpenTransaction {
   endTime?: string | null;
   currency?: number;
   companyCompanyId?: number;
-  status?: string;
+  status?: string | EnumResource;
   billingPriceBillingPriceId?: number | null;
   amount?: number;
   discount?: string | null;
@@ -28,8 +29,20 @@ export interface OpenTransaction {
   serviceTypeServiceTypeId?: number | null;
   appUserAppUserSeller?: number | null;
   vehiclePlate?: string;
-  tipoVehiculo?: string;
+  tipoVehiculo?: EnumResource | string;
+  basicVehicleType?: EnumResource | string;
+  codeService?: string;
   buildTicket?: BuildTicket;
+}
+
+export interface ParamVenta {
+  serviceCode: string;
+  collaboratorId: number;
+  collaboratorDescription: string;
+  companyBusinessServiceId?: number;
+  easyMode: boolean;
+  vehicleType: EnumResource[];
+  basicVehicleType: EnumResource[];
 }
 
 @Injectable({
@@ -60,6 +73,10 @@ export class OpenTransactionService {
     return this.http.get<OpenTransaction>(`${this.apiUrl}/by-plate`, {
       params: { vehiclePlate }
     });
+  }
+
+  getParams(serviceCode: string): Observable<ParamVenta> {
+    return this.http.get<ParamVenta>(`${this.apiUrl}/params/${serviceCode}`);
   }
 }
 

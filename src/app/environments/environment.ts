@@ -8,7 +8,8 @@ export const environment = {
     rowsPerPage: 10,
     activeMocks: false,
     apiAuthJwt: '/mt-api',
-    apiUrl: '/mt-api'
+    apiUrl: '/mt-api',
+    serviceCode: '100000001' // Código de servicio para transacciones de parqueadero
 };
 
 /*

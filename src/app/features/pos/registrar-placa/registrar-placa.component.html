@@ -34,31 +34,58 @@
       </small>
     </div>
 
+    @if (loadingParams) {
     <div class="form-group">
-      <label for="tipoVehiculo">Tipo de Vehículo *</label>
-      <div class="select-wrapper">
-        <app-select-lib
-          formControlName="tipoVehiculo"
-          [options]="tipoVehiculoOptions"
-          label=""
-          [showClear]="false">
-        </app-select-lib>
-      </div>
-      <small 
-        class="p-error" 
-        *ngIf="form.get('tipoVehiculo')?.invalid && form.get('tipoVehiculo')?.touched">
-        <span *ngIf="form.get('tipoVehiculo')?.errors?.['required']">
-          El tipo de vehículo es requerido
-        </span>
-      </small>
+      <app-spinner [loading]="loadingParams" size="small" message="Cargando parámetros del servicio"></app-spinner>
     </div>
+    } @else if (params) {
+      @if (easyMode) {
+      <div class="form-group">
+        <label for="basicVehicleType">Tipo Básico de Vehículo *</label>
+        <div class="select-wrapper">
+          <app-select-lib
+            formControlName="basicVehicleType"
+            [options]="basicVehicleTypeOptions"
+            label=""
+            [showClear]="false">
+          </app-select-lib>
+        </div>
+        <small 
+          class="p-error" 
+          *ngIf="form.get('basicVehicleType')?.invalid && form.get('basicVehicleType')?.touched">
+          <span *ngIf="form.get('basicVehicleType')?.errors?.['required']">
+            El tipo básico de vehículo es requerido
+          </span>
+        </small>
+      </div>
+      } @else {
+      <div class="form-group">
+        <label for="tipoVehiculo">Tipo de Vehículo *</label>
+        <div class="select-wrapper">
+          <app-select-lib
+            formControlName="tipoVehiculo"
+            [options]="tipoVehiculoOptions"
+            label=""
+            [showClear]="false">
+          </app-select-lib>
+        </div>
+        <small 
+          class="p-error" 
+          *ngIf="form.get('tipoVehiculo')?.invalid && form.get('tipoVehiculo')?.touched">
+          <span *ngIf="form.get('tipoVehiculo')?.errors?.['required']">
+            El tipo de vehículo es requerido
+          </span>
+        </small>
+      </div>
+      }
+    }
 
     <div class="form-actions">
       <p-button 
         type="submit"
         label="Registrar Placa"
         icon="pi pi-check"
-        [disabled]="form.invalid || loading"
+        [disabled]="form.invalid || loading || loadingParams || !params"
         [loading]="loading">
       </p-button>
       <p-button 
@@ -66,7 +93,7 @@
         label="Limpiar" 
         icon="pi pi-times"
         (onClick)="form.reset()"
-        [disabled]="loading"
+        [disabled]="loading || loadingParams"
         styleClass="p-button-secondary">
       </p-button>
     </div>

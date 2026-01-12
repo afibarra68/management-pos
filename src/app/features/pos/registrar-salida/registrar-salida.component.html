@@ -77,14 +77,14 @@
           <label>Tiempo Transcurrido:</label>
           <span class="value highlight">{{ tiempoTranscurrido || vehiculoEncontrado.timeElapsed || 'Calculando...' }}</span>
         </div>
-        <div class="info-item" *ngIf="vehiculoEncontrado.tipoVehiculo">
+        <div class="info-item" *ngIf="vehiculoEncontrado.tipoVehiculo || vehiculoEncontrado.basicVehicleType">
           <label>Tipo de Vehículo:</label>
-          <span class="value">{{ vehiculoEncontrado.tipoVehiculo }}</span>
+          <span class="value">{{ getTipoVehiculoDisplay(vehiculoEncontrado.tipoVehiculo || vehiculoEncontrado.basicVehicleType) }}</span>
         </div>
         <div class="info-item">
           <label>Estado:</label>
-          <span class="value status-badge" [class.status-open]="vehiculoEncontrado.status === 'OPEN'">
-            {{ vehiculoEncontrado.status }}
+          <span class="value status-badge" [class.status-open]="isStatusOpen(vehiculoEncontrado.status)">
+            {{ getStatusDisplay(vehiculoEncontrado.status) }}
           </span>
         </div>
       </div>

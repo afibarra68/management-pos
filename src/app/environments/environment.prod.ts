@@ -6,6 +6,7 @@ export const environment = {
     activeMocks: false,
     // URL del backend en Cloud Run (actualizar con la URL real después del despliegue)
     apiAuthJwt: 'https://parking-app-backend-XXXXX.run.app',
-    apiUrl: 'https://parking-app-backend-XXXXX.run.app'
+    apiUrl: 'https://parking-app-backend-XXXXX.run.app',
+    serviceCode: '100000001' // Código de servicio para transacciones de parqueadero
 };
 
