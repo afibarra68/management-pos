@@ -16,19 +16,19 @@
         [class.ng-invalid]="form.get('vehiclePlate')?.invalid && form.get('vehiclePlate')?.touched"
         (input)="form.patchValue({vehiclePlate: form.value.vehiclePlate.toUpperCase()})"
         maxlength="20">
-      <small 
-        class="p-error" 
-        *ngIf="form.get('vehiclePlate')?.invalid && form.get('vehiclePlate')?.touched">
-        <span *ngIf="form.get('vehiclePlate')?.errors?.['required']">
-          La placa es requerida
-        </span>
-        <span *ngIf="form.get('vehiclePlate')?.errors?.['minlength']">
-          La placa debe tener al menos 3 caracteres
-        </span>
-        <span *ngIf="form.get('vehiclePlate')?.errors?.['maxlength']">
-          La placa no puede tener más de 20 caracteres
-        </span>
-      </small>
+      @if (form.get('vehiclePlate')?.invalid && form.get('vehiclePlate')?.touched) {
+        <small class="p-error">
+          @if (form.get('vehiclePlate')?.errors?.['required']) {
+            <span>La placa es requerida</span>
+          }
+          @if (form.get('vehiclePlate')?.errors?.['minlength']) {
+            <span>La placa debe tener al menos 3 caracteres</span>
+          }
+          @if (form.get('vehiclePlate')?.errors?.['maxlength']) {
+            <span>La placa no puede tener más de 20 caracteres</span>
+          }
+        </small>
+      }
     </div>
 
     <div class="form-actions">
@@ -36,20 +36,20 @@
         type="submit"
         label="Buscar Vehículo"
         icon="pi pi-search"
-        [disabled]="form.invalid || buscando"
-        [loading]="buscando">
+        [disabled]="form.invalid || buscando">
       </p-button>
     </div>
   </form>
 
-  <p-message 
-    *ngIf="error" 
-    severity="error" 
-    [text]="error"
-    [closable]="true"
-    (onClose)="error = null"
-    [style]="{'margin-top': '1rem'}">
-  </p-message>
+  @if (error) {
+    <p-message 
+      severity="error" 
+      [text]="error"
+      [closable]="true"
+      (onClose)="error = null"
+      [style]="{'margin-top': '1rem'}">
+    </p-message>
+  }
 
   <p-dialog 
     [visible]="showModal"
@@ -59,7 +59,8 @@
     [dismissableMask]="true"
     [style]="{width: '600px'}"
     (onHide)="cerrarModal()">
-    <div class="vehicle-info-dialog" *ngIf="vehiculoEncontrado">
+    @if (vehiculoEncontrado) {
+      <div class="vehicle-info-dialog">
       <div class="info-grid">
         <div class="info-item">
           <label>Placa:</label>
@@ -77,10 +78,12 @@
           <label>Tiempo Transcurrido:</label>
           <span class="value highlight">{{ tiempoTranscurrido || vehiculoEncontrado.timeElapsed || 'Calculando...' }}</span>
         </div>
-        <div class="info-item" *ngIf="vehiculoEncontrado.tipoVehiculo || vehiculoEncontrado.basicVehicleType">
-          <label>Tipo de Vehículo:</label>
-          <span class="value">{{ getTipoVehiculoDisplay(vehiculoEncontrado.tipoVehiculo || vehiculoEncontrado.basicVehicleType) }}</span>
-        </div>
+        @if (vehiculoEncontrado.tipoVehiculo || vehiculoEncontrado.basicVehicleType) {
+          <div class="info-item">
+            <label>Tipo de Vehículo:</label>
+            <span class="value">{{ getTipoVehiculoDisplay(vehiculoEncontrado.tipoVehiculo || vehiculoEncontrado.basicVehicleType) }}</span>
+          </div>
+        }
         <div class="info-item">
           <label>Estado:</label>
           <span class="value status-badge" [class.status-open]="isStatusOpen(vehiculoEncontrado.status)">
@@ -89,15 +92,17 @@
         </div>
       </div>
 
-      <p-message 
-        *ngIf="error" 
-        severity="error" 
-        [text]="error"
-        [closable]="true"
-        (onClose)="error = null"
-        [style]="{'margin-top': '1rem'}">
-      </p-message>
-    </div>
+      @if (error) {
+        <p-message 
+          severity="error" 
+          [text]="error"
+          [closable]="true"
+          (onClose)="error = null"
+          [style]="{'margin-top': '1rem'}">
+        </p-message>
+      }
+      </div>
+    }
 
     <ng-template pTemplate="footer">
       <div class="dialog-footer">
@@ -113,7 +118,6 @@
           icon="pi pi-check"
           (onClick)="procesarSalida()"
           [disabled]="loading"
-          [loading]="loading"
           styleClass="p-button-success">
         </p-button>
       </div>

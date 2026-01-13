@@ -1,11 +1,12 @@
 <div class="app-container">
-  <p-toast></p-toast>
-  <p-confirmDialog></p-confirmDialog>
   <app-sidebar [class.hidden]="!showSidebar()"></app-sidebar>
-  <header class="app-header" [class.hidden]="!showSidebar()" [class.with-sidebar]="showSidebar()"
+  <header 
+    class="app-header" 
+    [class.hidden]="!showSidebar()"
+    [class.with-sidebar]="showSidebar()"
     [class.sidebar-collapsed]="showSidebar() && sidebarCollapsed()">
     @if (showSidebar()) {
-    <app-mobile-menu-button></app-mobile-menu-button>
+      <app-mobile-menu-button></app-mobile-menu-button>
     }
     <app-user-control></app-user-control>
   </header>
@@ -14,4 +15,6 @@
       <router-outlet />
     </main>
   </div>
+  <p-confirmDialog></p-confirmDialog>
+  <p-toast></p-toast>
 </div>

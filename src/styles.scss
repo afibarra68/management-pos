@@ -64,6 +64,15 @@ body {
   overflow-y: auto;
 }
 
+// Deshabilitar scroll cuando está en la página de login
+body.login-page,
+body.login-page html {
+  overflow: hidden !important;
+  height: 100vh !important;
+  position: fixed;
+  width: 100%;
+}
+
 // En resoluciones pequeñas, permitir scroll completo
 @media (max-width: 768px) {
 

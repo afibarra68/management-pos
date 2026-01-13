@@ -9,16 +9,8 @@
   <!-- Dashboard View -->
   @if (currentView === 'dashboard') {
     <div class="dashboard-content">
-      <!-- Loading State (solo cuando está cargando y no hay datos previos) -->
-      @if (loading && !stats) {
-        <div class="loading-state">
-          <i class="pi pi-spin pi-spinner" style="font-size: 2rem"></i>
-          <p>Cargando estadísticas...</p>
-        </div>
-      }
-
       <!-- Error State -->
-      @if (error && !loading) {
+      @if (error) {
         <div class="error-state">
           <i class="pi pi-exclamation-triangle" style="font-size: 2rem; color: var(--red-500)"></i>
           <p>{{ error }}</p>
@@ -68,7 +60,6 @@
               [rows]="10"
               [showCurrentPageReport]="true"
               currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} transacciones"
-              [loading]="loading"
               styleClass="p-datatable-sm">
               <ng-template pTemplate="header">
                 <tr>

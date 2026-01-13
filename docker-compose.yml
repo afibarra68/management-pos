@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  management-pos:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: management-pos-app
+    ports:
+      - "4000:4000"
+    restart: unless-stopped
+    networks:
+      - management-pos-network
+    environment:
+      - NODE_ENV=production
+      - PORT=4000
+      - API_URL=http://10.116.0.5:9000
+
+networks:
+  management-pos-network:
+    driver: bridge

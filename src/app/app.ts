@@ -24,10 +24,12 @@ export class App {
   private sidebarService = inject(SidebarService);
 
   // Usar computed para derivar el estado del sidebar colapsado directamente del servicio
+  // Esto se actualiza automáticamente cuando el sidebar cambia
   readonly sidebarCollapsed = computed(() => this.sidebarService.collapsed());
 
   // Signal para controlar la visibilidad del sidebar
-  private readonly isAuthenticated = signal(false);
+  // Inicializar con el estado de autenticación actual para evitar que el login aparezca brevemente
+  private readonly isAuthenticated = signal(this.authService.isAuthenticated());
   private readonly currentRoute = signal<string>('');
 
   // Computed signal para mostrar/ocultar sidebar
@@ -36,6 +38,22 @@ export class App {
     const route = this.currentRoute();
     const isAuthPage = route.startsWith('/auth') || route === '/login';
     return auth && !isAuthPage;
+  });
+
+  // Computed signal para calcular el ancho del header basado en el estado del sidebar
+  readonly headerWidth = computed(() => {
+    if (!this.showSidebar()) {
+      return '100%';
+    }
+    return this.sidebarCollapsed() ? 'calc(100% - 60px)' : 'calc(100% - 260px)';
+  });
+
+  // Computed signal para calcular la posición izquierda del header
+  readonly headerLeft = computed(() => {
+    if (!this.showSidebar()) {
+      return '0';
+    }
+    return this.sidebarCollapsed() ? '60px' : '260px';
   });
 
   constructor() {

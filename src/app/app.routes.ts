@@ -6,7 +6,8 @@ import { UnderConstructionComponent } from './features/under-construction/under-
 export const routes: Routes = [
   {
     path: '',
-    component: UnderConstructionComponent
+    redirectTo: '/pos',
+    pathMatch: 'full'
   },
   {
     path: 'auth',
@@ -24,6 +25,6 @@ export const routes: Routes = [
   },
   {
     path: '**',
-    component: UnderConstructionComponent
+    redirectTo: '/pos'
   }
 ];

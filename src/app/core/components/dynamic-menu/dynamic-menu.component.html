@@ -1,34 +1,66 @@
 <ul class="menu-list" [class.collapsed]="collapsed() && !isMobile()">
-  @for (item of menuItems(); track item.routerLink) {
-  <li class="menu-item">
-    <a [routerLink]="item.routerLink" routerLinkActive="active" [routerLinkActiveOptions]="{exact: false}"
-      class="menu-link" [title]="(collapsed() && !isMobile()) ? item.label : ''" (click)="onMenuClick()">
-      @if (item.icon) {
-      <i [class]="item.icon" class="menu-icon"></i>
-      }
-      @if (!collapsed() || isMobile()) {
-      <span class="menu-label">{{ item.label }}</span>
-      }
-      @if (item.badge && (!collapsed() || isMobile())) {
-      <span [class]="item.badgeClass || 'menu-badge'">
-        {{ item.badge }}
-      </span>
-      }
-    </a>
-    @if (item.items && item.items.length > 0 && (!collapsed() || isMobile())) {
-    <ul class="submenu">
-      @for (subItem of item.items; track subItem.routerLink) {
-      <li class="submenu-item">
-        <a [routerLink]="subItem.routerLink" routerLinkActive="active" class="submenu-link" (click)="onMenuClick()">
-          @if (subItem.icon) {
-          <i [class]="subItem.icon" class="menu-icon"></i>
+  @for (item of menuItems(); track item.id || $index) {
+    <li class="menu-item" [class.has-submenu]="hasSubmenu(item)" [class.expanded]="isExpanded(item)">
+      @if (item.routerLink && !hasSubmenu(item)) {
+        <a 
+          [routerLink]="item.routerLink" 
+          routerLinkActive="active"
+          [routerLinkActiveOptions]="{exact: false}"
+          class="menu-link"
+          [title]="(collapsed() && !isMobile()) ? item.label : ''"
+          (click)="onMenuClick()">
+          @if (item.icon) {
+            <i [class]="item.icon" class="menu-icon"></i>
           }
-          <span>{{ subItem.label }}</span>
+          @if (!collapsed() || isMobile()) {
+            <span class="menu-label">{{ item.label }}</span>
+          }
+          @if (item.badge && (!collapsed() || isMobile())) {
+            <span [class]="item.badgeClass || 'menu-badge'">
+              {{ item.badge }}
+            </span>
+          }
         </a>
-      </li>
+      } @else {
+        <span 
+          class="menu-link menu-parent" 
+          [class.expandable]="hasSubmenu(item)"
+          [title]="(collapsed() && !isMobile()) ? item.label : ''"
+          (click)="onParentClick($event, item)">
+          @if (item.icon) {
+            <i [class]="item.icon" class="menu-icon"></i>
+          }
+          @if (!collapsed() || isMobile()) {
+            <span class="menu-label">{{ item.label }}</span>
+          }
+          @if (hasSubmenu(item) && (!collapsed() || isMobile())) {
+            <i 
+              class="pi pi-chevron-right menu-arrow" 
+              [class.rotated]="isExpanded(item)">
+            </i>
+          }
+        </span>
       }
-    </ul>
-    }
-  </li>
+      @if (hasSubmenu(item) && (!collapsed() || isMobile())) {
+        <ul class="submenu" [class.expanded]="isExpanded(item)">
+          @for (subItem of item.items; track subItem.routerLink || subItem.label || $index) {
+            @if (subItem.visible !== false) {
+              <li class="submenu-item">
+                <a 
+                  [routerLink]="subItem.routerLink" 
+                  routerLinkActive="active"
+                  class="submenu-link"
+                  (click)="onMenuClick()">
+                  @if (subItem.icon) {
+                    <i [class]="subItem.icon" class="menu-icon"></i>
+                  }
+                  <span>{{ subItem.label }}</span>
+                </a>
+              </li>
+            }
+          }
+        </ul>
+      }
+    </li>
   }
 </ul>

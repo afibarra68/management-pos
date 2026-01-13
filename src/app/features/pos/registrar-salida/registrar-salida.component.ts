@@ -13,6 +13,7 @@ import { OpenTransaction } from '../../../core/services/open-transaction.service
 import { EnumResource } from '../../../core/services/enum.service';
 import { ClosedTransactionService, FinalizeTransaction } from '../../../core/services/closed-transaction.service';
 import { MessageService } from 'primeng/api';
+import { NotificationService } from '../../../core/services/notification.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { PrintService } from '../../../core/services/print.service';
 import { environment } from '../../../environments/environment';
@@ -48,6 +49,7 @@ export class RegistrarSalidaComponent implements OnInit, OnDestroy {
   private intervalId: any;
   private destroy$ = new Subject<void>();
   private cdr = inject(ChangeDetectorRef);
+  private notificationService = inject(NotificationService);
 
   constructor(
     private fb: FormBuilder,
@@ -132,7 +134,23 @@ export class RegistrarSalidaComponent implements OnInit, OnDestroy {
       },
       error: (err) => {
         this.buscando = false;
-        this.error = err?.error?.message || 'No se encontró un vehículo con esa placa en estado abierto';
+        const status = err?.status;
+        const errorResponse = err?.error;
+        
+        // Si es error 412 (PRECONDITION_FAILED), mostrar el mensaje del backend
+        if (status === 412) {
+          const errorMessage = errorResponse?.message || errorResponse?.error || 'Error de validación';
+          const errorDetails = errorResponse?.details || errorResponse?.detail;
+          
+          // Mostrar notificación con el mensaje del backend
+          this.notificationService.showPreconditionFailed(errorMessage, errorDetails);
+          this.error = errorMessage;
+        } else {
+          // Para otros errores, mostrar mensaje genérico
+          const genericMessage = 'Ha ocurrido un error. Por favor, consulte al administrador.';
+          this.notificationService.error(genericMessage);
+          this.error = err?.error?.message || 'No se encontró un vehículo con esa placa en estado abierto';
+        }
         this.cdr.detectChanges();
       }
     });
@@ -203,13 +221,23 @@ export class RegistrarSalidaComponent implements OnInit, OnDestroy {
           window.dispatchEvent(new CustomEvent('transactionClosed'));
         },
         error: (err) => {
-          this.error = err?.error?.message || 'Error al procesar la salida del vehículo';
-          this.messageService.add({
-            severity: 'error',
-            summary: 'Error',
-            detail: err?.error?.message || 'Error al procesar la salida del vehículo',
-            life: 5000
-          });
+          const status = err?.status;
+          const errorResponse = err?.error;
+          
+          // Si es error 412 (PRECONDITION_FAILED), mostrar el mensaje del backend
+          if (status === 412) {
+            const errorMessage = errorResponse?.message || errorResponse?.error || 'Error de validación';
+            const errorDetails = errorResponse?.details || errorResponse?.detail;
+            
+            // Mostrar notificación con el mensaje del backend
+            this.notificationService.showPreconditionFailed(errorMessage, errorDetails);
+            this.error = errorMessage;
+          } else {
+            // Para otros errores, mostrar mensaje genérico
+            const genericMessage = 'Ha ocurrido un error. Por favor, consulte al administrador.';
+            this.notificationService.error(genericMessage);
+            this.error = err?.error?.message || 'Error al procesar la salida del vehículo';
+          }
         }
       });
   }

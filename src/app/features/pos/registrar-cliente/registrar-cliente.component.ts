@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -10,6 +10,7 @@ import { FormsModule } from '@angular/forms';
 import { SharedModule } from '../../../shared/shared-module';
 import { ClientService, Client } from '../../../core/services/client.service';
 import { UtilsService } from '../../../core/services/utils.service';
+import { NotificationService } from '../../../core/services/notification.service';
 
 @Component({
   selector: 'app-registrar-cliente',
@@ -32,6 +33,7 @@ export class RegistrarClienteComponent implements OnInit {
   loading = false;
   error: string | null = null;
   success: string | null = null;
+  private notificationService = inject(NotificationService);
   typeIdentityOptions = [
     { label: 'Cédula de Ciudadanía', value: 'CC' },
     { label: 'Cédula de Extranjería', value: 'CE' },
@@ -97,11 +99,23 @@ export class RegistrarClienteComponent implements OnInit {
       },
       error: (err) => {
         this.loading = false;
-        this.error = err?.error?.message || 'Error al registrar el cliente';
-        this.utilsService.showError(
-          err?.error?.message || 'Error al registrar el cliente',
-          'Error en el Registro'
-        );
+        const status = err?.status;
+        const errorResponse = err?.error;
+        
+        // Si es error 412 (PRECONDITION_FAILED), mostrar el mensaje del backend
+        if (status === 412) {
+          const errorMessage = errorResponse?.message || errorResponse?.error || 'Error de validación';
+          const errorDetails = errorResponse?.details || errorResponse?.detail;
+          
+          // Mostrar notificación con el mensaje del backend
+          this.notificationService.showPreconditionFailed(errorMessage, errorDetails);
+          this.error = errorMessage;
+        } else {
+          // Para otros errores, mostrar mensaje genérico
+          const genericMessage = 'Ha ocurrido un error. Por favor, consulte al administrador.';
+          this.notificationService.error(genericMessage);
+          this.error = err?.error?.message || 'Error al registrar el cliente';
+        }
       }
     });
   }

@@ -4,6 +4,9 @@ import { Router } from '@angular/router';
 import { isPlatformBrowser } from '@angular/common';
 import { catchError, throwError } from 'rxjs';
 
+// Flag para evitar múltiples redirecciones simultáneas
+let isRedirecting = false;
+
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const router = inject(Router);
   const platformId = inject(PLATFORM_ID);
@@ -28,11 +31,25 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
     catchError((error) => {
       // Solo manejar errores en el navegador
       if (isBrowser) {
-        // Si el error es 401 (No autorizado), redirigir al login
-        if (error.status === 401) {
+        // Excluir /auth/validate y /auth/login del manejo automático de 401
+        const isValidateEndpoint = req.url.includes('/auth/validate');
+        const isLoginEndpoint = req.url.includes('/auth/login');
+        const currentPath = router.url;
+        const isAlreadyOnLogin = currentPath.startsWith('/auth/login');
+        
+        // Si el error es 401 (No autorizado) y NO es el endpoint de validación/login
+        if (error.status === 401 && !isValidateEndpoint && !isLoginEndpoint && !isRedirecting) {
+          // Limpiar el token y redirigir al login
           localStorage.removeItem('auth_token');
           localStorage.removeItem('user_data');
-          router.navigate(['/auth/login']);
+          
+          isRedirecting = true;
+          router.navigate(['/auth/login'], { replaceUrl: true }).then(() => {
+            // Resetear el flag después de un breve delay
+            setTimeout(() => {
+              isRedirecting = false;
+            }, 1000);
+          });
         }
       }
 

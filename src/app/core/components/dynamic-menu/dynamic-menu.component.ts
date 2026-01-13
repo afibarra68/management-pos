@@ -51,5 +51,31 @@ export class DynamicMenuComponent {
       this.sidebarService.closeMobileMenu();
     }
   }
+
+  /**
+   * Verifica si un item tiene submenu
+   */
+  hasSubmenu(item: MenuItem): boolean {
+    return !!(item.items && item.items.length > 0);
+  }
+
+  /**
+   * Maneja el click en un item padre con submenu
+   * Toggle el estado expandido/colapsado
+   */
+  onParentClick(event: Event, item: MenuItem): void {
+    if (item.items && item.items.length > 0 && item.id) {
+      event.preventDefault();
+      event.stopPropagation();
+      this.menuService.toggleMenuItem(item.id);
+    }
+  }
+
+  /**
+   * Verifica si un item está expandido
+   */
+  isExpanded(item: MenuItem): boolean {
+    return item.expanded === true;
+  }
 }
 

@@ -16,29 +16,27 @@
         [class.ng-invalid]="form.get('vehiclePlate')?.invalid && form.get('vehiclePlate')?.touched"
         (input)="form.patchValue({vehiclePlate: form.value.vehiclePlate.toUpperCase()})"
         maxlength="20">
-      <small 
-        class="p-error" 
-        *ngIf="form.get('vehiclePlate')?.invalid && form.get('vehiclePlate')?.touched">
-        <span *ngIf="form.get('vehiclePlate')?.errors?.['required']">
-          La placa es requerida
-        </span>
-        <span *ngIf="form.get('vehiclePlate')?.errors?.['minlength']">
-          La placa debe tener al menos 3 caracteres
-        </span>
-        <span *ngIf="form.get('vehiclePlate')?.errors?.['maxlength']">
-          La placa no puede tener más de 20 caracteres
-        </span>
-      </small>
-      <small class="p-text-secondary" *ngIf="form.get('vehiclePlate')?.valid">
-        La fecha y hora de inicio se registrarán automáticamente
-      </small>
+      @if (form.get('vehiclePlate')?.invalid && form.get('vehiclePlate')?.touched) {
+        <small class="p-error">
+          @if (form.get('vehiclePlate')?.errors?.['required']) {
+            <span>La placa es requerida</span>
+          }
+          @if (form.get('vehiclePlate')?.errors?.['minlength']) {
+            <span>La placa debe tener al menos 3 caracteres</span>
+          }
+          @if (form.get('vehiclePlate')?.errors?.['maxlength']) {
+            <span>La placa no puede tener más de 20 caracteres</span>
+          }
+        </small>
+      }
+      @if (form.get('vehiclePlate')?.valid) {
+        <small class="p-text-secondary">
+          La fecha y hora de inicio se registrarán automáticamente
+        </small>
+      }
     </div>
 
-    @if (loadingParams) {
-    <div class="form-group">
-      <app-spinner [loading]="loadingParams" size="small" message="Cargando parámetros del servicio"></app-spinner>
-    </div>
-    } @else if (params) {
+    @if (params) {
       @if (easyMode) {
       <div class="form-group">
         <label for="basicVehicleType">Tipo Básico de Vehículo *</label>
@@ -50,13 +48,13 @@
             [showClear]="false">
           </app-select-lib>
         </div>
-        <small 
-          class="p-error" 
-          *ngIf="form.get('basicVehicleType')?.invalid && form.get('basicVehicleType')?.touched">
-          <span *ngIf="form.get('basicVehicleType')?.errors?.['required']">
-            El tipo básico de vehículo es requerido
-          </span>
-        </small>
+        @if (form.get('basicVehicleType')?.invalid && form.get('basicVehicleType')?.touched) {
+          <small class="p-error">
+            @if (form.get('basicVehicleType')?.errors?.['required']) {
+              <span>El tipo básico de vehículo es requerido</span>
+            }
+          </small>
+        }
       </div>
       } @else {
       <div class="form-group">
@@ -69,13 +67,13 @@
             [showClear]="false">
           </app-select-lib>
         </div>
-        <small 
-          class="p-error" 
-          *ngIf="form.get('tipoVehiculo')?.invalid && form.get('tipoVehiculo')?.touched">
-          <span *ngIf="form.get('tipoVehiculo')?.errors?.['required']">
-            El tipo de vehículo es requerido
-          </span>
-        </small>
+        @if (form.get('tipoVehiculo')?.invalid && form.get('tipoVehiculo')?.touched) {
+          <small class="p-error">
+            @if (form.get('tipoVehiculo')?.errors?.['required']) {
+              <span>El tipo de vehículo es requerido</span>
+            }
+          </small>
+        }
       </div>
       }
     }
@@ -85,8 +83,7 @@
         type="submit"
         label="Registrar Placa"
         icon="pi pi-check"
-        [disabled]="form.invalid || loading || loadingParams || !params"
-        [loading]="loading">
+        [disabled]="form.invalid || loading || loadingParams || !params">
       </p-button>
       <p-button 
         type="button"
@@ -99,21 +96,23 @@
     </div>
   </form>
 
-  <p-message 
-    *ngIf="error" 
-    severity="error" 
-    [text]="error"
-    [closable]="true"
-    (onClose)="error = null"
-    [style]="{'margin-top': '1rem'}">
-  </p-message>
+  @if (error) {
+    <p-message 
+      severity="error" 
+      [text]="error"
+      [closable]="true"
+      (onClose)="error = null"
+      [style]="{'margin-top': '1rem'}">
+    </p-message>
+  }
 
-  <p-message 
-    *ngIf="success" 
-    severity="success" 
-    [text]="success"
-    [closable]="true"
-    (onClose)="success = null"
-    [style]="{'margin-top': '1rem'}">
-  </p-message>
+  @if (success) {
+    <p-message 
+      severity="success" 
+      [text]="success"
+      [closable]="true"
+      (onClose)="success = null"
+      [style]="{'margin-top': '1rem'}">
+    </p-message>
+  }
 </div>

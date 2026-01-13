@@ -1,20 +1,21 @@
 .sidebar {
   width: 260px;
   height: 100vh;
-  background-color: #ffffff;
-  border-right: 1px solid #e9ecef;
+  background: linear-gradient(180deg, #1a3a5f 0%, #2c5282 50%, #1a3a5f 100%);
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
   display: flex;
   flex-direction: column;
   transition: width 0.3s ease;
   position: fixed;
   left: 0;
   top: 0;
-  z-index: 1000;
-  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+  z-index: 1000; // Por encima del header (z-index: 100) y content-wrapper (z-index: 1)
+  box-shadow: 2px 0 12px rgba(0, 0, 0, 0.25);
   will-change: width;
   transform: translateZ(0); // Forzar aceleración por hardware
   contain: layout style paint; // Aislar el sidebar del resto del layout
   isolation: isolate; // Crear un nuevo contexto de apilamiento
+  pointer-events: auto; // Asegurar que sea clickeable
 
   &.collapsed {
     width: 60px;
@@ -30,14 +31,17 @@
   align-items: center;
   justify-content: space-between;
   padding: 1.25rem 1rem;
-  border-bottom: 1px solid #e9ecef;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
   min-height: 64px;
+  background: rgba(0, 0, 0, 0.1);
 
   .sidebar-title {
     margin: 0;
     font-size: 1.25rem;
     font-weight: 600;
-    color: #212529;
+    color: #ffffff;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    letter-spacing: 0.5px;
   }
 
   .toggle-btn {
@@ -48,30 +52,32 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background-color: #f8f9fa;
-    border: 1px solid #dee2e6;
+    background-color: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.2);
     border-radius: 50%;
     cursor: pointer;
     transition: all 0.2s ease;
     padding: 0;
     flex-shrink: 0;
-
+    backdrop-filter: blur(10px);
+    
     i {
       font-size: 1.25rem;
-      color: #495057;
+      color: #ffffff;
     }
-
+    
     &:hover {
-      background-color: #e9ecef;
-      border-color: #adb5bd;
-
+      background-color: rgba(255, 255, 255, 0.25);
+      border-color: rgba(255, 255, 255, 0.3);
+      transform: scale(1.05);
+      
       i {
-        color: #212529;
+        color: #e3f2fd;
       }
     }
-
+    
     &:active {
-      background-color: #dee2e6;
+      background-color: rgba(255, 255, 255, 0.2);
       transform: scale(0.95);
     }
   }
@@ -79,25 +85,8 @@
 
 .sidebar-nav {
   flex: 1;
-  overflow-y: auto;
+  overflow: visible;
   padding: 1rem 0.5rem;
-
-  &::-webkit-scrollbar {
-    width: 6px;
-  }
-
-  &::-webkit-scrollbar-track {
-    background: #f1f1f1;
-  }
-
-  &::-webkit-scrollbar-thumb {
-    background: #c1c1c1;
-    border-radius: 3px;
-
-    &:hover {
-      background: #a8a8a8;
-    }
-  }
 }
 
 // Overlay de fondo oscuro para móviles
@@ -131,28 +120,28 @@
     transition: transform 0.3s ease;
     z-index: 1000;
     box-shadow: 4px 0 20px rgba(0, 0, 0, 0.3);
-
+    
     // Cuando está abierto en móvil
     &.mobile-open {
       transform: translateX(0);
     }
-
+    
     // Cuando está cerrado en móvil
     &.mobile-closed {
       transform: translateX(-100%);
     }
-
+    
     // En móvil, siempre mostrar el título
     .sidebar-title {
       display: block !important;
     }
-
+    
     // En móvil, no usar estado colapsado
     &.collapsed {
       width: 280px;
     }
   }
-
+  
   .sidebar-nav {
     overflow-y: auto;
     overflow-x: hidden;

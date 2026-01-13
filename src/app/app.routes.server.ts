@@ -6,7 +6,15 @@ export const serverRoutes: ServerRoute[] = [
     renderMode: RenderMode.Server
   },
   {
+    // Las rutas de POS NO deben prerenderizarse porque requieren autenticación
+    // del lado del cliente (localStorage). Se renderizan solo en el cliente.
+    path: 'pos/**',
+    renderMode: RenderMode.Client // Renderizar solo en el cliente, no en el servidor
+  },
+  {
+    // Solo prerenderizar rutas públicas que no requieren autenticación
+    // Las rutas protegidas se renderizan en el cliente
     path: '**',
-    renderMode: RenderMode.Prerender
+    renderMode: RenderMode.Client // Cambiar a Client para evitar problemas con autenticación
   }
 ];

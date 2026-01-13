@@ -16,19 +16,19 @@
           placeholder="Ej: Juan Pérez"
           [class.ng-invalid]="form.get('fullName')?.invalid && form.get('fullName')?.touched"
           maxlength="100">
-        <small 
-          class="p-error" 
-          *ngIf="form.get('fullName')?.invalid && form.get('fullName')?.touched">
-          <span *ngIf="form.get('fullName')?.errors?.['required']">
-            El nombre completo es requerido
-          </span>
-          <span *ngIf="form.get('fullName')?.errors?.['minlength']">
-            El nombre debe tener al menos 3 caracteres
-          </span>
-          <span *ngIf="form.get('fullName')?.errors?.['maxlength']">
-            El nombre no puede tener más de 100 caracteres
-          </span>
-        </small>
+        @if (form.get('fullName')?.invalid && form.get('fullName')?.touched) {
+          <small class="p-error">
+            @if (form.get('fullName')?.errors?.['required']) {
+              <span>El nombre completo es requerido</span>
+            }
+            @if (form.get('fullName')?.errors?.['minlength']) {
+              <span>El nombre debe tener al menos 3 caracteres</span>
+            }
+            @if (form.get('fullName')?.errors?.['maxlength']) {
+              <span>El nombre no puede tener más de 100 caracteres</span>
+            }
+          </small>
+        }
       </div>
 
       <div class="form-group">
@@ -41,13 +41,13 @@
             [showClear]="false">
           </app-select-lib>
         </div>
-        <small 
-          class="p-error" 
-          *ngIf="form.get('typeIdentity')?.invalid && form.get('typeIdentity')?.touched">
-          <span *ngIf="form.get('typeIdentity')?.errors?.['required']">
-            El tipo de identificación es requerido
-          </span>
-        </small>
+        @if (form.get('typeIdentity')?.invalid && form.get('typeIdentity')?.touched) {
+          <small class="p-error">
+            @if (form.get('typeIdentity')?.errors?.['required']) {
+              <span>El tipo de identificación es requerido</span>
+            }
+          </small>
+        }
       </div>
 
       <div class="form-group">
@@ -60,19 +60,19 @@
           placeholder="Ej: 1234567890"
           [class.ng-invalid]="form.get('numberIdentity')?.invalid && form.get('numberIdentity')?.touched"
           maxlength="20">
-        <small 
-          class="p-error" 
-          *ngIf="form.get('numberIdentity')?.invalid && form.get('numberIdentity')?.touched">
-          <span *ngIf="form.get('numberIdentity')?.errors?.['required']">
-            El número de identificación es requerido
-          </span>
-          <span *ngIf="form.get('numberIdentity')?.errors?.['minlength']">
-            El número debe tener al menos 5 caracteres
-          </span>
-          <span *ngIf="form.get('numberIdentity')?.errors?.['maxlength']">
-            El número no puede tener más de 20 caracteres
-          </span>
-        </small>
+        @if (form.get('numberIdentity')?.invalid && form.get('numberIdentity')?.touched) {
+          <small class="p-error">
+            @if (form.get('numberIdentity')?.errors?.['required']) {
+              <span>El número de identificación es requerido</span>
+            }
+            @if (form.get('numberIdentity')?.errors?.['minlength']) {
+              <span>El número debe tener al menos 5 caracteres</span>
+            }
+            @if (form.get('numberIdentity')?.errors?.['maxlength']) {
+              <span>El número no puede tener más de 20 caracteres</span>
+            }
+          </small>
+        }
       </div>
 
       <div class="form-group">
@@ -107,8 +107,7 @@
           type="submit"
           label="Registrar Cliente"
           icon="pi pi-check"
-          [disabled]="form.invalid || loading"
-          [loading]="loading">
+          [disabled]="form.invalid || loading">
         </p-button>
         <p-button 
           type="button"
@@ -122,22 +121,24 @@
     </form>
   </p-card>
 
-  <p-message 
-    *ngIf="error" 
-    severity="error" 
-    [text]="error"
-    [closable]="true"
-    (onClose)="error = null"
-    [style]="{'margin-top': '1rem'}">
-  </p-message>
+  @if (error) {
+    <p-message 
+      severity="error" 
+      [text]="error"
+      [closable]="true"
+      (onClose)="error = null"
+      [style]="{'margin-top': '1rem'}">
+    </p-message>
+  }
 
-  <p-message 
-    *ngIf="success" 
-    severity="success" 
-    [text]="success"
-    [closable]="true"
-    (onClose)="success = null"
-    [style]="{'margin-top': '1rem'}">
-  </p-message>
+  @if (success) {
+    <p-message 
+      severity="success" 
+      [text]="success"
+      [closable]="true"
+      (onClose)="success = null"
+      [style]="{'margin-top': '1rem'}">
+    </p-message>
+  }
 </div>
 

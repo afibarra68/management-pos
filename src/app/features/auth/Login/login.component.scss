@@ -4,16 +4,16 @@
   align-items: center;
   justify-content: center;
   padding: 2rem;
-  background-color: #ffffff;
+  background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 50%, #90caf9 100%);
   position: relative;
-  z-index: 10; // Asegurar que esté por encima de otros elementos
+  overflow: hidden;
 }
 
 .login-container {
   width: 100%;
   max-width: 480px;
   position: relative;
-  z-index: 10; // Asegurar que el contenedor y su contenido sean clickeables
+  z-index: 1;
 }
 
 ::ng-deep .login-card {
@@ -35,20 +35,21 @@
 .login-header {
   text-align: center;
   padding: 2rem 2rem 1rem;
-  background-color: #ffffff;
-  border-bottom: 1px solid #e9ecef;
+  background: linear-gradient(135deg, #1a3a5f 0%, #2c5282 100%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 
   h1 {
-    margin: 1rem 0 0.5rem;
+    margin: 0 0 0.5rem;
     font-size: 2rem;
     font-weight: 600;
-    color: #212529;
+    color: #ffffff;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
   }
 
   .login-subtitle {
     margin: 0;
     font-size: 0.95rem;
-    color: #6c757d;
+    color: rgba(255, 255, 255, 0.9);
   }
 }
 
@@ -146,14 +147,6 @@
   padding: 0.75rem;
   font-size: 1rem;
   font-weight: 500;
-  position: relative;
-  z-index: 10; // Asegurar que el botón sea clickeable
-
-  .p-button {
-    position: relative;
-    z-index: 10;
-    pointer-events: auto !important;
-  }
 }
 
 // Responsive
@@ -188,7 +181,7 @@
 
     h1 {
       font-size: 1.25rem;
-      margin: 0.5rem 0 0.25rem;
+      margin: 0 0 0.25rem;
     }
 
     .login-subtitle {
@@ -221,6 +214,15 @@
     padding: 0.625rem;
     font-size: 0.9rem;
   }
+
+  .form-footer {
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+
+    p {
+      font-size: 0.8rem;
+    }
+  }
 }
 
 // Responsive para pantallas muy pequeñas
@@ -248,7 +250,7 @@
 
     h1 {
       font-size: 1.1rem;
-      margin: 0.25rem 0 0.125rem;
+      margin: 0 0 0.125rem;
     }
 
     .login-subtitle {
@@ -270,5 +272,14 @@
 
   .form-actions {
     margin-top: 0.25rem;
+  }
+
+  .form-footer {
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
+
+    p {
+      font-size: 0.75rem;
+    }
   }
 }

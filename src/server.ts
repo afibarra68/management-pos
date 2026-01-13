@@ -12,17 +12,9 @@ const browserDistFolder = join(import.meta.dirname, '../browser');
 const app = express();
 const angularApp = new AngularNodeAppEngine();
 
-/**
- * Example Express Rest API endpoints can be defined here.
- * Uncomment and define endpoints as necessary.
- *
- * Example:
- * ```ts
- * app.get('/api/{*splat}', (req, res) => {
- *   // Handle API request
- * });
- * ```
- */
+// Nota: El proxy para /mt-api se maneja con Nginx en producción
+// En desarrollo, Angular CLI usa proxy.conf.json
+// Node.js solo maneja SSR y archivos estáticos
 
 /**
  * Serve static files from /browser
@@ -36,7 +28,7 @@ app.use(
 );
 
 /**
- * Handle all other requests by rendering the Angular application.
+ * Handle all other requests by rendering the Angular application (SSR).
  */
 app.use((req, res, next) => {
   angularApp
@@ -63,6 +55,6 @@ if (isMainModule(import.meta.url) || process.env['pm_id']) {
 }
 
 /**
- * Request handler used by the Angular CLI (for dev-server and during build) or Firebase Cloud Functions.
+ * Request handler used by the Angular CLI (for dev-server and during build).
  */
 export const reqHandler = createNodeRequestHandler(app);

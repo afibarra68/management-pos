@@ -11,6 +11,7 @@ import { OpenTransactionService, ParamVenta } from '../../../core/services/open-
 import { OpenTransaction } from '../../../core/services/open-transaction.service';
 import { EnumService, EnumResource } from '../../../core/services/enum.service';
 import { UtilsService } from '../../../core/services/utils.service';
+import { NotificationService } from '../../../core/services/notification.service';
 import { PrintService } from '../../../core/services/print.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { ConfirmationService } from 'primeng/api';
@@ -40,6 +41,7 @@ import { Subject, takeUntil, finalize, catchError, of } from 'rxjs';
 export class RegistrarPlacaComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
   private cdr = inject(ChangeDetectorRef);
+  private notificationService = inject(NotificationService);
   
   form: FormGroup;
   loading = false;
@@ -266,11 +268,23 @@ export class RegistrarPlacaComponent implements OnInit, OnDestroy {
           }
         },
         error: (err) => {
-          this.error = err?.error?.message || 'Error al registrar la placa';
-          this.utilsService.showError(
-            err?.error?.message || 'Error al registrar la placa',
-            'Error en el Registro'
-          );
+          const status = err?.status;
+          const errorResponse = err?.error;
+          
+          // Si es error 412 (PRECONDITION_FAILED), mostrar el mensaje del backend
+          if (status === 412) {
+            const errorMessage = errorResponse?.message || errorResponse?.error || 'Error de validación';
+            const errorDetails = errorResponse?.details || errorResponse?.detail;
+            
+            // Mostrar notificación con el mensaje del backend
+            this.notificationService.showPreconditionFailed(errorMessage, errorDetails);
+            this.error = errorMessage;
+          } else {
+            // Para otros errores, mostrar mensaje genérico
+            const genericMessage = 'Ha ocurrido un error. Por favor, consulte al administrador.';
+            this.notificationService.error(genericMessage);
+            this.error = err?.error?.message || 'Error al registrar la placa';
+          }
         }
       });
   }

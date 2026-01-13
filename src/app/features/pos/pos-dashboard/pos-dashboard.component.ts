@@ -6,6 +6,7 @@ import { TableModule } from 'primeng/table';
 import { RegistrarPlacaComponent } from '../registrar-placa/registrar-placa.component';
 import { RegistrarSalidaComponent } from '../registrar-salida/registrar-salida.component';
 import { ClosedTransactionService, ClosedTransactionStats } from '../../../core/services/closed-transaction.service';
+import { NotificationService } from '../../../core/services/notification.service';
 import { catchError, of, Subject, takeUntil, finalize } from 'rxjs';
 
 type ViewType = 'dashboard' | 'ingresar' | 'salida';
@@ -27,6 +28,7 @@ type ViewType = 'dashboard' | 'ingresar' | 'salida';
 })
 export class PosDashboardComponent implements OnInit, OnDestroy {
   private closedTransactionService = inject(ClosedTransactionService);
+  private notificationService = inject(NotificationService);
   private cdr = inject(ChangeDetectorRef);
   private destroy$ = new Subject<void>();
   
@@ -70,7 +72,24 @@ export class PosDashboardComponent implements OnInit, OnDestroy {
           this.cdr.detectChanges(); // Forzar detección de cambios
         }),
         catchError(err => {
-          this.error = err?.error?.message || 'Error al cargar estadísticas';
+          const status = err?.status;
+          const errorResponse = err?.error;
+          
+          // Si es error 412 (PRECONDITION_FAILED), mostrar el mensaje del backend
+          if (status === 412) {
+            const errorMessage = errorResponse?.message || errorResponse?.error || 'Error de validación';
+            const errorDetails = errorResponse?.details || errorResponse?.detail;
+            
+            // Mostrar notificación con el mensaje del backend
+            this.notificationService.showPreconditionFailed(errorMessage, errorDetails);
+            this.error = errorMessage;
+          } else {
+            // Para otros errores, mostrar mensaje genérico
+            const genericMessage = 'Ha ocurrido un error. Por favor, consulte al administrador.';
+            this.notificationService.error(genericMessage);
+            this.error = err?.error?.message || 'Error al cargar estadísticas';
+          }
+          
           return of(null);
         })
       )
