@@ -18,7 +18,8 @@ RUN if [ -f package-lock.json ]; then \
 COPY . .
 
 # Construir la aplicación para producción con SSR
-RUN npm run build
+# Usar configuración de producción para que use environment.prod.ts
+RUN npm run build -- --configuration=production
 
 # Stage 2: Imagen de producción con Node.js (soporta SSR y contenido dinámico)
 FROM node:20-alpine
@@ -68,7 +69,9 @@ EXPOSE 4000
 # Variables de entorno
 ENV PORT=4000
 ENV NODE_ENV=production
-ENV API_URL=http://10.116.0.5:9000
+# Nota: Las URLs de API se configuran en environment.prod.ts durante el build
+# Estas variables se usan solo como referencia, el código compilado usa las URLs de environment.prod.ts
+ENV API_URL=https://api-flux.alparquear.com
 
 # Comando para iniciar el servidor Node.js con SSR
 CMD ["node", "dist/management-pos/server/server.mjs"]
