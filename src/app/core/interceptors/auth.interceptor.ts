@@ -39,9 +39,32 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
         
         // Si el error es 401 (No autorizado) y NO es el endpoint de validación/login
         if (error.status === 401 && !isValidateEndpoint && !isLoginEndpoint && !isRedirecting) {
-          // Limpiar el token y redirigir al login
+          // Limpiar todos los datos de autenticación
           localStorage.removeItem('auth_token');
           localStorage.removeItem('user_data');
+          
+          // Limpiar sessionStorage
+          sessionStorage.removeItem('auth_token');
+          sessionStorage.removeItem('user_data');
+          
+          // Limpiar cualquier otro dato relacionado con el usuario
+          const keysToRemove: string[] = [];
+          for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key && (key.includes('user') || key.includes('auth') || key.includes('token'))) {
+              keysToRemove.push(key);
+            }
+          }
+          keysToRemove.forEach(key => localStorage.removeItem(key));
+          
+          const sessionKeysToRemove: string[] = [];
+          for (let i = 0; i < sessionStorage.length; i++) {
+            const key = sessionStorage.key(i);
+            if (key && (key.includes('user') || key.includes('auth') || key.includes('token'))) {
+              sessionKeysToRemove.push(key);
+            }
+          }
+          sessionKeysToRemove.forEach(key => sessionStorage.removeItem(key));
           
           isRedirecting = true;
           router.navigate(['/auth/login'], { replaceUrl: true }).then(() => {

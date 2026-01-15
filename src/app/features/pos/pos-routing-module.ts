@@ -3,7 +3,6 @@ import { RouterModule, Routes } from '@angular/router';
 import { PosDashboardComponent } from './pos-dashboard/pos-dashboard.component';
 import { RegistrarPlacaComponent } from './registrar-placa/registrar-placa.component';
 import { RegistrarSalidaComponent } from './registrar-salida/registrar-salida.component';
-import { RegistrarClienteComponent } from './registrar-cliente/registrar-cliente.component';
 
 const routes: Routes = [
   {
@@ -17,10 +16,6 @@ const routes: Routes = [
   {
     path: 'registrar-salida',
     component: RegistrarSalidaComponent
-  },
-  {
-    path: 'registrar-cliente',
-    component: RegistrarClienteComponent
   }
 ];
 

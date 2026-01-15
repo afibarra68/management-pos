@@ -59,27 +59,73 @@ export class AuthService {
     return isPlatformBrowser(this.platformId);
   }
 
+  /**
+   * Limpia todos los datos de autenticación y usuario del almacenamiento
+   */
+  private clearAllAuthData(): void {
+    if (!this.isBrowser) {
+      return;
+    }
+
+    // Limpiar localStorage
+    localStorage.removeItem(this.tokenKey);
+    localStorage.removeItem(this.userKey);
+
+    // Limpiar sessionStorage por si acaso hay datos allí
+    sessionStorage.removeItem(this.tokenKey);
+    sessionStorage.removeItem(this.userKey);
+
+    // Limpiar cualquier otro dato relacionado con el usuario
+    // Limpiar todas las claves que puedan contener datos del usuario
+    const keysToRemove: string[] = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && (key.includes('user') || key.includes('auth') || key.includes('token'))) {
+        keysToRemove.push(key);
+      }
+    }
+    keysToRemove.forEach(key => localStorage.removeItem(key));
+
+    // Limpiar sessionStorage de manera similar
+    const sessionKeysToRemove: string[] = [];
+    for (let i = 0; i < sessionStorage.length; i++) {
+      const key = sessionStorage.key(i);
+      if (key && (key.includes('user') || key.includes('auth') || key.includes('token'))) {
+        sessionKeysToRemove.push(key);
+      }
+    }
+    sessionKeysToRemove.forEach(key => sessionStorage.removeItem(key));
+  }
+
   login(credentials: LoginRequest): Observable<LoginResponse> {
     const baseUrl = this.apiUrl;
     return this.http.post<LoginResponse>(`${baseUrl}/auth/login`, credentials)
       .pipe(
         tap(response => {
           if (response.jwt && this.isBrowser) {
-            // Guardar el token JWT
+            // Limpiar datos antiguos antes de guardar los nuevos
+            this.clearAllAuthData();
+
+            // Guardar el token JWT (siempre actualizar)
             localStorage.setItem(this.tokenKey, response.jwt);
-            // Guardar los datos del usuario
-            localStorage.setItem(this.userKey, JSON.stringify({
-              firstName: response.firstName,
-              lastName: response.lastName,
-              secondName: response.secondName,
-              secondLastname: response.secondLastname,
-              appUserId: response.appUserId,
-              numberIdentity: response.numberIdentity,
-              roles: response.roles,
-              companyName: response.companyName,
-              companyDescription: response.companyDescription,
-              companyId: response.companyId
-            }));
+
+            // Guardar los datos del usuario (siempre actualizar con todos los campos de la respuesta)
+            const userData = {
+              firstName: response.firstName || null,
+              lastName: response.lastName || null,
+              secondName: response.secondName || null,
+              secondLastname: response.secondLastname || null,
+              appUserId: response.appUserId || null,
+              numberIdentity: response.numberIdentity || null,
+              roles: response.roles || [],
+              companyName: response.companyName || null,
+              companyDescription: response.companyDescription || null,
+              companyId: response.companyId || null,
+              accessLevel: response.accessLevel || null,
+              pwdMsgToExpire: response.pwdMsgToExpire || false
+            };
+
+            localStorage.setItem(this.userKey, JSON.stringify(userData));
           }
         }),
         catchError(error => {
@@ -90,10 +136,7 @@ export class AuthService {
   }
 
   logout(): void {
-    if (this.isBrowser) {
-      localStorage.removeItem(this.tokenKey);
-      localStorage.removeItem(this.userKey);
-    }
+    this.clearAllAuthData();
     this.router.navigate(['/auth/login']);
   }
 

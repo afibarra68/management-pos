@@ -5,7 +5,6 @@ import { PosRoutingModule } from './pos-routing-module';
 import { PosDashboardComponent } from './pos-dashboard/pos-dashboard.component';
 import { RegistrarPlacaComponent } from './registrar-placa/registrar-placa.component';
 import { RegistrarSalidaComponent } from './registrar-salida/registrar-salida.component';
-import { RegistrarClienteComponent } from './registrar-cliente/registrar-cliente.component';
 import { SharedModule } from '../../shared/shared-module';
 
 
@@ -17,7 +16,6 @@ import { SharedModule } from '../../shared/shared-module';
     PosDashboardComponent,
     RegistrarPlacaComponent,
     RegistrarSalidaComponent,
-    RegistrarClienteComponent,
     SharedModule
   ],
   exports: [

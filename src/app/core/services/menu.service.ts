@@ -23,12 +23,6 @@ export class MenuService {
       icon: 'pi pi-sign-out',
       routerLink: '/pos/registrar-salida',
       visible: true
-    },
-    {
-      label: 'Registrar Cliente',
-      icon: 'pi pi-user-plus',
-      routerLink: '/pos/registrar-cliente',
-      visible: true
     }
     // Aquí se pueden agregar más items del menú dinámicamente
   ]);
