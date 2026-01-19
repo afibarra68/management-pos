@@ -65,8 +65,8 @@ body {
 }
 
 // Deshabilitar scroll cuando está en la página de login
-body.login-page,
-body.login-page html {
+body:has(app-login),
+html:has(app-login) {
   overflow: hidden !important;
   height: 100vh !important;
   position: fixed;
@@ -81,6 +81,15 @@ body.login-page html {
     overflow-y: auto;
     overflow-x: hidden;
     -webkit-overflow-scrolling: touch; // Scroll suave en iOS
+  }
+
+  // Deshabilitar scroll en login también en móviles
+  body:has(app-login),
+  html:has(app-login) {
+    overflow: hidden !important;
+    height: 100vh !important;
+    position: fixed;
+    width: 100%;
   }
 }
 

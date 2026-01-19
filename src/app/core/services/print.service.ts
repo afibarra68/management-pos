@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { BuildTicket } from './open-transaction.service';
@@ -7,10 +7,9 @@ import { BuildTicket } from './open-transaction.service';
   providedIn: 'root'
 })
 export class PrintService {
+  private http = inject(HttpClient);
   // URL directa del servicio de impresión parking-printing
   private printApiUrl = 'http://127.0.0.1:8080/print';
-
-  constructor(private http: HttpClient) { }
 
   /**
    * Envía el ticket a imprimir al servicio parking-printing

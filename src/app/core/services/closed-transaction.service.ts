@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
@@ -30,9 +30,8 @@ export interface ClosedTransaction {
   providedIn: 'root'
 })
 export class ClosedTransactionService {
+  private http = inject(HttpClient);
   private apiUrl = `${environment.apiAuthJwt}/closed-transactions`;
-
-  constructor(private http: HttpClient) {}
 
   create(transaction: ClosedTransaction): Observable<ClosedTransaction> {
     return this.http.post<ClosedTransaction>(this.apiUrl, transaction);
@@ -83,4 +82,5 @@ export interface FinalizeTransaction {
   receiptModel: string; // "LIQUID"
   vehiclePlate: string;
   codeService: string;
+  notes?: string;
 }

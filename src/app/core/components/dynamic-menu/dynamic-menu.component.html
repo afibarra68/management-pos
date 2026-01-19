@@ -5,7 +5,7 @@
         <a 
           [routerLink]="item.routerLink" 
           routerLinkActive="active"
-          [routerLinkActiveOptions]="{exact: false}"
+          [routerLinkActiveOptions]="{exact: true}"
           class="menu-link"
           [title]="(collapsed() && !isMobile()) ? item.label : ''"
           (click)="onMenuClick()">

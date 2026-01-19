@@ -4,12 +4,14 @@
       <p-avatar [label]="getInitials()" shape="circle" styleClass="user-avatar"></p-avatar>
       <span class="user-name">{{ getFullName() }}</span>
     </div>
-    <p-button 
-      icon="pi pi-sign-out" 
-      label="Cerrar Sesión"
-      (onClick)="logout()"
-      styleClass="p-button-text p-button-danger logout-btn">
-    </p-button>
+    <div class="logout-container">
+      <p-button 
+        icon="pi pi-sign-out" 
+        label="Cerrar Sesión"
+        (onClick)="logout()"
+        styleClass="p-button-text p-button-danger logout-btn">
+      </p-button>
+    </div>
   </div>
 }
 

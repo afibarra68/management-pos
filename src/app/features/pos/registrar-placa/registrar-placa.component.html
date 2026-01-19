@@ -1,118 +1,117 @@
 <div class="registrar-placa-container">
   <div class="header">
-    <h1>Ingresar Vehículo</h1>
-    <p class="subtitle">Ingrese la placa del vehículo para iniciar el proceso de estacionamiento</p>
+    <div class="header-left">
+      <h1>Ingresar Vehículo</h1>
+      <p class="subtitle">Ingrese la placa del vehículo para iniciar el proceso de estacionamiento</p>
+    </div>
+    <div class="header-right">
+      @if (companyName) {
+      <div class="info-item">
+        <i class="pi pi-building"></i>
+        <span>{{ companyName }}</span>
+      </div>
+      }
+      @if (currentShift) {
+      <div class="info-item shift-info">
+        <i class="pi pi-clock"></i>
+        <span><strong>Turno:</strong> {{ getShiftDisplayText() }}</span>
+      </div>
+      }
+      <div class="info-item time-info">
+        <i class="pi pi-calendar-clock"></i>
+        <span>{{ currentTime }}</span>
+      </div>
+      <div class="info-item pos-button">
+        <p-button 
+          label="Ver Operaciones" 
+          icon="pi pi-home"
+          (onClick)="goToDashboard()"
+          styleClass="p-button-outlined p-button-secondary">
+        </p-button>
+      </div>
+    </div>
   </div>
 
   <form [formGroup]="form" (ngSubmit)="submit()" class="form-container">
     <div class="form-group">
       <label for="vehiclePlate">Placa del Vehículo *</label>
-      <input 
-        id="vehiclePlate"
-        type="text" 
-        pInputText 
-        formControlName="vehiclePlate"
-        placeholder="Ej: ABC123"
+      <input id="vehiclePlate" type="text" pInputText formControlName="vehiclePlate"
         [class.ng-invalid]="form.get('vehiclePlate')?.invalid && form.get('vehiclePlate')?.touched"
-        (input)="form.patchValue({vehiclePlate: form.value.vehiclePlate.toUpperCase()})"
-        maxlength="20">
+        (input)="form.patchValue({vehiclePlate: form.value.vehiclePlate.toUpperCase()})" maxlength="8">
       @if (form.get('vehiclePlate')?.invalid && form.get('vehiclePlate')?.touched) {
-        <small class="p-error">
-          @if (form.get('vehiclePlate')?.errors?.['required']) {
-            <span>La placa es requerida</span>
-          }
-          @if (form.get('vehiclePlate')?.errors?.['minlength']) {
-            <span>La placa debe tener al menos 3 caracteres</span>
-          }
-          @if (form.get('vehiclePlate')?.errors?.['maxlength']) {
-            <span>La placa no puede tener más de 20 caracteres</span>
-          }
-        </small>
+      <small class="p-error">
+        @if (form.get('vehiclePlate')?.errors?.['required']) {
+        <span>La placa es requerida</span>
+        }
+        @if (form.get('vehiclePlate')?.errors?.['minlength']) {
+        <span>La placa debe tener al menos 3 caracteres</span>
+        }
+        @if (form.get('vehiclePlate')?.errors?.['maxlength']) {
+        <span>La placa no puede tener más de 8 caracteres</span>
+        }
+      </small>
       }
       @if (form.get('vehiclePlate')?.valid) {
-        <small class="p-text-secondary">
-          La fecha y hora de inicio se registrarán automáticamente
-        </small>
+      <small class="p-text-secondary">
+        La fecha y hora de inicio se registrarán automáticamente
+      </small>
       }
     </div>
 
     @if (params) {
-      @if (easyMode) {
-      <div class="form-group">
-        <label for="basicVehicleType">Tipo Básico de Vehículo *</label>
-        <div class="select-wrapper">
-          <app-select-lib
-            formControlName="basicVehicleType"
-            [options]="basicVehicleTypeOptions"
-            label=""
-            [showClear]="false">
-          </app-select-lib>
-        </div>
-        @if (form.get('basicVehicleType')?.invalid && form.get('basicVehicleType')?.touched) {
-          <small class="p-error">
-            @if (form.get('basicVehicleType')?.errors?.['required']) {
-              <span>El tipo básico de vehículo es requerido</span>
-            }
-          </small>
-        }
+    @if (easyMode) {
+    <div class="form-group">
+      <label for="basicVehicleType">Tipo Básico de Vehículo *</label>
+      <div class="select-wrapper">
+        <app-select-lib formControlName="basicVehicleType" [options]="basicVehicleTypeOptions" label=""
+          [showClear]="false">
+        </app-select-lib>
       </div>
-      } @else {
-      <div class="form-group">
-        <label for="tipoVehiculo">Tipo de Vehículo *</label>
-        <div class="select-wrapper">
-          <app-select-lib
-            formControlName="tipoVehiculo"
-            [options]="tipoVehiculoOptions"
-            label=""
-            [showClear]="false">
-          </app-select-lib>
-        </div>
-        @if (form.get('tipoVehiculo')?.invalid && form.get('tipoVehiculo')?.touched) {
-          <small class="p-error">
-            @if (form.get('tipoVehiculo')?.errors?.['required']) {
-              <span>El tipo de vehículo es requerido</span>
-            }
-          </small>
+      @if (form.get('basicVehicleType')?.invalid && form.get('basicVehicleType')?.touched) {
+      <small class="p-error">
+        @if (form.get('basicVehicleType')?.errors?.['required']) {
+        <span>El tipo básico de vehículo es requerido</span>
         }
-      </div>
+      </small>
       }
+    </div>
+    } @else {
+    <div class="form-group">
+      <label for="tipoVehiculo">Tipo de Vehículo *</label>
+      <div class="select-wrapper">
+        <app-select-lib formControlName="tipoVehiculo" [options]="tipoVehiculoOptions" label="" [showClear]="false">
+        </app-select-lib>
+      </div>
+      @if (form.get('tipoVehiculo')?.invalid && form.get('tipoVehiculo')?.touched) {
+      <small class="p-error">
+        @if (form.get('tipoVehiculo')?.errors?.['required']) {
+        <span>El tipo de vehículo es requerido</span>
+        }
+      </small>
+      }
+    </div>
+    }
     }
 
+    <div class="form-group">
+      <label for="notes">Notas (Opcional)</label>
+      <textarea id="notes" pInputTextarea formControlName="notes" rows="3" 
+        placeholder="Agregue cualquier nota adicional sobre el ingreso del vehículo..."
+        [class.ng-invalid]="form.get('notes')?.invalid && form.get('notes')?.touched">
+      </textarea>
+      <small class="p-text-secondary">
+        Información adicional sobre el ingreso del vehículo
+      </small>
+    </div>
+
     <div class="form-actions">
-      <p-button 
-        type="submit"
-        label="Registrar Placa"
-        icon="pi pi-check"
+      <p-button type="submit" label="Registrar Placa" icon="pi pi-check"
         [disabled]="form.invalid || loading || loadingParams || !params">
       </p-button>
-      <p-button 
-        type="button"
-        label="Limpiar" 
-        icon="pi pi-times"
-        (onClick)="form.reset()"
-        [disabled]="loading || loadingParams"
-        styleClass="p-button-secondary">
+      <p-button type="button" label="Limpiar" icon="pi pi-times" (onClick)="form.reset()"
+        [disabled]="loading || loadingParams" styleClass="p-button-secondary">
       </p-button>
     </div>
   </form>
 
-  @if (error) {
-    <p-message 
-      severity="error" 
-      [text]="error"
-      [closable]="true"
-      (onClose)="error = null"
-      [style]="{'margin-top': '1rem'}">
-    </p-message>
-  }
-
-  @if (success) {
-    <p-message 
-      severity="success" 
-      [text]="success"
-      [closable]="true"
-      (onClose)="success = null"
-      [style]="{'margin-top': '1rem'}">
-    </p-message>
-  }
 </div>

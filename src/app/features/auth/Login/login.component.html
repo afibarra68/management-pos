@@ -19,7 +19,7 @@
             Usuario
           </label>
           <span class="p-input-icon-left" style="width: 100%;">
-            <input id="username" type="text" pInputText formControlName="username" placeholder="Ingresa tu usuario"
+            <input id="username" type="text" pInputText formControlName="username"
               [class.ng-invalid]="form.get('username')?.invalid && form.get('username')?.touched"
               style="width: 100%;" />
           </span>
@@ -35,7 +35,7 @@
             Contraseña
           </label>
           <span class="p-input-icon-left" style="width: 100%;">
-            <p-password id="accesKey" formControlName="accesKey" placeholder="Ingresa tu contraseña" [toggleMask]="true"
+            <p-password id="accesKey" formControlName="accesKey" [toggleMask]="true"
               [feedback]="false" [class.ng-invalid]="form.get('accesKey')?.invalid && form.get('accesKey')?.touched"
               styleClass="full-width" inputStyleClass="full-width">
             </p-password>

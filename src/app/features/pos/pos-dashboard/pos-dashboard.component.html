@@ -1,25 +1,25 @@
 <div class="pos-dashboard-container">
   <div class="header">
     <h1>Punto de Venta</h1>
-    @if (currentView === 'dashboard') {
+    @if (isDashboardView()) {
       <p class="subtitle">Dashboard del día de hoy</p>
     }
   </div>
 
   <!-- Dashboard View -->
-  @if (currentView === 'dashboard') {
+  @if (isDashboardView()) {
     <div class="dashboard-content">
       <!-- Error State -->
-      @if (error) {
+      @if (hasError()) {
         <div class="error-state">
           <i class="pi pi-exclamation-triangle" style="font-size: 2rem; color: var(--red-500)"></i>
-          <p>{{ error }}</p>
+          <p>{{ error() }}</p>
           <p-button label="Reintentar" icon="pi pi-refresh" (onClick)="loadStats()"></p-button>
         </div>
       }
 
       <!-- Stats Cards (mostrar siempre, incluso si está cargando con datos previos) -->
-      @if (!error) {
+      @if (!hasError()) {
         <div class="stats-cards">
           <p-card class="stat-card">
             <div class="stat-content">
@@ -28,7 +28,7 @@
               </div>
               <div class="stat-info">
                 <h3 class="stat-label">Total Operaciones</h3>
-                <p class="stat-value">{{ stats?.totalTransactions || 0 }}</p>
+                <p class="stat-value">{{ stats()?.totalTransactions ?? 0 }}</p>
               </div>
             </div>
           </p-card>
@@ -39,9 +39,9 @@
                 <i class="pi pi-money-bill"></i>
               </div>
               <div class="stat-info">
-                <h3 class="stat-label">Total Recaudado</h3>
+                <h3 class="stat-label">Total en Caja</h3>
                 <p class="stat-value">
-                  {{ stats ? formatCurrency(stats.totalAmount, stats.currency) : formatCurrency(0, 'USD') }}
+                  {{ formatCurrency(totalCash(), 'COP') }}
                 </p>
               </div>
             </div>
@@ -49,40 +49,52 @@
         </div>
       }
 
+      <!-- Mapa de Puestos -->
+      <div class="parking-map-section">
+        <app-parking-map></app-parking-map>
+      </div>
+
+      <!-- Visualizador de Caja -->
+      <div class="cash-register-section">
+        <app-cash-register-view></app-cash-register-view>
+      </div>
+
       <!-- Transactions Table (mostrar si hay datos) -->
-      @if (stats && !error) {
+      @if (hasStats() && !hasError()) {
         <div class="transactions-section">
           <h2 class="section-title">Transacciones del Día</h2>
           <p-card>
-            <p-table 
-              [value]="stats.transactions" 
-              [paginator]="true" 
-              [rows]="10"
-              [showCurrentPageReport]="true"
-              currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} transacciones"
-              styleClass="p-datatable-sm">
-              <ng-template pTemplate="header">
-                <tr>
-                  <th>Hora</th>
-                  <th>Tiempo Estacionado</th>
-                  <th>Monto</th>
-                  <th>Vendedor</th>
-                </tr>
-              </ng-template>
-              <ng-template pTemplate="body" let-transaction>
-                <tr>
-                  <td>{{ formatDate(transaction.operationDate) }}</td>
-                  <td>{{ transaction.timeElapsed || 'N/A' }}</td>
-                  <td>{{ formatCurrency(transaction.totalAmount, transaction.currency) }}</td>
-                  <td>{{ transaction.sellerName || 'N/A' }}</td>
-                </tr>
-              </ng-template>
-              <ng-template pTemplate="emptymessage">
-                <tr>
-                  <td colspan="4" class="text-center">No hay transacciones registradas hoy</td>
-                </tr>
-              </ng-template>
-            </p-table>
+            @if (stats(); as currentStats) {
+              <p-table 
+                [value]="currentStats.transactions" 
+                [paginator]="true" 
+                [rows]="10"
+                [showCurrentPageReport]="true"
+                currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} transacciones"
+                styleClass="p-datatable-sm">
+                <ng-template pTemplate="header">
+                  <tr>
+                    <th>Hora</th>
+                    <th>Tiempo Estacionado</th>
+                    <th>Monto</th>
+                    <th>Vendedor</th>
+                  </tr>
+                </ng-template>
+                <ng-template pTemplate="body" let-transaction>
+                  <tr>
+                    <td>{{ formatDate(transaction.operationDate) }}</td>
+                    <td>{{ transaction.timeElapsed ?? 'N/A' }}</td>
+                    <td>{{ formatCurrency(transaction.totalAmount, transaction.currency) }}</td>
+                    <td>{{ transaction.sellerName ?? 'N/A' }}</td>
+                  </tr>
+                </ng-template>
+                <ng-template pTemplate="emptymessage">
+                  <tr>
+                    <td colspan="4" class="text-center">No hay transacciones registradas hoy</td>
+                  </tr>
+                </ng-template>
+              </p-table>
+            }
           </p-card>
         </div>
       }
@@ -90,7 +102,7 @@
   }
 
   <!-- Actions Buttons (shown when not in dashboard view) -->
-  @if (currentView !== 'dashboard') {
+  @if (!isDashboardView()) {
     <div class="actions-buttons">
       <p-button 
         label="Volver al Dashboard" 
@@ -102,12 +114,12 @@
   }
 
   <!-- Content Area for Forms -->
-  @if (currentView !== 'dashboard') {
+  @if (!isDashboardView()) {
     <div class="content-area">
-      @if (currentView === 'ingresar') {
+      @if (currentView() === 'ingresar') {
         <app-registrar-placa></app-registrar-placa>
       }
-      @if (currentView === 'salida') {
+      @if (currentView() === 'salida') {
         <app-registrar-salida></app-registrar-salida>
       }
     </div>

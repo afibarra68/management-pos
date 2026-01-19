@@ -1,20 +1,31 @@
 .user-control {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  padding: 0.5rem 1rem;
+  gap: 1.5rem;
+  padding: 0.5rem 0;
+  margin-left: auto; // Empujar todo el componente hacia la derecha
+  flex-shrink: 0; // No permitir que se comprima
+  justify-content: flex-end; // Alinear contenido interno a la derecha
 }
 
 .user-info {
   display: flex;
   align-items: center;
   gap: 0.75rem;
+  flex-shrink: 0;
 }
 
 .user-name {
   font-weight: 500;
   color: #495057;
   font-size: 0.95rem;
+  white-space: nowrap;
+}
+
+.logout-container {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
 }
 
 ::ng-deep .user-avatar {
@@ -39,6 +50,10 @@
 
   .user-name {
     display: none;
+  }
+
+  .logout-btn {
+    margin-left: 0; // En móvil, no necesitamos el margin-left adicional
   }
 }
 
