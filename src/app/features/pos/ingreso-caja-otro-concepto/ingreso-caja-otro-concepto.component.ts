@@ -11,9 +11,9 @@ import { FormsModule } from '@angular/forms';
 import { SharedModule } from '../../../shared/shared-module';
 import { CashRegisterService } from '../../../core/services/cash-register.service';
 import { AuthService } from '../../../core/services/auth.service';
-import { ShiftService, DShiftAssignment } from '../../../core/services/shift.service';
+import { ShiftService, DShiftAssignment, ShiftConnectionHistory } from '../../../core/services/shift.service';
 import { ToastModule } from 'primeng/toast';
-import { Subject, takeUntil, finalize, catchError, of } from 'rxjs';
+import { Subject, forkJoin, takeUntil, finalize, catchError, of } from 'rxjs';
 import { NotificationService } from '../../../core/services/notification.service';
 
 @Component({
@@ -49,6 +49,7 @@ export class IngresoCajaOtroConceptoComponent implements OnInit, OnDestroy {
   loading = false;
   loadingShift = false;
   currentShift: DShiftAssignment | null = null;
+  activeShiftHistory: ShiftConnectionHistory | null = null;
   companyName: string = '';
   currentTime: string = '';
 
@@ -90,29 +91,29 @@ export class IngresoCajaOtroConceptoComponent implements OnInit, OnDestroy {
     }
 
     this.loadingShift = true;
-    const today = new Date().toISOString().split('T')[0]; // Formato YYYY-MM-DD
+    const today = new Date().toISOString().split('T')[0];
 
-    this.shiftService.getByUserAndDate(userData.appUserId, today)
+    forkJoin({
+      assignments: this.shiftService.getByUserAndDate(userData.appUserId, today).pipe(catchError(() => of([]))),
+      activeHistory: this.shiftService.getOrCreateActiveShift().pipe(catchError(() => of(null)))
+    })
       .pipe(
         takeUntil(this.destroy$),
         finalize(() => {
           this.loadingShift = false;
           this.cdr.markForCheck();
         }),
-        catchError((err: any) => {
-          return of([]);
-        })
+        catchError(() => of({ assignments: [], activeHistory: null }))
       )
       .subscribe({
-        next: (assignments: DShiftAssignment[]) => {
-          // Obtener el primer turno activo (CONFIRMED o PENDING) para hoy
-          const activeShift = assignments.find(assignment => {
-            const status = assignment.status;
-            const statusId = typeof status === 'string' ? status : status?.id;
-            return statusId === 'CONFIRMED' || statusId === 'PENDING';
-          });
-
+        next: ({ assignments, activeHistory }) => {
+          const activeShift = assignments?.find(a => {
+            const s = a.status;
+            const id = typeof s === 'string' ? s : s?.id;
+            return id === 'CONFIRMED' || id === 'PENDING';
+          }) || null;
           this.currentShift = activeShift || null;
+          this.activeShiftHistory = activeHistory || null;
           this.cdr.markForCheck();
         }
       });
@@ -142,8 +143,9 @@ export class IngresoCajaOtroConceptoComponent implements OnInit, OnDestroy {
       return;
     }
 
-    if (!this.currentShift?.shiftAssignmentId) {
-      this.notificationService.error('No se ha podido obtener la información del turno actual. Por favor, recargue la página.');
+    const historyId = this.activeShiftHistory?.shiftConnectionHistoryId;
+    if (!historyId) {
+      this.notificationService.error('No hay un turno en proceso activo. Por favor, recargue la página.');
       return;
     }
 
@@ -153,7 +155,7 @@ export class IngresoCajaOtroConceptoComponent implements OnInit, OnDestroy {
     this.loading = true;
 
     this.cashRegisterService.registerOtherIncome(
-      this.currentShift.shiftAssignmentId,
+      historyId,
       amount,
       notes
     )

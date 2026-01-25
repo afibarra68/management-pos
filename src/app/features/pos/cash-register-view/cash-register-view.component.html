@@ -1,13 +1,13 @@
 <div class="cash-register-view-container">
   <div class="header">
     <h2>Estado de Caja</h2>
-    @if (currentShift() && !isShiftCompleted()) {
+    @if (currentShift() && !isShiftCompleted() && activeShiftHistory()) {
       <p-button 
-        label="Cerrar Turno" 
-        icon="pi pi-times-circle" 
-        severity="danger"
+        label="Liquidar Turno" 
+        icon="pi pi-check-circle" 
+        severity="success"
         (onClick)="openCloseShiftDialog()"
-        [disabled]="loading() || closingShift()">
+        [disabled]="loading() || closingShift() || !canCloseShift()">
       </p-button>
     }
   </div>
@@ -111,11 +111,30 @@
     [style]="{width: '450px'}"
     (onHide)="closeCloseShiftDialog()">
     <div class="dialog-content">
-      <p>¿Está seguro de que desea cerrar el turno?</p>
-      <p class="warning-text">
-        <i class="pi pi-exclamation-triangle"></i>
-        Una vez cerrado, no se podrán crear más transacciones hasta que se confirme un nuevo turno.
-      </p>
+      @if (!canCloseShift()) {
+        <p class="error-text">
+          <i class="pi pi-exclamation-triangle"></i>
+          Aún en servicio, el turno no se puede cerrar. Debe faltar 10 minutos o menos para finalizar.
+        </p>
+      } @else {
+        <p>¿Está seguro de que desea liquidar el turno?</p>
+        @if (activeShiftHistory()) {
+          <div class="shift-summary">
+            <p><strong>Resumen del turno:</strong></p>
+            <ul>
+              <li>Total salidas de vehículos: {{ activeShiftHistory()?.totalVehicleExits || 0 }}</li>
+              <li>Salidas con suscripción: {{ activeShiftHistory()?.totalSubscriptionExits || 0 }}</li>
+              <li>Salidas con pago: {{ activeShiftHistory()?.totalPaidExits || 0 }}</li>
+              <li>Total efectivo recibido: {{ formatCurrency(activeShiftHistory()?.totalCashReceived || 0) }}</li>
+              <li>Total otros pagos: {{ formatCurrency(activeShiftHistory()?.totalOtherPayments || 0) }}</li>
+            </ul>
+          </div>
+        }
+        <p class="warning-text">
+          <i class="pi pi-exclamation-triangle"></i>
+          Una vez cerrado, no se podrán crear más transacciones hasta que se confirme un nuevo turno.
+        </p>
+      }
     </div>
     <ng-template pTemplate="footer">
       <p-button 
@@ -126,12 +145,12 @@
         styleClass="p-button-text">
       </p-button>
       <p-button 
-        label="Cerrar Turno" 
+        label="Liquidar Turno" 
         icon="pi pi-check" 
-        severity="danger"
+        severity="success"
         (onClick)="closeShift()"
         [loading]="closingShift()"
-        [disabled]="closingShift()">
+        [disabled]="closingShift() || !canCloseShift()">
       </p-button>
     </ng-template>
   </p-dialog>

@@ -232,10 +232,12 @@ export class RegistrarSalidaComponent implements OnInit, OnDestroy {
           this.buscando = false;
           this.vehiculoEncontrado = transaction;
           this.showModal = true;
+          this.cdr.markForCheck();
         },
         error: (err) => {
           this.buscando = false;
           this.handleError(err, 'No se encontró un vehículo con esa placa en estado abierto');
+          this.cdr.markForCheck();
         }
       });
   }
@@ -250,6 +252,17 @@ export class RegistrarSalidaComponent implements OnInit, OnDestroy {
 
     if (!this.params) {
       this.error = 'No se han cargado los parámetros del servicio. Por favor, recargue la página.';
+      return;
+    }
+
+    // Validar si puede gestionar salida con efectivo (solo para vehículos sin suscripción)
+    if (vehicle.bySubscription !== true && this.params.canManageCashExit === false) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'No permitido',
+        detail: 'No tiene permiso para gestionar salidas con recepción de efectivo. Debe tener un turno activo.',
+        life: 5000
+      });
       return;
     }
 
@@ -301,6 +314,7 @@ export class RegistrarSalidaComponent implements OnInit, OnDestroy {
     this.showModal = false;
     this.vehiculoEncontrado = null;
     this.exitNotes = '';
+    this.cdr.markForCheck();
   }
 
   /**

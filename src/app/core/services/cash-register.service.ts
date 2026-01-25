@@ -6,8 +6,8 @@ import { EnumResource } from './enum.service';
 
 export interface CashRegister {
   cashRegisterId?: number;
-  shiftAssignmentId?: number;
-  shiftAssignment?: any;
+  shiftConnectionHistoryId?: number;
+  shiftConnectionHistory?: any;
   companyCompanyId?: number;
   company?: any;
   appUserId?: number;
@@ -28,21 +28,21 @@ export class CashRegisterService {
   private http = inject(HttpClient);
   private apiUrl = environment.apiUrl;
 
-  getByShiftAssignment(shiftAssignmentId: number): Observable<CashRegister[]> {
-    return this.http.get<CashRegister[]>(`${this.apiUrl}/cash-registers/by-shift/${shiftAssignmentId}`);
+  getByShiftConnectionHistory(shiftConnectionHistoryId: number): Observable<CashRegister[]> {
+    return this.http.get<CashRegister[]>(`${this.apiUrl}/cash-registers/by-connection/${shiftConnectionHistoryId}`);
   }
 
-  getTotalByShiftAssignmentAndConcept(shiftAssignmentId: number, concept: string): Observable<number> {
-    return this.http.get<number>(`${this.apiUrl}/cash-registers/by-shift/${shiftAssignmentId}/concept/${concept}/total`);
+  getTotalByShiftConnectionHistoryAndConcept(shiftConnectionHistoryId: number, concept: string): Observable<number> {
+    return this.http.get<number>(`${this.apiUrl}/cash-registers/by-connection/${shiftConnectionHistoryId}/concept/${concept}/total`);
   }
 
-  getTotalByShiftAssignment(shiftAssignmentId: number): Observable<number> {
-    return this.http.get<number>(`${this.apiUrl}/cash-registers/by-shift/${shiftAssignmentId}/total`);
+  getTotalByShiftConnectionHistory(shiftConnectionHistoryId: number): Observable<number> {
+    return this.http.get<number>(`${this.apiUrl}/cash-registers/by-connection/${shiftConnectionHistoryId}/total`);
   }
 
-  setInitialCash(shiftAssignmentId: number, initialCash: number, notes?: string): Observable<CashRegister> {
+  setInitialCash(shiftConnectionHistoryId: number, initialCash: number, notes?: string): Observable<CashRegister> {
     let params = new HttpParams()
-      .set('shiftAssignmentId', shiftAssignmentId.toString())
+      .set('shiftConnectionHistoryId', shiftConnectionHistoryId.toString())
       .set('initialCash', initialCash.toString());
     if (notes) {
       params = params.set('notes', notes);
@@ -54,9 +54,9 @@ export class CashRegisterService {
     return this.http.post<CashRegister>(`${this.apiUrl}/cash-registers`, cashRegister);
   }
 
-  registerOtherIncome(shiftAssignmentId: number, amount: number, notes?: string): Observable<CashRegister> {
+  registerOtherIncome(shiftConnectionHistoryId: number, amount: number, notes?: string): Observable<CashRegister> {
     let params = new HttpParams()
-      .set('shiftAssignmentId', shiftAssignmentId.toString())
+      .set('shiftConnectionHistoryId', shiftConnectionHistoryId.toString())
       .set('amount', amount.toString());
     if (notes) {
       params = params.set('notes', notes);

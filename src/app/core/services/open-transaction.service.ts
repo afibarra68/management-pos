@@ -59,6 +59,8 @@ export interface ParamVenta {
   easyMode: boolean;
   vehicleType: EnumResource[];
   basicVehicleType: EnumResource[];
+  hasActiveShift?: boolean;
+  canManageCashExit?: boolean;
 }
 
 @Injectable({

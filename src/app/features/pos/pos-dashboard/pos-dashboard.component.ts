@@ -9,10 +9,7 @@ import { ParkingMapComponent } from '../parking-map/parking-map.component';
 import { CashRegisterViewComponent } from '../cash-register-view/cash-register-view.component';
 import { ClosedTransactionService, ClosedTransactionStats } from '../../../core/services/closed-transaction.service';
 import { NotificationService } from '../../../core/services/notification.service';
-import { ShiftService, DShiftAssignment } from '../../../core/services/shift.service';
-import { CashRegisterService } from '../../../core/services/cash-register.service';
-import { AuthService } from '../../../core/services/auth.service';
-import { catchError, of, Subject, takeUntil, finalize, forkJoin } from 'rxjs';
+import { catchError, of, Subject, takeUntil, finalize } from 'rxjs';
 
 type ViewType = 'dashboard' | 'ingresar' | 'salida';
 
@@ -37,9 +34,6 @@ type ViewType = 'dashboard' | 'ingresar' | 'salida';
 export class PosDashboardComponent implements OnInit, OnDestroy {
   private closedTransactionService = inject(ClosedTransactionService);
   private notificationService = inject(NotificationService);
-  private shiftService = inject(ShiftService);
-  private cashRegisterService = inject(CashRegisterService);
-  private authService = inject(AuthService);
   private cdr = inject(ChangeDetectorRef);
   private destroy$ = new Subject<void>();
   
@@ -67,19 +61,16 @@ export class PosDashboardComponent implements OnInit, OnDestroy {
   }
 
   private setupEventListeners(): void {
-    // Escuchar eventos personalizados para recargar estadísticas y total en caja
     window.addEventListener('transactionClosed', () => {
       if (this.isDashboardView()) {
         this.loadStats();
-        this.loadTotalCash();
       }
     });
-    
-    // Escuchar eventos de actualización de caja
-    window.addEventListener('cashRegisterUpdated', () => {
-      if (this.isDashboardView()) {
-        this.loadTotalCash();
-      }
+
+    window.addEventListener('cashRegisterUpdated', (event: Event) => {
+      const totalInCash = (event as CustomEvent).detail?.totalInCash ?? 0;
+      this.totalCash.set(totalInCash);
+      this.cdr.markForCheck();
     });
   }
 
@@ -107,7 +98,7 @@ export class PosDashboardComponent implements OnInit, OnDestroy {
   loadStats(): void {
     this.loading.set(true);
     this.error.set(null);
-    
+
     this.closedTransactionService.getTodayStats()
       .pipe(
         takeUntil(this.destroy$),
@@ -122,66 +113,6 @@ export class PosDashboardComponent implements OnInit, OnDestroy {
           if (data) {
             this.stats.set(data);
           }
-        }
-      });
-    
-    // Cargar total en caja
-    this.loadTotalCash();
-  }
-
-  /**
-   * Carga el total en caja del turno actual (efectivo inicial + total ingresos)
-   */
-  private loadTotalCash(): void {
-    const userData = this.authService.getUserData();
-    if (!userData?.appUserId) {
-      this.totalCash.set(0);
-      return;
-    }
-
-    const today = new Date().toISOString().split('T')[0]; // Formato YYYY-MM-DD
-
-    this.shiftService.getByUserAndDate(userData.appUserId, today)
-      .pipe(
-        takeUntil(this.destroy$),
-        catchError(() => of([]))
-      )
-      .subscribe({
-        next: (assignments: DShiftAssignment[]) => {
-          // Obtener el primer turno activo (CONFIRMED o PENDING) para hoy
-          const activeShift = assignments.find(assignment => {
-            const status = assignment.status;
-            const statusId = typeof status === 'string' ? status : status?.id;
-            return statusId === 'CONFIRMED' || statusId === 'PENDING';
-          });
-
-          if (!activeShift?.shiftAssignmentId) {
-            this.totalCash.set(0);
-            this.cdr.markForCheck();
-            return;
-          }
-
-          // Obtener registros de caja y calcular total
-          forkJoin({
-            registers: this.cashRegisterService.getByShiftAssignment(activeShift.shiftAssignmentId),
-            total: this.cashRegisterService.getTotalByShiftAssignment(activeShift.shiftAssignmentId)
-          })
-            .pipe(
-              takeUntil(this.destroy$),
-              catchError(() => of({ registers: [], total: 0 }))
-            )
-            .subscribe({
-              next: ({ registers, total }) => {
-                // Calcular efectivo inicial (primer registro con initialCash > 0)
-                const firstRegister = registers?.find(r => r.initialCash && r.initialCash > 0);
-                const initialCash = firstRegister?.initialCash || 0;
-                
-                // Total en caja = efectivo inicial + total ingresos
-                const totalInCash = initialCash + (total || 0);
-                this.totalCash.set(totalInCash);
-                this.cdr.markForCheck();
-              }
-            });
         }
       });
   }

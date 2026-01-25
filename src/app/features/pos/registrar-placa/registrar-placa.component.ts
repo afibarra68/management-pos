@@ -335,6 +335,15 @@ export class RegistrarPlacaComponent implements OnInit, OnDestroy {
       return;
     }
 
+    // Validar turno activo si el módulo está habilitado
+    if (this.params.hasActiveShift === false) {
+      this.utilsService.showError(
+        'No hay turno activo. Debe iniciar un turno para realizar transacciones.',
+        'Turno requerido'
+      );
+      return;
+    }
+
     const userData = this.authService.getUserData();
     if (!userData?.appUserId) {
       this.error = 'No se pudo obtener la información del usuario autenticado.';
