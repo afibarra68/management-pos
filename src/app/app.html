@@ -5,10 +5,14 @@
     [class.hidden]="!showSidebar()"
     [class.with-sidebar]="showSidebar()"
     [class.sidebar-collapsed]="showSidebar() && sidebarCollapsed()">
-    @if (showSidebar()) {
-      <app-mobile-menu-button></app-mobile-menu-button>
-    }
-    <app-user-control></app-user-control>
+    <div class="header-left">
+      @if (showSidebar()) {
+        <app-mobile-menu-button></app-mobile-menu-button>
+      }
+    </div>
+    <div class="header-right">
+      <app-user-control></app-user-control>
+    </div>
   </header>
   <div class="content-wrapper" [class.with-sidebar]="showSidebar()" [class.sidebar-collapsed]="sidebarCollapsed()">
     <main class="main-content">

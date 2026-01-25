@@ -1,4 +1,4 @@
-.registrar-placa-container {
+.ingreso-caja-container {
   padding: 2rem;
   height: 100%;
   max-width: 1000px;
@@ -28,12 +28,6 @@
         color: var(--text-color-secondary);
         font-size: 1.2rem;
       }
-    }
-
-    .header-actions {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
     }
 
     .header-right {
@@ -150,168 +144,82 @@
       font-size: 1.2rem;
     }
 
-    input {
+    input,
+    textarea {
       width: 100%;
-      font-size: 1.5rem;
-      padding: 1rem;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      border-radius: 8px;
-    }
+      padding: 0.75rem;
+      border: 1px solid var(--surface-border);
+      border-radius: 6px;
+      font-size: 1rem;
+      transition: border-color 0.3s, box-shadow 0.3s;
 
-    .select-wrapper {
-      width: 100%;
+      &:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 0.2rem var(--primary-color-light);
+      }
 
-      ::ng-deep {
-        app-select-lib {
-          width: 100%;
-          display: block;
-        }
-
-        .p-field {
-          width: 100% !important;
-          max-width: 100% !important;
-          padding: 0 !important;
-        }
-
-        .p-col-12 {
-          width: 100% !important;
-          flex: 0 0 100% !important;
-        }
-
-        .p-float-label {
-          width: 100%;
-
-          label {
-            display: none;
-          }
-
-          p-select {
-            width: 100% !important;
-            font-size: 1.5rem;
-          }
-        }
+      &.ng-invalid.ng-touched {
+        border-color: var(--red-500);
       }
     }
 
+    textarea {
+      resize: vertical;
+      min-height: 100px;
+    }
+
     small {
-      margin-top: 0.75rem;
+      margin-top: 0.5rem;
       display: block;
-      font-size: 1rem;
+    }
+
+    .p-error {
+      color: var(--red-500);
+      font-size: 0.9rem;
     }
 
     .p-text-secondary {
       color: var(--text-color-secondary);
-      font-style: italic;
+      font-size: 0.9rem;
     }
   }
 
   .form-actions {
     display: flex;
-    gap: 1.5rem;
-    justify-content: center;
-    margin-top: 3rem;
-    padding-top: 2.5rem;
-    border-top: 2px solid var(--surface-border);
+    gap: 1rem;
+    justify-content: flex-end;
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--surface-border);
 
     ::ng-deep .p-button {
-      font-size: 1.2rem;
-      padding: 1rem 2rem;
-      min-width: 200px;
+      min-width: 150px;
     }
   }
-}
 
-// Responsive para resoluciones pequeñas
-@media (max-width: 768px) {
-  .registrar-placa-container {
-    padding: 1rem 0.75rem;
-    height: auto;
-    min-height: calc(100vh - 64px);
-    overflow-y: auto;
-    overflow-x: hidden;
-    -webkit-overflow-scrolling: touch;
+  @media (max-width: 768px) {
+    padding: 1rem;
 
     .header {
       flex-direction: column;
-      margin-bottom: 1.5rem;
-      gap: 1rem;
-
-      .header-left {
-        text-align: center;
-
-        h1 {
-          font-size: 1.75rem;
-          margin-bottom: 0.5rem;
-        }
-
-        .subtitle {
-          font-size: 1rem;
-        }
-      }
+      gap: 1.5rem;
 
       .header-right {
         width: 100%;
         min-width: auto;
-
-        .info-item {
-          padding: 0.75rem 1rem;
-          font-size: 0.95rem;
-          width: 100%;
-          justify-content: center;
-
-          i {
-            font-size: 1.1rem;
-          }
-        }
       }
     }
 
     .form-container {
-      padding: 1.5rem 1rem;
-      margin-bottom: 1rem;
-    }
-
-    .form-group {
-      margin-bottom: 1.5rem;
-
-      label {
-        font-size: 1rem;
-        margin-bottom: 0.5rem;
-      }
-
-      input {
-        font-size: 1.1rem;
-        padding: 0.75rem;
-      }
-
-      .select-wrapper {
-        ::ng-deep {
-          .p-float-label {
-            p-select {
-              font-size: 1.1rem;
-            }
-          }
-        }
-      }
-
-      small {
-        font-size: 0.85rem;
-        margin-top: 0.5rem;
-      }
+      padding: 1.5rem;
     }
 
     .form-actions {
       flex-direction: column;
-      gap: 0.75rem;
-      margin-top: 1.5rem;
-      padding-top: 1.5rem;
 
       ::ng-deep .p-button {
         width: 100%;
-        font-size: 1rem;
-        padding: 0.75rem 1.5rem;
-        min-width: auto;
       }
     }
   }

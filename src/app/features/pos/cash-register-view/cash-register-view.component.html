@@ -1,0 +1,158 @@
+<div class="cash-register-view-container">
+  <div class="header">
+    <h2>Estado de Caja</h2>
+    @if (currentShift() && !isShiftCompleted() && activeShiftHistory()) {
+      <p-button 
+        label="Liquidar Turno" 
+        icon="pi pi-check-circle" 
+        severity="success"
+        (onClick)="openCloseShiftDialog()"
+        [disabled]="loading() || closingShift() || !canCloseShift()">
+      </p-button>
+    }
+  </div>
+
+  <p-toast></p-toast>
+
+
+  @if (loading()) {
+    <div class="loading-state">
+      <i class="pi pi-spin pi-spinner" style="font-size: 2rem;"></i>
+      <p>Cargando información de caja...</p>
+    </div>
+  }
+
+  @if (!loading() && currentShift()) {
+    <!-- Resumen General -->
+    <div class="summary-section">
+      <p-card class="summary-card">
+        <div class="summary-content">
+          <div class="summary-item">
+            <div class="summary-label">Efectivo Inicial</div>
+            <div class="summary-value">{{ formatCurrency(initialCash()) }}</div>
+          </div>
+          <div class="summary-item">
+            <div class="summary-label">Total Ingresos</div>
+            <div class="summary-value income">{{ formatCurrency(totalAmount()) }}</div>
+          </div>
+          <div class="summary-item">
+            <div class="summary-label">Total en Caja</div>
+            <div class="summary-value total">{{ formatCurrency(getTotalCash()) }}</div>
+          </div>
+        </div>
+      </p-card>
+    </div>
+
+    <!-- Resumen por Concepto -->
+    @if (summaryByConcept().length > 0) {
+      <div class="concept-summary-section">
+        <h3>Resumen por Concepto</h3>
+        <p-table [value]="summaryByConcept()" [tableStyle]="{'min-width': '50rem'}">
+          <ng-template pTemplate="header">
+            <tr>
+              <th>Concepto</th>
+              <th>Cantidad</th>
+              <th>Total</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-summary>
+            <tr>
+              <td>{{ summary.conceptDisplay }}</td>
+              <td>{{ summary.count }}</td>
+              <td>{{ formatCurrency(summary.totalAmount) }}</td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
+    }
+
+    <!-- Registros Recientes -->
+    @if (cashRegisters().length > 0) {
+      <div class="recent-registers-section">
+        <h3>Registros Recientes</h3>
+        <p-table [value]="cashRegisters().slice(0, 10)" [tableStyle]="{'min-width': '50rem'}">
+          <ng-template pTemplate="header">
+            <tr>
+              <th>Fecha</th>
+              <th>Concepto</th>
+              <th>Monto</th>
+              <th>Notas</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-register>
+            <tr>
+              <td>{{ formatDate(register.registerDate || '') }}</td>
+              <td>{{ getConceptDisplay(register.concept) }}</td>
+              <td>{{ formatCurrency(register.amount || 0) }}</td>
+              <td>{{ register.notes || '-' }}</td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
+    }
+  }
+
+  @if (!loading() && !currentShift()) {
+    <div class="empty-state">
+      <i class="pi pi-info-circle" style="font-size: 3rem; color: var(--text-color-secondary);"></i>
+      <p>No hay un turno activo</p>
+      <small>Confirme su turno para ver el estado de la caja</small>
+    </div>
+  }
+
+  <!-- Diálogo de confirmación para cerrar turno -->
+  <p-dialog 
+    [visible]="showCloseShiftDialog()" 
+    [modal]="true" 
+    [closable]="true"
+    [draggable]="false" 
+    [resizable]="false"
+    header="Cerrar Turno"
+    [style]="{width: '450px'}"
+    (onHide)="closeCloseShiftDialog()">
+    <div class="dialog-content">
+      @if (!canCloseShift()) {
+        <p class="error-text">
+          <i class="pi pi-exclamation-triangle"></i>
+          Aún en servicio, el turno no se puede cerrar. Debe faltar 10 minutos o menos para finalizar.
+        </p>
+      } @else {
+        <p>¿Está seguro de que desea liquidar el turno?</p>
+        @if (activeShiftHistory()) {
+          <div class="shift-summary">
+            <p><strong>Resumen del turno:</strong></p>
+            <ul>
+              <li>Total salidas de vehículos: {{ activeShiftHistory()?.totalVehicleExits || 0 }}</li>
+              <li>Salidas con suscripción: {{ activeShiftHistory()?.totalSubscriptionExits || 0 }}</li>
+              <li>Salidas con pago: {{ activeShiftHistory()?.totalPaidExits || 0 }}</li>
+              <li>Total efectivo recibido: {{ formatCurrency(activeShiftHistory()?.totalCashReceived || 0) }}</li>
+              <li>Total otros pagos: {{ formatCurrency(activeShiftHistory()?.totalOtherPayments || 0) }}</li>
+            </ul>
+          </div>
+        }
+        <p class="warning-text">
+          <i class="pi pi-exclamation-triangle"></i>
+          Una vez cerrado, no se podrán crear más transacciones hasta que se confirme un nuevo turno.
+        </p>
+      }
+    </div>
+    <ng-template pTemplate="footer">
+      <p-button 
+        label="Cancelar" 
+        icon="pi pi-times" 
+        (onClick)="closeCloseShiftDialog()"
+        [disabled]="closingShift()"
+        styleClass="p-button-text">
+      </p-button>
+      <p-button 
+        label="Liquidar Turno" 
+        icon="pi pi-check" 
+        severity="success"
+        (onClick)="closeShift()"
+        [loading]="closingShift()"
+        [disabled]="closingShift() || !canCloseShift()">
+      </p-button>
+    </ng-template>
+  </p-dialog>
+
+</div>

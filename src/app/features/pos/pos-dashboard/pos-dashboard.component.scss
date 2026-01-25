@@ -230,6 +230,22 @@
     }
   }
 
+  .parking-map-section {
+    margin-top: 2rem;
+    
+    app-parking-map {
+      display: block;
+    }
+  }
+
+  .cash-register-section {
+    margin-top: 2rem;
+    
+    app-cash-register-view {
+      display: block;
+    }
+  }
+
   .transactions-section {
     flex: 1;
     display: flex;

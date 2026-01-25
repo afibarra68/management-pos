@@ -1,10 +1,12 @@
-import { Component, ViewEncapsulation, OnInit, OnDestroy, inject, ChangeDetectorRef } from '@angular/core';
+import { Component, ViewEncapsulation, OnInit, OnDestroy, inject, signal, computed, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
 import { TableModule } from 'primeng/table';
 import { RegistrarPlacaComponent } from '../registrar-placa/registrar-placa.component';
 import { RegistrarSalidaComponent } from '../registrar-salida/registrar-salida.component';
+import { ParkingMapComponent } from '../parking-map/parking-map.component';
+import { CashRegisterViewComponent } from '../cash-register-view/cash-register-view.component';
 import { ClosedTransactionService, ClosedTransactionStats } from '../../../core/services/closed-transaction.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { catchError, of, Subject, takeUntil, finalize } from 'rxjs';
@@ -20,11 +22,14 @@ type ViewType = 'dashboard' | 'ingresar' | 'salida';
     CardModule,
     TableModule,
     RegistrarPlacaComponent,
-    RegistrarSalidaComponent
+    RegistrarSalidaComponent,
+    ParkingMapComponent,
+    CashRegisterViewComponent
   ],
   templateUrl: './pos-dashboard.component.html',
   styleUrls: ['./pos-dashboard.component.scss'],
-  encapsulation: ViewEncapsulation.None
+  encapsulation: ViewEncapsulation.None,
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class PosDashboardComponent implements OnInit, OnDestroy {
   private closedTransactionService = inject(ClosedTransactionService);
@@ -32,10 +37,17 @@ export class PosDashboardComponent implements OnInit, OnDestroy {
   private cdr = inject(ChangeDetectorRef);
   private destroy$ = new Subject<void>();
   
-  currentView: ViewType = 'dashboard';
-  stats: ClosedTransactionStats | null = null;
-  loading = false;
-  error: string | null = null;
+  // Signals para mejor rendimiento y reactividad
+  currentView = signal<ViewType>('dashboard');
+  stats = signal<ClosedTransactionStats | null>(null);
+  loading = signal(false);
+  error = signal<string | null>(null);
+  totalCash = signal<number>(0); // Total en caja (efectivo inicial + total ingresos)
+  
+  // Computed signals para valores derivados
+  hasStats = computed(() => this.stats() !== null);
+  hasError = computed(() => this.error() !== null);
+  isDashboardView = computed(() => this.currentView() === 'dashboard');
 
   ngOnInit(): void {
     this.loadStats();
@@ -49,66 +61,67 @@ export class PosDashboardComponent implements OnInit, OnDestroy {
   }
 
   private setupEventListeners(): void {
-    // Escuchar eventos personalizados para recargar estadísticas
     window.addEventListener('transactionClosed', () => {
-      if (this.currentView === 'dashboard') {
+      if (this.isDashboardView()) {
         this.loadStats();
       }
     });
+
+    window.addEventListener('cashRegisterUpdated', (event: Event) => {
+      const totalInCash = (event as CustomEvent).detail?.totalInCash ?? 0;
+      this.totalCash.set(totalInCash);
+      this.cdr.markForCheck();
+    });
+  }
+
+  /**
+   * Maneja errores de forma centralizada
+   */
+  private handleError(err: any): void {
+    const status = err?.status;
+    const errorResponse = err?.error;
+    
+    // Extraer el mensaje legible (readableMsg tiene prioridad)
+    const errorMessage = errorResponse?.readableMsg || errorResponse?.message || errorResponse?.error || 'Error desconocido';
+    
+    if (status === 412) {
+      const errorDetails = errorResponse?.details || errorResponse?.detail;
+      this.notificationService.showPreconditionFailed(errorMessage, errorDetails);
+      this.error.set(errorMessage);
+    } else {
+      const genericMessage = 'Ha ocurrido un error. Por favor, consulte al administrador.';
+      this.notificationService.error(errorMessage || genericMessage);
+      this.error.set(errorMessage);
+    }
   }
 
   loadStats(): void {
-    // Siempre cargar cuando se llama este método
-    this.loading = true;
-    this.error = null;
-    this.cdr.detectChanges(); // Forzar detección de cambios para mostrar loading
-    
+    this.loading.set(true);
+    this.error.set(null);
+
     this.closedTransactionService.getTodayStats()
       .pipe(
         takeUntil(this.destroy$),
-        finalize(() => {
-          // Asegurar que loading se establezca en false siempre
-          this.loading = false;
-          this.cdr.detectChanges(); // Forzar detección de cambios
-        }),
+        finalize(() => this.loading.set(false)),
         catchError(err => {
-          const status = err?.status;
-          const errorResponse = err?.error;
-          
-          // Si es error 412 (PRECONDITION_FAILED), mostrar el mensaje del backend
-          if (status === 412) {
-            const errorMessage = errorResponse?.message || errorResponse?.error || 'Error de validación';
-            const errorDetails = errorResponse?.details || errorResponse?.detail;
-            
-            // Mostrar notificación con el mensaje del backend
-            this.notificationService.showPreconditionFailed(errorMessage, errorDetails);
-            this.error = errorMessage;
-          } else {
-            // Para otros errores, mostrar mensaje genérico
-            const genericMessage = 'Ha ocurrido un error. Por favor, consulte al administrador.';
-            this.notificationService.error(genericMessage);
-            this.error = err?.error?.message || 'Error al cargar estadísticas';
-          }
-          
+          this.handleError(err);
           return of(null);
         })
       )
       .subscribe({
         next: (data) => {
-          // Actualizar inmediatamente cuando lleguen los datos
           if (data) {
-            this.stats = data;
-            this.cdr.detectChanges(); // Forzar detección de cambios para mostrar datos
+            this.stats.set(data);
           }
         }
       });
   }
 
-  formatCurrency(amount: number, currency: string): string {
+  formatCurrency(amount: number, currency?: string): string {
     return new Intl.NumberFormat('es-CO', {
       style: 'currency',
-      currency: currency || 'USD'
-    }).format(amount);
+      currency: currency || 'COP'
+    }).format(amount || 0);
   }
 
   formatDate(dateString: string): string {
@@ -122,16 +135,15 @@ export class PosDashboardComponent implements OnInit, OnDestroy {
   }
 
   showIngresar(): void {
-    this.currentView = 'ingresar';
+    this.currentView.set('ingresar');
   }
 
   showSalida(): void {
-    this.currentView = 'salida';
+    this.currentView.set('salida');
   }
 
   showDashboard(): void {
-    this.currentView = 'dashboard';
-    // Siempre cargar estadísticas cuando se muestra el dashboard
+    this.currentView.set('dashboard');
     this.loadStats();
   }
 }

@@ -60,6 +60,20 @@ export class AuthService {
   }
 
   /**
+   * Limpia todas las claves de un storage que coincidan con los patrones especificados
+   */
+  private clearStorageByPattern(storage: Storage, patterns: string[]): void {
+    const keysToRemove: string[] = [];
+    for (let i = 0; i < storage.length; i++) {
+      const key = storage.key(i);
+      if (key && patterns.some(pattern => key.includes(pattern))) {
+        keysToRemove.push(key);
+      }
+    }
+    keysToRemove.forEach(key => storage.removeItem(key));
+  }
+
+  /**
    * Limpia todos los datos de autenticación y usuario del almacenamiento
    */
   private clearAllAuthData(): void {
@@ -67,69 +81,52 @@ export class AuthService {
       return;
     }
 
-    // Limpiar localStorage
+    const authPatterns = ['user', 'auth', 'token'];
+    
+    // Limpiar claves específicas primero
     localStorage.removeItem(this.tokenKey);
     localStorage.removeItem(this.userKey);
-
-    // Limpiar sessionStorage por si acaso hay datos allí
     sessionStorage.removeItem(this.tokenKey);
     sessionStorage.removeItem(this.userKey);
 
-    // Limpiar cualquier otro dato relacionado con el usuario
-    // Limpiar todas las claves que puedan contener datos del usuario
-    const keysToRemove: string[] = [];
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (key && (key.includes('user') || key.includes('auth') || key.includes('token'))) {
-        keysToRemove.push(key);
-      }
-    }
-    keysToRemove.forEach(key => localStorage.removeItem(key));
-
-    // Limpiar sessionStorage de manera similar
-    const sessionKeysToRemove: string[] = [];
-    for (let i = 0; i < sessionStorage.length; i++) {
-      const key = sessionStorage.key(i);
-      if (key && (key.includes('user') || key.includes('auth') || key.includes('token'))) {
-        sessionKeysToRemove.push(key);
-      }
-    }
-    sessionKeysToRemove.forEach(key => sessionStorage.removeItem(key));
+    // Limpiar cualquier otro dato relacionado con el usuario usando patrones
+    this.clearStorageByPattern(localStorage, authPatterns);
+    this.clearStorageByPattern(sessionStorage, authPatterns);
   }
 
   login(credentials: LoginRequest): Observable<LoginResponse> {
     const baseUrl = this.apiUrl;
-    return this.http.post<LoginResponse>(`${baseUrl}/auth/login`, credentials)
+    // Usar el endpoint login-sell que solo permite usuarios con rol PARKING_ATTENDANT (CAJERO)
+    return this.http.post<LoginResponse>(`${baseUrl}/auth/login-sell`, credentials)
       .pipe(
         tap(response => {
           if (response.jwt && this.isBrowser) {
             // Limpiar datos antiguos antes de guardar los nuevos
             this.clearAllAuthData();
 
-            // Guardar el token JWT (siempre actualizar)
+            // Guardar el token JWT
             localStorage.setItem(this.tokenKey, response.jwt);
 
-            // Guardar los datos del usuario (siempre actualizar con todos los campos de la respuesta)
+            // Guardar los datos del usuario de forma optimizada
             const userData = {
-              firstName: response.firstName || null,
-              lastName: response.lastName || null,
-              secondName: response.secondName || null,
-              secondLastname: response.secondLastname || null,
-              appUserId: response.appUserId || null,
-              numberIdentity: response.numberIdentity || null,
-              roles: response.roles || [],
-              companyName: response.companyName || null,
-              companyDescription: response.companyDescription || null,
-              companyId: response.companyId || null,
-              accessLevel: response.accessLevel || null,
-              pwdMsgToExpire: response.pwdMsgToExpire || false
+              firstName: response.firstName ?? null,
+              lastName: response.lastName ?? null,
+              secondName: response.secondName ?? null,
+              secondLastname: response.secondLastname ?? null,
+              appUserId: response.appUserId ?? null,
+              numberIdentity: response.numberIdentity ?? null,
+              roles: response.roles ?? [],
+              companyName: response.companyName ?? null,
+              companyDescription: response.companyDescription ?? null,
+              companyId: response.companyId ?? null,
+              accessLevel: response.accessLevel ?? null,
+              pwdMsgToExpire: response.pwdMsgToExpire ?? false
             };
 
             localStorage.setItem(this.userKey, JSON.stringify(userData));
           }
         }),
         catchError(error => {
-          console.error('Error en login:', error);
           return throwError(() => error);
         })
       );
@@ -171,7 +168,6 @@ export class AuthService {
     return this.http.post<CreateUserResponse>(`${this.apiUrl}/users/create_public_user`, userData)
       .pipe(
         catchError(error => {
-          console.error('Error al crear usuario:', error);
           return throwError(() => error);
         })
       );

@@ -7,12 +7,6 @@ import { MenuItem } from '../models/menu-item.model';
 export class MenuService {
   private menuItems = signal<MenuItem[]>([
     {
-      label: 'Punto de Venta',
-      icon: 'pi pi-shopping-cart',
-      routerLink: '/pos',
-      visible: true
-    },
-    {
       label: 'Ingresar Vehículo',
       icon: 'pi pi-sign-in',
       routerLink: '/pos/ingresar-vehiculo',
@@ -22,6 +16,24 @@ export class MenuService {
       label: 'Registrar Salida',
       icon: 'pi pi-sign-out',
       routerLink: '/pos/registrar-salida',
+      visible: true
+    },
+    {
+      label: 'Vehículos en Parqueadero',
+      icon: 'pi pi-car',
+      routerLink: '/pos/vehiculos-parqueadero',
+      visible: true
+    },
+    {
+      label: 'Mapa de Puestos',
+      icon: 'pi pi-th-large',
+      routerLink: '/pos/mapa-puestos',
+      visible: true
+    },
+    {
+      label: 'Ingreso a Caja por Otro Concepto',
+      icon: 'pi pi-money-bill',
+      routerLink: '/pos/ingreso-caja-otro-concepto',
       visible: true
     }
     // Aquí se pueden agregar más items del menú dinámicamente

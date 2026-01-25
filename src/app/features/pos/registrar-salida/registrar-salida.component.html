@@ -1,7 +1,35 @@
 <div class="registrar-salida-container">
   <div class="header">
-    <h1>Registrar Salida</h1>
-    <p class="subtitle">Busque el vehículo por placa para procesar su salida</p>
+    <div class="header-left">
+      <h1>Registrar Salida</h1>
+      <p class="subtitle">Busque el vehículo por placa para procesar su salida</p>
+    </div>
+    <div class="header-right">
+      @if (companyName) {
+      <div class="info-item">
+        <i class="pi pi-building"></i>
+        <span>{{ companyName }}</span>
+      </div>
+      }
+      @if (currentShift) {
+      <div class="info-item shift-info">
+        <i class="pi pi-clock"></i>
+        <span><strong>Turno:</strong> {{ getShiftDisplayText() }}</span>
+      </div>
+      }
+      <div class="info-item time-info">
+        <i class="pi pi-calendar-clock"></i>
+        <span>{{ currentTime }}</span>
+      </div>
+      <div class="info-item pos-button">
+        <p-button 
+          label="Ver Operaciones" 
+          icon="pi pi-home"
+          (onClick)="goToDashboard()"
+          styleClass="p-button-outlined p-button-secondary">
+        </p-button>
+      </div>
+    </div>
   </div>
 
   <form [formGroup]="form" (ngSubmit)="buscarVehiculo()" class="form-container">
@@ -12,10 +40,9 @@
         type="text" 
         pInputText 
         formControlName="vehiclePlate"
-        placeholder="Ej: ABC123"
         [class.ng-invalid]="form.get('vehiclePlate')?.invalid && form.get('vehiclePlate')?.touched"
         (input)="form.patchValue({vehiclePlate: form.value.vehiclePlate.toUpperCase()})"
-        maxlength="20">
+        maxlength="8">
       @if (form.get('vehiclePlate')?.invalid && form.get('vehiclePlate')?.touched) {
         <small class="p-error">
           @if (form.get('vehiclePlate')?.errors?.['required']) {
@@ -25,7 +52,7 @@
             <span>La placa debe tener al menos 3 caracteres</span>
           }
           @if (form.get('vehiclePlate')?.errors?.['maxlength']) {
-            <span>La placa no puede tener más de 20 caracteres</span>
+            <span>La placa no puede tener más de 8 caracteres</span>
           }
         </small>
       }
@@ -41,15 +68,6 @@
     </div>
   </form>
 
-  @if (error) {
-    <p-message 
-      severity="error" 
-      [text]="error"
-      [closable]="true"
-      (onClose)="error = null"
-      [style]="{'margin-top': '1rem'}">
-    </p-message>
-  }
 
   <p-dialog 
     [visible]="showModal"
@@ -75,8 +93,8 @@
           <span class="value">{{ vehiculoEncontrado.startTime }}</span>
         </div>
         <div class="info-item">
-          <label>Tiempo Transcurrido:</label>
-          <span class="value highlight">{{ tiempoTranscurrido || vehiculoEncontrado.timeElapsed || 'Calculando...' }}</span>
+          <label>Notas:</label>
+          <span class="value notes-text">{{ vehiculoEncontrado.notes || '-' }}</span>
         </div>
         @if (vehiculoEncontrado.tipoVehiculo || vehiculoEncontrado.basicVehicleType) {
           <div class="info-item">
@@ -92,15 +110,21 @@
         </div>
       </div>
 
-      @if (error) {
-        <p-message 
-          severity="error" 
-          [text]="error"
-          [closable]="true"
-          (onClose)="error = null"
-          [style]="{'margin-top': '1rem'}">
-        </p-message>
-      }
+      <div class="notes-section">
+        <label for="exitNotes">Notas de Salida (Opcional):</label>
+        <textarea 
+          id="exitNotes"
+          pInputTextarea 
+          [(ngModel)]="exitNotes"
+          rows="3"
+          placeholder="Agregue cualquier nota adicional sobre la salida del vehículo..."
+          class="notes-textarea">
+        </textarea>
+        <small class="p-text-secondary">
+          Información adicional sobre la salida del vehículo
+        </small>
+      </div>
+
       </div>
     }
 

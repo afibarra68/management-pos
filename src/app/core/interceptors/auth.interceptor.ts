@@ -39,32 +39,29 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
         
         // Si el error es 401 (No autorizado) y NO es el endpoint de validación/login
         if (error.status === 401 && !isValidateEndpoint && !isLoginEndpoint && !isRedirecting) {
-          // Limpiar todos los datos de autenticación
+          // Función helper para limpiar storage por patrones
+          const clearStorageByPattern = (storage: Storage, patterns: string[]): void => {
+            const keysToRemove: string[] = [];
+            for (let i = 0; i < storage.length; i++) {
+              const key = storage.key(i);
+              if (key && patterns.some(pattern => key.includes(pattern))) {
+                keysToRemove.push(key);
+              }
+            }
+            keysToRemove.forEach(key => storage.removeItem(key));
+          };
+
+          const authPatterns = ['user', 'auth', 'token'];
+          
+          // Limpiar claves específicas primero
           localStorage.removeItem('auth_token');
           localStorage.removeItem('user_data');
-          
-          // Limpiar sessionStorage
           sessionStorage.removeItem('auth_token');
           sessionStorage.removeItem('user_data');
           
-          // Limpiar cualquier otro dato relacionado con el usuario
-          const keysToRemove: string[] = [];
-          for (let i = 0; i < localStorage.length; i++) {
-            const key = localStorage.key(i);
-            if (key && (key.includes('user') || key.includes('auth') || key.includes('token'))) {
-              keysToRemove.push(key);
-            }
-          }
-          keysToRemove.forEach(key => localStorage.removeItem(key));
-          
-          const sessionKeysToRemove: string[] = [];
-          for (let i = 0; i < sessionStorage.length; i++) {
-            const key = sessionStorage.key(i);
-            if (key && (key.includes('user') || key.includes('auth') || key.includes('token'))) {
-              sessionKeysToRemove.push(key);
-            }
-          }
-          sessionKeysToRemove.forEach(key => sessionStorage.removeItem(key));
+          // Limpiar cualquier otro dato relacionado con el usuario usando patrones
+          clearStorageByPattern(localStorage, authPatterns);
+          clearStorageByPattern(sessionStorage, authPatterns);
           
           isRedirecting = true;
           router.navigate(['/auth/login'], { replaceUrl: true }).then(() => {

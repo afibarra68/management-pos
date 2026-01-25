@@ -7,19 +7,113 @@
 
   .header {
     margin-bottom: 3rem;
-    text-align: center;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 2rem;
 
-    h1 {
-      margin: 0 0 0.75rem 0;
-      color: var(--text-color);
-      font-size: 2.5rem;
-      font-weight: 600;
+    .header-left {
+      flex: 1;
+      text-align: left;
     }
 
-    .subtitle {
-      margin: 0;
-      color: var(--text-color-secondary);
-      font-size: 1.2rem;
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .header-right {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      align-items: flex-end;
+      min-width: 300px;
+
+      .info-item {
+        padding: 0.75rem 1.25rem;
+        background: var(--surface-card);
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        font-size: 1rem;
+        width: 100%;
+        justify-content: flex-start;
+
+        i {
+          font-size: 1.2rem;
+          color: var(--primary-color);
+        }
+
+        span {
+          color: var(--text-color);
+        }
+
+        strong {
+          font-weight: 600;
+        }
+
+        &.shift-info {
+          background: #ffffff;
+          color: #000000;
+          border: none;
+
+          i {
+            color: #000000;
+            font-size: 1.4rem;
+          }
+
+          span {
+            color: #000000;
+            font-weight: 600;
+            font-size: 1.1rem;
+          }
+
+          strong {
+            color: #000000;
+            font-weight: 700;
+          }
+        }
+
+        &.time-info {
+          background: var(--surface-100);
+          font-weight: 600;
+          font-size: 1.1rem;
+
+          i {
+            color: var(--primary-color);
+          }
+        }
+
+        &.pos-button {
+          background: var(--surface-card);
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+          padding: 0.75rem 1.25rem;
+          justify-content: center;
+          align-items: center;
+          border-radius: 8px;
+          display: flex;
+          gap: 0.75rem;
+          min-height: auto;
+
+          ::ng-deep .p-button {
+            width: 100%;
+            font-size: 1rem;
+            padding: 0.5rem 1rem;
+            margin: 0;
+            border-radius: 6px;
+            height: auto;
+            min-height: auto;
+            box-shadow: none;
+          }
+
+          ::ng-deep .p-button-outlined {
+            border-width: 1px;
+          }
+        }
+      }
     }
   }
 
@@ -123,6 +217,43 @@
           color: #155724;
         }
       }
+
+      &.notes-text {
+        color: var(--text-color);
+        font-style: italic;
+        word-wrap: break-word;
+        white-space: pre-wrap;
+      }
+    }
+  }
+
+  .notes-section {
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--surface-border);
+
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+      color: var(--text-color);
+      font-size: 0.9rem;
+    }
+
+    .notes-textarea {
+      width: 100%;
+      font-size: 0.95rem;
+      padding: 0.75rem;
+      border-radius: 6px;
+      resize: vertical;
+      min-height: 80px;
+    }
+
+    small {
+      display: block;
+      margin-top: 0.5rem;
+      font-size: 0.85rem;
+      color: var(--text-color-secondary);
     }
   }
 
@@ -144,15 +275,37 @@
     -webkit-overflow-scrolling: touch;
 
     .header {
+      flex-direction: column;
       margin-bottom: 1.5rem;
+      gap: 1rem;
 
-      h1 {
-        font-size: 1.75rem;
-        margin-bottom: 0.5rem;
+      .header-left {
+        text-align: center;
+
+        h1 {
+          font-size: 1.75rem;
+          margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+          font-size: 1rem;
+        }
       }
 
-      .subtitle {
-        font-size: 1rem;
+      .header-right {
+        width: 100%;
+        min-width: auto;
+
+        .info-item {
+          padding: 0.75rem 1rem;
+          font-size: 0.95rem;
+          width: 100%;
+          justify-content: center;
+
+          i {
+            font-size: 1.1rem;
+          }
+        }
       }
     }
 
