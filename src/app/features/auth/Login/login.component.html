@@ -8,19 +8,14 @@
         </div>
       </ng-template>
 
-      <form [formGroup]="form" (ngSubmit)="submit()" class="login-form">
-        @if (error) {
-        <p-message severity="error" [text]="error" [closable]="true" (onClose)="error = null" styleClass="login-error">
-        </p-message>
-        }
-
+      <form [formGroup]="form" (ngSubmit)="submit()" class="login-form" autocomplete="off">
         <div class="form-field">
           <label for="username" class="field-label">
             Usuario
           </label>
           <span class="p-input-icon-left" style="width: 100%;">
             <input id="username" type="text" pInputText formControlName="username"
-              [class.ng-invalid]="form.get('username')?.invalid && form.get('username')?.touched"
+              [class.ng-invalid]="form.get('username')?.invalid && form.get('username')?.touched" autocomplete="off"
               style="width: 100%;" />
           </span>
           @if (form.get('username')?.invalid && form.get('username')?.touched) {
@@ -35,8 +30,8 @@
             Contraseña
           </label>
           <span class="p-input-icon-left" style="width: 100%;">
-            <p-password id="accesKey" formControlName="accesKey" [toggleMask]="true"
-              [feedback]="false" [class.ng-invalid]="form.get('accesKey')?.invalid && form.get('accesKey')?.touched"
+            <p-password id="accesKey" formControlName="accesKey" [toggleMask]="true" [feedback]="false"
+              [class.ng-invalid]="form.get('accesKey')?.invalid && form.get('accesKey')?.touched"
               styleClass="full-width" inputStyleClass="full-width">
             </p-password>
           </span>

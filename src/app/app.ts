@@ -1,4 +1,4 @@
-import { Component, signal, inject, afterNextRender, computed, ChangeDetectionStrategy, OnDestroy } from '@angular/core';
+import { Component, signal, inject, afterNextRender, computed, ChangeDetectionStrategy, OnDestroy, OnInit } from '@angular/core';
 import { RouterOutlet, Router, NavigationEnd } from '@angular/router';
 import { SidebarComponent } from './core/components/sidebar/sidebar.component';
 import { UserControlComponent } from './core/components/user-control/user-control.component';
@@ -8,6 +8,7 @@ import { AuthService } from './core/services/auth.service';
 import { SidebarService } from './core/services/sidebar.service';
 import { ToastModule } from 'primeng/toast';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { getTimezoneFromToken, configureTimezone } from './core/utils/timezone.util';
 
 @Component({
   selector: 'app-root',
@@ -16,7 +17,7 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
   styleUrl: './app.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class App implements OnDestroy {
+export class App implements OnInit, OnDestroy {
   protected readonly title = signal('t-parking');
   private router = inject(Router);
   private authService = inject(AuthService);
@@ -40,6 +41,19 @@ export class App implements OnDestroy {
   // Inicializar con el estado de autenticación actual para evitar que el login aparezca brevemente
   private readonly isAuthenticated = signal(this.authService.isAuthenticated());
   private readonly currentRoute = signal<string>('');
+
+  ngOnInit(): void {
+    // Configurar timezone desde el token si existe
+    if (typeof window !== 'undefined') {
+      const token = this.authService.getToken();
+      if (token) {
+        const timezone = getTimezoneFromToken(token);
+        if (timezone) {
+          configureTimezone(timezone);
+        }
+      }
+    }
+  }
 
   // Computed signal para mostrar/ocultar sidebar
   readonly showSidebar = computed(() => {

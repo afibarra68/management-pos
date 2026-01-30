@@ -41,8 +41,8 @@ export class VehicleCapacityService {
       this.getActiveByCompany(companyId).subscribe({
         next: (capacities) => {
           const occupancy: ParkingOccupancy[] = capacities.map(capacity => {
-            const tipoVehiculoId = typeof capacity.tipoVehiculo === 'string' 
-              ? capacity.tipoVehiculo 
+            const tipoVehiculoId = typeof capacity.tipoVehiculo === 'string'
+              ? capacity.tipoVehiculo
               : capacity.tipoVehiculo?.id;
 
             // Contar vehículos ocupados de este tipo

@@ -1,109 +1,99 @@
 @if (hasData() || loading()) {
-  <div class="parking-map-container">
-    <div class="header">
-      <h2>Mapa de Puestos</h2>
-      <p class="subtitle">Estado de ocupación del parqueadero</p>
-    </div>
+<div class="parking-map-container">
+  <div class="header">
+    <h2>Mapa de Puestos</h2>
+    <p class="subtitle">Estado de ocupación del parqueadero</p>
+  </div>
 
 
-    @if (loading()) {
-    <div class="loading-state">
-      <i class="pi pi-spin pi-spinner" style="font-size: 2rem;"></i>
-      <p>Cargando información del parqueadero...</p>
-    </div>
+  @if (loading()) {
+  <div class="loading-state">
+    <i class="pi pi-spin pi-spinner" style="font-size: 2rem;"></i>
+    <p>Cargando información del parqueadero...</p>
+  </div>
   }
 
   @if (!loading() && occupancyData().length > 0) {
-    <!-- Resumen General -->
-    <div class="summary-section">
-      <p-card class="summary-card">
-        <div class="summary-content">
-          <div class="summary-item">
-            <div class="summary-label">Capacidad Total</div>
-            <div class="summary-value">{{ totalCapacity() }}</div>
-          </div>
-          <div class="summary-item">
-            <div class="summary-label">Ocupados</div>
-            <div class="summary-value occupied">{{ totalOccupied() }}</div>
-          </div>
-          <div class="summary-item">
-            <div class="summary-label">Disponibles</div>
-            <div class="summary-value available">{{ totalAvailable() }}</div>
-          </div>
-          <div class="summary-item">
-            <div class="summary-label">Ocupación General</div>
-            <div class="summary-value" [style.color]="getOccupancyColor(overallOccupancyPercentage())">
-              {{ overallOccupancyPercentage() }}%
-            </div>
+  <!-- Resumen General -->
+  <div class="summary-section">
+    <p-card class="summary-card">
+      <div class="summary-content">
+        <div class="summary-item">
+          <div class="summary-label">Capacidad Total</div>
+          <div class="summary-value">{{ totalCapacity() }}</div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-label">Ocupados</div>
+          <div class="summary-value occupied">{{ totalOccupied() }}</div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-label">Disponibles</div>
+          <div class="summary-value available">{{ totalAvailable() }}</div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-label">Ocupación General</div>
+          <div class="summary-value" [style.color]="getOccupancyColor(overallOccupancyPercentage())">
+            {{ overallOccupancyPercentage() }}%
           </div>
         </div>
-        <div class="summary-progress">
-          <p-progressBar 
-            [value]="overallOccupancyPercentage()" 
-            [showValue]="false"
-            [style]="{'height': '20px'}">
-          </p-progressBar>
-        </div>
-      </p-card>
-    </div>
+      </div>
+      <div class="summary-progress">
+        <p-progressBar [value]="overallOccupancyPercentage()" [showValue]="false" [style]="{'height': '20px'}">
+        </p-progressBar>
+      </div>
+    </p-card>
+  </div>
 
-    <!-- Detalle por Tipo de Vehículo -->
-    <div class="occupancy-details">
-      @for (item of occupancyData(); track item.tipoVehiculo?.id || $index) {
-        <p-card class="occupancy-card">
-          <div class="card-header">
-            <h3>{{ getVehicleTypeDisplay(item.tipoVehiculo) }}</h3>
-            <span 
-              class="status-badge" 
-              [style.background-color]="getOccupancyColor(item.occupancyPercentage)"
-              [style.color]="'white'">
-              {{ getOccupancyStatus(item.occupancyPercentage) }}
+  <!-- Detalle por Tipo de Vehículo -->
+  <div class="occupancy-details">
+    @for (item of occupancyData(); track item.tipoVehiculo?.id || $index) {
+    <p-card class="occupancy-card">
+      <div class="card-header">
+        <h3>{{ getVehicleTypeDisplay(item.tipoVehiculo) }}</h3>
+        <span class="status-badge" [style.background-color]="getOccupancyColor(item.occupancyPercentage)"
+          [style.color]="'white'">
+          {{ getOccupancyStatus(item.occupancyPercentage) }}
+        </span>
+      </div>
+
+      <div class="card-content">
+        <div class="occupancy-stats">
+          <div class="stat-row">
+            <span class="stat-label">Capacidad:</span>
+            <span class="stat-value">{{ item.capacity }} puestos</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Ocupados:</span>
+            <span class="stat-value occupied">{{ item.occupied }}</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Disponibles:</span>
+            <span class="stat-value available">{{ item.available }}</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Ocupación:</span>
+            <span class="stat-value percentage" [style.color]="getOccupancyColor(item.occupancyPercentage)">
+              {{ item.occupancyPercentage }}%
             </span>
           </div>
-          
-          <div class="card-content">
-            <div class="occupancy-stats">
-              <div class="stat-row">
-                <span class="stat-label">Capacidad:</span>
-                <span class="stat-value">{{ item.capacity }} puestos</span>
-              </div>
-              <div class="stat-row">
-                <span class="stat-label">Ocupados:</span>
-                <span class="stat-value occupied">{{ item.occupied }}</span>
-              </div>
-              <div class="stat-row">
-                <span class="stat-label">Disponibles:</span>
-                <span class="stat-value available">{{ item.available }}</span>
-              </div>
-              <div class="stat-row">
-                <span class="stat-label">Ocupación:</span>
-                <span 
-                  class="stat-value percentage" 
-                  [style.color]="getOccupancyColor(item.occupancyPercentage)">
-                  {{ item.occupancyPercentage }}%
-                </span>
-              </div>
-            </div>
-            
-            <div class="progress-section">
-              <p-progressBar 
-                [value]="item.occupancyPercentage" 
-                [showValue]="true"
-                [style]="{'height': '25px'}">
-              </p-progressBar>
-            </div>
-          </div>
-        </p-card>
-      }
-    </div>
-  }
+        </div>
 
-    @if (!loading() && occupancyData().length === 0 && !error()) {
-      <div class="empty-state">
-        <i class="pi pi-info-circle" style="font-size: 3rem; color: var(--text-color-secondary);"></i>
-        <p>No hay configuración de capacidad disponible</p>
-        <small>Configure la capacidad de vehículos en el panel administrativo</small>
+        <div class="progress-section">
+          <p-progressBar [value]="item.occupancyPercentage" [showValue]="true" [style]="{'height': '25px'}">
+          </p-progressBar>
+        </div>
       </div>
+    </p-card>
     }
   </div>
+  }
+
+  @if (!loading() && occupancyData().length === 0 && !error()) {
+  <div class="empty-state">
+    <i class="pi pi-info-circle" style="font-size: 3rem; color: var(--text-color-secondary);"></i>
+    <p>No hay configuración de capacidad disponible</p>
+    <small>Configure la capacidad de vehículos en el panel administrativo</small>
+  </div>
+  }
+</div>
 }

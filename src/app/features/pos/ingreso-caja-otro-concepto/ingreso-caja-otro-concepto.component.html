@@ -15,18 +15,9 @@
   <form [formGroup]="form" (ngSubmit)="submit()" class="form-container">
     <div class="form-group">
       <label for="amount">Monto *</label>
-      <p-inputNumber 
-        id="amount" 
-        formControlName="amount"
-        [min]="0.01"
-        [max]="999999999"
-        [minFractionDigits]="2"
-        [maxFractionDigits]="2"
-        mode="decimal"
-        currency="COP"
-        locale="es-CO"
-        [class.ng-invalid]="form.get('amount')?.invalid && form.get('amount')?.touched"
-        styleClass="w-full">
+      <p-inputNumber id="amount" formControlName="amount" [min]="0.01" [max]="999999999" [minFractionDigits]="2"
+        [maxFractionDigits]="2" mode="decimal" currency="COP" locale="es-CO"
+        [class.ng-invalid]="form.get('amount')?.invalid && form.get('amount')?.touched" styleClass="w-full">
       </p-inputNumber>
       @if (form.get('amount')?.invalid && form.get('amount')?.touched) {
       <small class="p-error">
@@ -47,11 +38,7 @@
 
     <div class="form-group">
       <label for="notes">Notas (Opcional)</label>
-      <textarea 
-        id="notes" 
-        pInputTextarea 
-        formControlName="notes" 
-        rows="4" 
+      <textarea id="notes" pInputTextarea formControlName="notes" rows="4"
         placeholder="Describa el concepto del ingreso (ej: venta de productos, servicio adicional, etc.)..."
         [class.ng-invalid]="form.get('notes')?.invalid && form.get('notes')?.touched">
       </textarea>
@@ -61,19 +48,11 @@
     </div>
 
     <div class="form-actions">
-      <p-button 
-        type="submit" 
-        label="Registrar Ingreso" 
-        icon="pi pi-check"
+      <p-button type="submit" label="Registrar Ingreso" icon="pi pi-check"
         [disabled]="form.invalid || loading || loadingShift || !currentShift">
       </p-button>
-      <p-button 
-        type="button" 
-        label="Limpiar" 
-        icon="pi pi-times" 
-        (onClick)="form.reset()"
-        [disabled]="loading || loadingShift" 
-        styleClass="p-button-secondary">
+      <p-button type="button" label="Limpiar" icon="pi pi-times" (onClick)="form.reset()"
+        [disabled]="loading || loadingShift" styleClass="p-button-secondary">
       </p-button>
     </div>
   </form>

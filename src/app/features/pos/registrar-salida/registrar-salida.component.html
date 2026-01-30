@@ -15,26 +15,22 @@
         <div class="block-content">
           <div class="form-group">
             <label for="vehiclePlate">Placa del Vehículo *</label>
-            <input 
-              id="vehiclePlate"
-              type="text" 
-              formControlName="vehiclePlate"
+            <input id="vehiclePlate" type="text" formControlName="vehiclePlate"
               [class.invalid]="form.get('vehiclePlate')?.invalid && form.get('vehiclePlate')?.touched"
-              (input)="form.patchValue({vehiclePlate: form.value.vehiclePlate.toUpperCase()})"
-              maxlength="8"
+              (input)="form.patchValue({vehiclePlate: form.value.vehiclePlate.toUpperCase()})" maxlength="8"
               placeholder="ABC123">
             @if (form.get('vehiclePlate')?.invalid && form.get('vehiclePlate')?.touched) {
-              <small class="error-text">
-                @if (form.get('vehiclePlate')?.errors?.['required']) {
-                  <span>La placa es requerida</span>
-                }
-                @if (form.get('vehiclePlate')?.errors?.['minlength']) {
-                  <span>La placa debe tener al menos 3 caracteres</span>
-                }
-                @if (form.get('vehiclePlate')?.errors?.['maxlength']) {
-                  <span>La placa no puede tener más de 8 caracteres</span>
-                }
-              </small>
+            <small class="error-text">
+              @if (form.get('vehiclePlate')?.errors?.['required']) {
+              <span>La placa es requerida</span>
+              }
+              @if (form.get('vehiclePlate')?.errors?.['minlength']) {
+              <span>La placa debe tener al menos 3 caracteres</span>
+              }
+              @if (form.get('vehiclePlate')?.errors?.['maxlength']) {
+              <span>La placa no puede tener más de 8 caracteres</span>
+              }
+            </small>
             }
           </div>
         </div>
@@ -42,10 +38,7 @@
 
       <!-- Acciones -->
       <div class="form-actions">
-        <button 
-          type="submit"
-          class="btn-primary"
-          [disabled]="form.invalid || buscando">
+        <button type="submit" class="btn-primary" [disabled]="form.invalid || buscando">
           Buscar Vehículo
         </button>
       </div>
@@ -54,91 +47,81 @@
 
   <!-- Modal de Confirmación -->
   @if (showModal && vehiculoEncontrado) {
-    <div class="modal-overlay" (click)="cerrarModal()">
-      <div class="modal-content" (click)="$event.stopPropagation()">
-        <div class="modal-header">
-          <h2>Vehículo: {{ vehiculoEncontrado.vehiclePlate }}</h2>
-          <button type="button" class="btn-close" (click)="cerrarModal()">×</button>
-        </div>
-        
-        <div class="modal-body">
-          <!-- Bloque: Información del Vehículo -->
-          <div class="form-block">
-            <div class="block-header">
-              <span class="block-title">Información del Vehículo</span>
-            </div>
-            <div class="block-content">
-              <div class="info-grid">
-                <div class="info-row">
-                  <label>Placa:</label>
-                  <span>{{ vehiculoEncontrado.vehiclePlate }}</span>
-                </div>
-                <div class="info-row">
-                  <label>Fecha Entrada:</label>
-                  <span>{{ vehiculoEncontrado.startDay }}</span>
-                </div>
-                <div class="info-row">
-                  <label>Hora Entrada:</label>
-                  <span>{{ vehiculoEncontrado.startTime }}</span>
-                </div>
-                @if (vehiculoEncontrado.tipoVehiculo || vehiculoEncontrado.basicVehicleType) {
-                  <div class="info-row">
-                    <label>Tipo de Vehículo:</label>
-                    <span>{{ getTipoVehiculoDisplay(vehiculoEncontrado.tipoVehiculo || vehiculoEncontrado.basicVehicleType) }}</span>
-                  </div>
-                }
-                <div class="info-row">
-                  <label>Estado:</label>
-                  <span>{{ getStatusDisplay(vehiculoEncontrado.status) }}</span>
-                </div>
-                @if (vehiculoEncontrado.notes) {
-                  <div class="info-row">
-                    <label>Notas:</label>
-                    <span>{{ vehiculoEncontrado.notes }}</span>
-                  </div>
-                }
+  <div class="modal-overlay" (click)="cerrarModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Vehículo: {{ vehiculoEncontrado.vehiclePlate }}</h2>
+        <button type="button" class="btn-close" (click)="cerrarModal()">×</button>
+      </div>
+
+      <div class="modal-body">
+        <!-- Bloque: Información del Vehículo -->
+        <div class="form-block">
+          <div class="block-header">
+            <span class="block-title">Información del Vehículo</span>
+          </div>
+          <div class="block-content">
+            <div class="info-grid">
+              <div class="info-row">
+                <label>Placa:</label>
+                <span>{{ vehiculoEncontrado.vehiclePlate }}</span>
               </div>
+              <div class="info-row">
+                <label>Fecha Entrada:</label>
+                <span>{{ vehiculoEncontrado.startDay }}</span>
+              </div>
+              <div class="info-row">
+                <label>Hora Entrada:</label>
+                <span>{{ vehiculoEncontrado.startTime }}</span>
+              </div>
+              @if (vehiculoEncontrado.tipoVehiculo || vehiculoEncontrado.basicVehicleType) {
+              <div class="info-row">
+                <label>Tipo de Vehículo:</label>
+                <span>{{ getTipoVehiculoDisplay(vehiculoEncontrado.tipoVehiculo || vehiculoEncontrado.basicVehicleType)
+                  }}</span>
+              </div>
+              }
+              <div class="info-row">
+                <label>Estado:</label>
+                <span>{{ getStatusDisplay(vehiculoEncontrado.status) }}</span>
+              </div>
+              @if (vehiculoEncontrado.notes) {
+              <div class="info-row">
+                <label>Notas:</label>
+                <span>{{ vehiculoEncontrado.notes }}</span>
+              </div>
+              }
             </div>
           </div>
+        </div>
 
-          <!-- Bloque: Notas de Salida -->
-          <div class="form-block">
-            <div class="block-header">
-              <span class="block-title">Notas de Salida</span>
-              <span class="block-subtitle">Opcional</span>
-            </div>
-            <div class="block-content">
-              <div class="form-group">
-                <label for="exitNotes">Notas</label>
-                <textarea 
-                  id="exitNotes"
-                  [(ngModel)]="exitNotes"
-                  rows="2"
-                  placeholder="Agregue cualquier nota adicional sobre la salida del vehículo...">
+        <!-- Bloque: Notas de Salida -->
+        <div class="form-block">
+          <div class="block-header">
+            <span class="block-title">Notas de Salida</span>
+            <span class="block-subtitle">Opcional</span>
+          </div>
+          <div class="block-content">
+            <div class="form-group">
+              <label for="exitNotes">Notas</label>
+              <textarea id="exitNotes" [(ngModel)]="exitNotes" rows="2"
+                placeholder="Agregue cualquier nota adicional sobre la salida del vehículo...">
                 </textarea>
-                <small class="help-text">Información adicional sobre la salida del vehículo</small>
-              </div>
+              <small class="help-text">Información adicional sobre la salida del vehículo</small>
             </div>
           </div>
-        </div>
-
-        <div class="modal-footer">
-          <button 
-            type="button"
-            class="btn-secondary"
-            (click)="cancelar()"
-            [disabled]="loading">
-            Cancelar
-          </button>
-          <button 
-            type="button"
-            class="btn-primary"
-            (click)="procesarSalida()"
-            [disabled]="loading">
-            Procesar Salida
-          </button>
         </div>
       </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary" (click)="cancelar()" [disabled]="loading">
+          Cancelar
+        </button>
+        <button type="button" class="btn-primary" (click)="procesarSalida()" [disabled]="loading">
+          Procesar Salida
+        </button>
+      </div>
     </div>
+  </div>
   }
 </div>

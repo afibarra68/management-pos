@@ -1,0 +1,245 @@
+.cash-register-view-container {
+  padding: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+  transition: background-color 0.3s ease, color 0.3s ease;
+
+  // Modo oscuro
+  :host-context(.dark-mode) & {
+    color: #ffffff;
+
+    .header {
+      border-bottom-color: #333333;
+
+      h2 {
+        color: #ffffff !important;
+      }
+    }
+
+    .summary-card {
+      background-color: #1a1a1a;
+      border-color: #333333;
+
+      .summary-label {
+        color: #cccccc !important;
+      }
+
+      .summary-value {
+        color: #ffffff !important;
+      }
+    }
+
+    h3 {
+      color: #ffffff !important;
+      border-bottom-color: #333333;
+    }
+
+    .loading-state,
+    .empty-state {
+      color: #ffffff !important;
+
+      p,
+      small {
+        color: #ffffff !important;
+      }
+    }
+
+    .dialog-content {
+      label {
+        color: #ffffff !important;
+      }
+    }
+  }
+
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #e0e0e0;
+
+    h2 {
+      margin: 0;
+      color: #1a1a1a;
+      font-size: 2rem;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+    }
+  }
+
+  .loading-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem;
+    color: var(--text-color-secondary);
+
+    i {
+      margin-bottom: 1rem;
+    }
+  }
+
+  .summary-section {
+    margin-bottom: 2rem;
+
+    .summary-card {
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      transition: box-shadow 0.2s ease;
+
+      &:hover {
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      }
+
+      ::ng-deep .p-card-body {
+        padding: 1.5rem;
+      }
+
+      .summary-content {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+
+        .summary-item {
+          text-align: center;
+
+          .summary-label {
+            font-size: 0.875rem;
+            color: var(--text-color-secondary);
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+          }
+
+          .summary-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-color);
+
+            &.income {
+              color: var(--green-500);
+            }
+
+            &.total {
+              color: var(--blue-500);
+            }
+          }
+        }
+      }
+    }
+  }
+
+  .concept-summary-section,
+  .recent-registers-section {
+    margin-bottom: 2rem;
+
+    h3 {
+      margin-bottom: 1rem;
+      color: #1a1a1a;
+      font-size: 1.25rem;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid #e0e0e0;
+    }
+  }
+
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 4rem 2rem;
+    text-align: center;
+    color: var(--text-color-secondary);
+
+    i {
+      margin-bottom: 1rem;
+    }
+
+    p {
+      margin: 0.5rem 0;
+      font-size: 1.1rem;
+      font-weight: 500;
+    }
+
+    small {
+      color: var(--text-color-secondary);
+    }
+  }
+
+  .dialog-content {
+    .field {
+      display: flex;
+      flex-direction: column;
+      margin-bottom: 1rem;
+
+      label {
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+        color: var(--text-color);
+      }
+
+      small {
+        margin-top: 0.25rem;
+        display: block;
+      }
+    }
+  }
+
+  // Modo oscuro para tablas PrimeNG
+  :host-context(.dark-mode) & {
+    ::ng-deep {
+
+      .p-table,
+      .p-datatable {
+        background-color: #1a1a1a !important;
+        color: #ffffff !important;
+
+        .p-datatable-thead>tr>th {
+          background-color: #2a2a2a !important;
+          color: #ffffff !important;
+          border-color: #333333 !important;
+        }
+
+        .p-datatable-tbody>tr>td {
+          background-color: #1a1a1a !important;
+          color: #ffffff !important;
+          border-color: #333333 !important;
+        }
+
+        .p-datatable-tbody>tr:hover {
+          background-color: #2a2a2a !important;
+        }
+
+        th,
+        td {
+          color: #ffffff !important;
+        }
+      }
+    }
+  }
+}
+
+// Responsive
+@media (max-width: 768px) {
+  .cash-register-view-container {
+    padding: 1rem;
+
+    .header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 1rem;
+    }
+
+    .summary-section {
+      .summary-card {
+        .summary-content {
+          grid-template-columns: 1fr;
+          gap: 1rem;
+        }
+      }
+    }
+  }
+}

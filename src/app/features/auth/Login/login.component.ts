@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, PLATFORM_ID, Inject, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, PLATFORM_ID, Inject, inject, AfterViewInit, ElementRef, ViewChild } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { AuthService, LoginRequest } from '../../../core/services/auth.service';
 import { NotificationService } from '../../../core/services/notification.service';
@@ -33,10 +33,9 @@ import { finalize } from 'rxjs/operators';
   ],
   templateUrl: './login.component.html',
 })
-export class LoginComponent implements OnInit, OnDestroy {
+export class LoginComponent implements OnInit, OnDestroy, AfterViewInit {
   form: FormGroup;
   loading = false;
-  error: string | null = null;
   showValidationModal = false;
   private notificationService = inject(NotificationService);
   private shiftService = inject(ShiftService);
@@ -75,6 +74,18 @@ export class LoginComponent implements OnInit, OnDestroy {
     }
   }
 
+  ngAfterViewInit(): void {
+    if (isPlatformBrowser(this.platformId)) {
+      // Desactivar autocompletado del campo de contraseña
+      setTimeout(() => {
+        const passwordInput = document.querySelector('#accesKey input[type="password"]') as HTMLInputElement;
+        if (passwordInput) {
+          passwordInput.setAttribute('autocomplete', 'new-password');
+        }
+      }, 100);
+    }
+  }
+
   ngOnDestroy(): void {
     if (isPlatformBrowser(this.platformId)) {
       document.body.classList.remove('login-page');
@@ -92,7 +103,6 @@ export class LoginComponent implements OnInit, OnDestroy {
   submit(): void {
     if (this.form.invalid) return;
     this.loading = true;
-    this.error = null;
     const credentials: LoginRequest = this.form.value;
 
     this.auth.login(credentials).subscribe({
@@ -106,22 +116,45 @@ export class LoginComponent implements OnInit, OnDestroy {
         this.loading = false;
         const status = err?.status;
         const errorResponse = err?.error;
+        const errorMessage = err?.message || '';
+        const errorName = err?.name || '';
 
-        // Si es error 412 (PRECONDITION_FAILED), mostrar el mensaje del backend
-        if (status === 412) {
-          const errorMessage = errorResponse?.message || errorResponse?.error || 'Error de validación';
-          const errorDetails = errorResponse?.details || errorResponse?.detail;
+        // Detectar timeout o problemas de conexión
+        const isTimeout = status === 0 ||
+          status === null ||
+          status === undefined ||
+          errorName === 'TimeoutError' ||
+          errorMessage.toLowerCase().includes('timeout') ||
+          errorMessage.toLowerCase().includes('network') ||
+          errorMessage.toLowerCase().includes('connection');
+
+        if (isTimeout) {
+          // Mostrar mensaje específico para timeout/conexión
+          this.notificationService.error(
+            'No se logra establecer conexión con el servidor. Por favor, verifique su conexión a internet e intente nuevamente.',
+            'Error de conexión'
+          );
+        } else if (status === 412) {
+          // Si es error 412 (PRECONDITION_FAILED), mostrar el mensaje del backend
+          // Extraer el mensaje legible (readableMsg tiene prioridad)
+          // Intentar múltiples campos posibles donde puede venir el mensaje
+          const backendErrorMessage = errorResponse?.readableMsg ||
+            errorResponse?.message ||
+            errorResponse?.error ||
+            (typeof errorResponse === 'string' ? errorResponse : null) ||
+            'Error de validación';
+
+          // Extraer detalles adicionales si existen
+          const errorDetails = errorResponse?.details ||
+            errorResponse?.detail ||
+            errorResponse?.errorDetails;
 
           // Mostrar notificación con el mensaje del backend
-          this.notificationService.showPreconditionFailed(errorMessage, errorDetails);
-
-          // También mostrar en el formulario para referencia
-          this.error = errorMessage;
+          this.notificationService.showPreconditionFailed(backendErrorMessage, errorDetails);
         } else {
           // Para otros errores, mostrar mensaje genérico
           const genericMessage = 'Ha ocurrido un error. Por favor, consulte al administrador.';
           this.notificationService.error(genericMessage);
-          this.error = err?.error?.message || 'Error en el login';
         }
       }
     });

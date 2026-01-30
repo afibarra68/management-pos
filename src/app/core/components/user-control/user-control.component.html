@@ -1,19 +1,16 @@
 @if (userData) {
-  <div class="user-control">
-    @if (companyDescription) {
-      <div class="company-info">
-        <span class="company-name">{{ companyDescription }}</span>
-      </div>
-    }
-    <div class="user-info">
-      <div class="user-avatar">{{ getInitials() }}</div>
-      <span class="user-name">{{ getFullName() }}</span>
-    </div>
-    <button 
-      type="button"
-      class="btn-logout"
-      (click)="logout()">
-      Cerrar Sesión
-    </button>
+<div class="user-control">
+  @if (companyDescription) {
+  <div class="company-info">
+    <span class="company-name">{{ companyDescription }}</span>
   </div>
+  }
+  <div class="user-info">
+    <div class="user-avatar">{{ getInitials() }}</div>
+    <span class="user-name">{{ getFullName() }}</span>
+  </div>
+  <button type="button" class="btn-logout" (click)="logout()">
+    Cerrar Sesión
+  </button>
+</div>
 }

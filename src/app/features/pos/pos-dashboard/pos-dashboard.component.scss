@@ -1,0 +1,571 @@
+.pos-dashboard-container {
+  padding: 1rem 2rem;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  transition: background-color 0.3s ease, color 0.3s ease;
+
+  // Modo oscuro
+  :host-context(.dark-mode) & {
+    color: #ffffff;
+
+    .header {
+      border-bottom-color: #333333;
+
+      h1 {
+        color: #ffffff !important;
+      }
+
+      .subtitle {
+        color: #cccccc !important;
+      }
+    }
+
+    .stat-card {
+      background-color: #1a1a1a;
+      border-color: #333333;
+
+      ::ng-deep {
+
+        .p-card-body,
+        .p-card-content {
+          background-color: #1a1a1a !important;
+          color: #ffffff !important;
+        }
+      }
+
+      .stat-label {
+        color: #cccccc !important;
+      }
+
+      .stat-value {
+        color: #ffffff !important;
+      }
+    }
+
+    .actions-buttons {
+      .action-card {
+        ::ng-deep {
+
+          .p-card-body,
+          .p-card-content {
+            background-color: #1a1a1a !important;
+            color: #ffffff !important;
+          }
+
+          .card-content {
+
+            h2,
+            p {
+              color: #ffffff !important;
+            }
+          }
+        }
+      }
+    }
+
+    .section-title {
+      color: #ffffff !important;
+      border-bottom-color: #333333;
+    }
+
+    .loading-state,
+    .error-state {
+      p {
+        color: #ffffff !important;
+      }
+    }
+  }
+
+  .header {
+    text-align: center;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #e0e0e0;
+
+    h1 {
+      margin: 0 0 0.5rem 0;
+      color: #1a1a1a;
+      font-size: 2rem;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+    }
+
+    .subtitle {
+      margin: 0;
+      color: #666666;
+      font-size: 0.9rem;
+    }
+  }
+
+  .actions-buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+    padding-top: 0.5rem;
+    position: relative;
+
+    .action-card {
+      transition: all 0.3s ease;
+      flex: 0 0 200px;
+      width: 200px;
+      height: 120px;
+      position: relative;
+      z-index: 1;
+
+      &:hover:not(.active) {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        z-index: 2;
+      }
+
+      &.active {
+        z-index: 10;
+        border: 3px solid var(--primary-color);
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+        transform: scale(1.05);
+
+        ::ng-deep {
+          .p-card {
+            background: #ffffff !important;
+            background-color: #ffffff !important;
+            border-color: var(--primary-color) !important;
+          }
+
+          .p-card-body {
+            background: #ffffff !important;
+            background-color: #ffffff !important;
+          }
+
+          .p-card-content {
+            background: #ffffff !important;
+            background-color: #ffffff !important;
+          }
+        }
+      }
+
+      &.active .card-content {
+        .card-icon {
+          color: var(--primary-color) !important;
+        }
+
+        h2 {
+          color: var(--primary-color) !important;
+        }
+
+        p {
+          color: var(--primary-color) !important;
+        }
+      }
+
+      ::ng-deep .p-card-body {
+        padding: 1rem;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--surface-card);
+        background-color: var(--surface-card);
+      }
+
+
+      ::ng-deep .p-card-content {
+        padding: 0;
+        width: 100%;
+      }
+
+      .card-content {
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.5rem;
+        height: 100%;
+        justify-content: center;
+
+        .card-icon {
+          font-size: 2rem;
+          color: var(--primary-color);
+          margin-bottom: 0;
+          transition: color 0.3s ease;
+        }
+
+        h2 {
+          margin: 0;
+          color: var(--text-color);
+          font-size: 1rem;
+          font-weight: 600;
+          transition: color 0.3s ease;
+        }
+
+        p {
+          margin: 0;
+          color: var(--text-color-secondary);
+          font-size: 0.75rem;
+          line-height: 1.3;
+          transition: color 0.3s ease;
+        }
+      }
+    }
+  }
+
+  .content-area {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0 1rem;
+
+    app-registrar-placa,
+    app-registrar-salida {
+      display: block;
+      max-width: 100%;
+    }
+  }
+
+  .dashboard-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    overflow-y: auto;
+  }
+
+  .stats-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .stat-card {
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    transition: box-shadow 0.2s ease;
+
+    &:hover {
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+
+    ::ng-deep .p-card-body {
+      padding: 1.5rem;
+    }
+
+    .stat-content {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+    }
+
+    .stat-icon {
+      width: 60px;
+      height: 60px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      color: white;
+
+      &.total {
+        background-color: #4a9eff;
+      }
+
+      &.amount {
+        background-color: #4a9eff;
+      }
+
+      i {
+        font-size: 1.8rem;
+      }
+    }
+
+    .stat-info {
+      flex: 1;
+
+      .stat-label {
+        margin: 0 0 0.5rem 0;
+        color: #666666;
+        font-size: 0.9rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .stat-value {
+        margin: 0;
+        color: #1a1a1a;
+        font-size: 1.8rem;
+        font-weight: 700;
+      }
+    }
+  }
+
+  .loading-state,
+  .error-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem;
+    gap: 1rem;
+    text-align: center;
+
+    p {
+      margin: 0;
+      color: var(--text-color-secondary);
+    }
+  }
+
+  .parking-map-section {
+    margin-top: 2rem;
+
+    app-parking-map {
+      display: block;
+    }
+  }
+
+  .cash-register-section {
+    margin-top: 2rem;
+
+    app-cash-register-view {
+      display: block;
+    }
+  }
+
+  .transactions-section {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+
+    .section-title {
+      margin: 0 0 1rem 0;
+      color: #1a1a1a;
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid #e0e0e0;
+    }
+
+    ::ng-deep {
+      .p-card {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .p-card-body {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        padding: 1.5rem;
+      }
+
+      .p-card-content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        padding: 0;
+      }
+
+      .p-datatable {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+
+        .p-datatable-wrapper {
+          flex: 1;
+          overflow: auto;
+        }
+
+        .p-datatable-thead>tr>th {
+          color: #1a1a1a;
+        }
+
+        .p-datatable-tbody>tr>td {
+          color: #1a1a1a;
+        }
+      }
+    }
+  }
+
+  // Modo oscuro para tablas
+  :host-context(.dark-mode) & {
+    .transactions-section {
+      ::ng-deep {
+        .p-datatable {
+          .p-datatable-thead>tr>th {
+            background-color: #2a2a2a !important;
+            color: #ffffff !important;
+            border-color: #333333 !important;
+          }
+
+          .p-datatable-tbody>tr>td {
+            background-color: #1a1a1a !important;
+            color: #ffffff !important;
+            border-color: #333333 !important;
+          }
+
+          .p-datatable-tbody>tr:hover {
+            background-color: #2a2a2a !important;
+          }
+        }
+      }
+    }
+  }
+}
+
+// Responsive para resoluciones pequeñas
+@media (max-width: 768px) {
+  .pos-dashboard-container {
+    padding: 0.75rem 1rem;
+    height: auto;
+    min-height: calc(100vh - 64px);
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+
+    .header {
+      margin-bottom: 1rem;
+
+      h1 {
+        font-size: 1.5rem;
+      }
+
+      .subtitle {
+        font-size: 0.85rem;
+      }
+    }
+
+    .actions-buttons {
+      flex-direction: column;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+      padding-top: 0.5rem;
+
+      .action-card {
+        flex: 1 1 auto;
+        width: 100%;
+        max-width: 100%;
+        height: auto;
+        min-height: 100px;
+      }
+    }
+
+    .content-area {
+      padding: 0 0.5rem;
+      overflow-y: visible;
+      overflow-x: hidden;
+    }
+
+    .dashboard-content {
+      gap: 1rem;
+      overflow-y: visible;
+    }
+
+    .stats-cards {
+      grid-template-columns: 1fr;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .stat-card {
+      ::ng-deep .p-card-body {
+        padding: 1rem;
+      }
+
+      .stat-content {
+        gap: 1rem;
+      }
+
+      .stat-icon {
+        width: 50px;
+        height: 50px;
+        font-size: 1.2rem;
+
+        i {
+          font-size: 1.5rem;
+        }
+      }
+
+      .stat-info {
+        .stat-label {
+          font-size: 0.85rem;
+        }
+
+        .stat-value {
+          font-size: 1.5rem;
+        }
+      }
+    }
+
+    .transactions-section {
+      .section-title {
+        font-size: 1.25rem;
+        margin-bottom: 0.75rem;
+      }
+
+      ::ng-deep {
+        .p-card-body {
+          padding: 1rem;
+        }
+      }
+    }
+  }
+}
+
+::ng-deep {
+  .cursor-pointer {
+    cursor: pointer;
+  }
+
+  .active-card {
+    .p-card {
+      background: #ffffff !important;
+      background-color: #ffffff !important;
+      border-color: var(--primary-color) !important;
+    }
+
+    .p-card-body {
+      background: #ffffff !important;
+      background-color: #ffffff !important;
+    }
+
+    .p-card-content {
+      background: #ffffff !important;
+      background-color: #ffffff !important;
+    }
+
+    .card-content {
+
+      .card-icon,
+      i {
+        color: var(--primary-color) !important;
+      }
+
+      h2 {
+        color: var(--primary-color) !important;
+      }
+
+      p {
+        color: var(--primary-color) !important;
+      }
+    }
+  }
+
+  .action-card.active {
+    .p-card-body {
+      h2 {
+        color: var(--primary-color) !important;
+      }
+
+      p {
+        color: var(--primary-color) !important;
+      }
+
+      i {
+        color: var(--primary-color) !important;
+      }
+    }
+  }
+}
