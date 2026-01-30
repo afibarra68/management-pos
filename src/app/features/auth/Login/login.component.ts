@@ -32,7 +32,6 @@ import { finalize } from 'rxjs/operators';
     RouterModule
   ],
   templateUrl: './login.component.html',
-  styleUrls: ['./login.component.scss']
 })
 export class LoginComponent implements OnInit, OnDestroy {
   form: FormGroup;
@@ -54,7 +53,7 @@ export class LoginComponent implements OnInit, OnDestroy {
       const returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/pos';
       this.router.navigate([returnUrl], { replaceUrl: true });
     }
-    
+
     this.form = this.fb.group({
       username: ['', Validators.required],
       accesKey: ['', Validators.required]
@@ -69,7 +68,7 @@ export class LoginComponent implements OnInit, OnDestroy {
         this.router.navigate([returnUrl], { replaceUrl: true });
         return;
       }
-      
+
       document.body.classList.add('login-page');
       document.documentElement.style.overflow = 'hidden';
       document.body.style.overflow = 'hidden';
@@ -95,32 +94,13 @@ export class LoginComponent implements OnInit, OnDestroy {
     this.loading = true;
     this.error = null;
     const credentials: LoginRequest = this.form.value;
-    
+
     this.auth.login(credentials).subscribe({
       next: () => {
         this.loading = false;
         const returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/pos';
-
-        // Mostrar modal "Validando, acceso al turno!" e invocar /shift-validation/active-shift
-        this.showValidationModal = true;
-        this.shiftService.getOrCreateActiveShift().pipe(
-          finalize(() => { this.showValidationModal = false; })
-        ).subscribe({
-          next: () => {
-            this.router.navigateByUrl(returnUrl, { replaceUrl: true });
-          },
-          error: (err) => {
-            const status = err?.status;
-            const errorResponse = err?.error;
-            if (status === 412) {
-              const msg = errorResponse?.message || errorResponse?.error || 'Error al validar acceso al turno';
-              this.notificationService.showPreconditionFailed(msg, errorResponse?.details || errorResponse?.detail);
-            } else {
-              this.notificationService.error(errorResponse?.message || 'No se pudo validar el acceso al turno.');
-            }
-            this.router.navigateByUrl(returnUrl, { replaceUrl: true });
-          }
-        });
+        // El backend ya crea/valida el turno activo durante el login, solo navegar
+        this.router.navigateByUrl(returnUrl, { replaceUrl: true });
       },
       error: (err) => {
         this.loading = false;

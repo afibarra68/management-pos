@@ -12,9 +12,12 @@ import { SharedModule } from '../../../shared/shared-module';
 import { CashRegisterService } from '../../../core/services/cash-register.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { ShiftService, DShiftAssignment, ShiftConnectionHistory } from '../../../core/services/shift.service';
+import { ClosedTransactionService } from '../../../core/services/closed-transaction.service';
+import { ParamVenta } from '../../../core/services/open-transaction.service';
 import { ToastModule } from 'primeng/toast';
 import { Subject, forkJoin, takeUntil, finalize, catchError, of } from 'rxjs';
 import { NotificationService } from '../../../core/services/notification.service';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-ingreso-caja-otro-concepto',
@@ -32,26 +35,24 @@ import { NotificationService } from '../../../core/services/notification.service
     SharedModule
   ],
   templateUrl: './ingreso-caja-otro-concepto.component.html',
-  styleUrls: ['./ingreso-caja-otro-concepto.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class IngresoCajaOtroConceptoComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
   private fb = inject(FormBuilder);
   private cashRegisterService = inject(CashRegisterService);
+  private closedTransactionService = inject(ClosedTransactionService);
   private router = inject(Router);
   private authService = inject(AuthService);
   private shiftService = inject(ShiftService);
   private notificationService = inject(NotificationService);
   private cdr = inject(ChangeDetectorRef);
-  
+
   form: FormGroup;
   loading = false;
   loadingShift = false;
   currentShift: DShiftAssignment | null = null;
   activeShiftHistory: ShiftConnectionHistory | null = null;
-  companyName: string = '';
-  currentTime: string = '';
 
   constructor() {
     this.form = this.fb.group({
@@ -62,26 +63,11 @@ export class IngresoCajaOtroConceptoComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.loadCurrentShift();
-    this.loadCompanyName();
-    this.updateCurrentTime();
   }
 
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
-  }
-
-  updateCurrentTime(): void {
-    const now = new Date();
-    this.currentTime = now.toLocaleString('es-CO', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit'
-    });
-    this.cdr.markForCheck();
   }
 
   loadCurrentShift(): void {
@@ -91,50 +77,65 @@ export class IngresoCajaOtroConceptoComponent implements OnInit, OnDestroy {
     }
 
     this.loadingShift = true;
-    const today = new Date().toISOString().split('T')[0];
 
-    forkJoin({
-      assignments: this.shiftService.getByUserAndDate(userData.appUserId, today).pipe(catchError(() => of([]))),
-      activeHistory: this.shiftService.getOrCreateActiveShift().pipe(catchError(() => of(null)))
-    })
+    // Obtener información del turno activo desde params
+    const serviceCode = environment.serviceCode;
+    this.closedTransactionService.getParams(serviceCode)
       .pipe(
         takeUntil(this.destroy$),
         finalize(() => {
           this.loadingShift = false;
           this.cdr.markForCheck();
         }),
-        catchError(() => of({ assignments: [], activeHistory: null }))
+        catchError(() => of(null))
       )
       .subscribe({
-        next: ({ assignments, activeHistory }) => {
-          const activeShift = assignments?.find(a => {
-            const s = a.status;
-            const id = typeof s === 'string' ? s : s?.id;
-            return id === 'CONFIRMED' || id === 'PENDING';
-          }) || null;
-          this.currentShift = activeShift || null;
-          this.activeShiftHistory = activeHistory || null;
+        next: (params: ParamVenta | null) => {
+          if (params?.dshiftConnectionHistory) {
+            const activeHistory = params.dshiftConnectionHistory;
+            this.activeShiftHistory = activeHistory;
+
+            // Construir DShiftAssignment a partir de ShiftConnectionHistory
+            if (activeHistory.shift && activeHistory.shiftAssignmentId) {
+              const shiftAssignment: DShiftAssignment = {
+                shiftAssignmentId: activeHistory.shiftAssignmentId,
+                shiftId: activeHistory.shiftId || activeHistory.shift?.shiftId,
+                shift: activeHistory.shift,
+                appUserId: activeHistory.appUserId,
+                status: activeHistory.shift?.status || { id: 'CONFIRMED', description: 'Turno confirmado' }
+              };
+              this.currentShift = shiftAssignment;
+            } else {
+              this.currentShift = null;
+            }
+          } else {
+            this.activeShiftHistory = null;
+            this.currentShift = null;
+          }
           this.cdr.markForCheck();
         }
       });
   }
 
-  loadCompanyName(): void {
-    const userData = this.authService.getUserData();
-    if (userData?.companyName) {
-      this.companyName = userData.companyName;
-      this.cdr.markForCheck();
-    }
-  }
-
   getShiftDisplayText(): string {
-    if (!this.currentShift) return 'No asignado';
-    const shiftType = this.currentShift.shift?.shiftType?.typeName || '';
-    return `${shiftType}`;
-  }
+    const shiftAssignment = this.currentShift;
+    if (!shiftAssignment?.shift) {
+      return 'Sin turno asignado';
+    }
 
-  goToDashboard(): void {
-    this.router.navigate(['/pos']);
+    const shift = shiftAssignment.shift;
+    const shiftType = shift.shiftType;
+    const typeName = shiftType?.typeName || shiftType?.description || 'Turno';
+    const startTime = shift.startTime || shiftType?.startTime || '';
+    const endTime = shift.endTime || shiftType?.endTime || '';
+
+    if (startTime && endTime) {
+      return `${typeName} (${startTime} - ${endTime})`;
+    } else if (startTime) {
+      return `${typeName} (${startTime})`;
+    }
+
+    return typeName;
   }
 
   submit(): void {
@@ -172,7 +173,7 @@ export class IngresoCajaOtroConceptoComponent implements OnInit, OnDestroy {
             `Ingreso registrado exitosamente. Monto: $${amount.toLocaleString('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
           );
           this.form.reset();
-          
+
           // Disparar evento para actualizar la vista de caja
           window.dispatchEvent(new CustomEvent('cashRegisterUpdated'));
         },
@@ -180,7 +181,7 @@ export class IngresoCajaOtroConceptoComponent implements OnInit, OnDestroy {
           const errorMessage = this.getErrorMessage(err);
           const status = err?.status;
           const errorResponse = err?.error;
-          
+
           if (status === 412) {
             const errorDetails = errorResponse?.details ?? errorResponse?.detail;
             this.notificationService.showPreconditionFailed(errorMessage, errorDetails);
@@ -197,12 +198,12 @@ export class IngresoCajaOtroConceptoComponent implements OnInit, OnDestroy {
   private getErrorMessage(err: any): string {
     const status = err?.status;
     const errorResponse = err?.error;
-    
+
     // Si es un error 412, usar readableMsg si está disponible
     if (status === 412) {
       return errorResponse?.readableMsg || errorResponse?.message || 'Error de validación';
     }
-    
+
     // Para otros errores, intentar obtener readableMsg primero, luego message
     return errorResponse?.readableMsg || errorResponse?.message || 'Error al registrar el ingreso';
   }

@@ -1,17 +1,19 @@
 @if (userData) {
   <div class="user-control">
+    @if (companyDescription) {
+      <div class="company-info">
+        <span class="company-name">{{ companyDescription }}</span>
+      </div>
+    }
     <div class="user-info">
-      <p-avatar [label]="getInitials()" shape="circle" styleClass="user-avatar"></p-avatar>
+      <div class="user-avatar">{{ getInitials() }}</div>
       <span class="user-name">{{ getFullName() }}</span>
     </div>
-    <div class="logout-container">
-      <p-button 
-        icon="pi pi-sign-out" 
-        label="Cerrar Sesión"
-        (onClick)="logout()"
-        styleClass="p-button-text p-button-danger logout-btn">
-      </p-button>
-    </div>
+    <button 
+      type="button"
+      class="btn-logout"
+      (click)="logout()">
+      Cerrar Sesión
+    </button>
   </div>
 }
-

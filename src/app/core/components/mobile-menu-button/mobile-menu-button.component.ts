@@ -6,13 +6,12 @@ import { SidebarService } from '../../services/sidebar.service';
   standalone: true,
   imports: [],
   templateUrl: './mobile-menu-button.component.html',
-  styleUrls: ['./mobile-menu-button.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class MobileMenuButtonComponent {
   private readonly sidebarService = inject(SidebarService);
   private readonly cdr = inject(ChangeDetectorRef);
-  
+
   readonly mobileMenuOpen = this.sidebarService.mobileMenuOpen;
 
   constructor() {
@@ -26,7 +25,7 @@ export class MobileMenuButtonComponent {
     this.sidebarService.toggleMobileMenu();
     this.cdr.markForCheck();
   }
-  
+
   @HostListener('window:resize')
   onResize(): void {
     // Si cambia a desktop, cerrar el menú móvil

@@ -1,11 +1,12 @@
-<div class="parking-map-container">
-  <div class="header">
-    <h2>Mapa de Puestos</h2>
-    <p class="subtitle">Estado de ocupación del parqueadero</p>
-  </div>
+@if (hasData() || loading()) {
+  <div class="parking-map-container">
+    <div class="header">
+      <h2>Mapa de Puestos</h2>
+      <p class="subtitle">Estado de ocupación del parqueadero</p>
+    </div>
 
 
-  @if (loading()) {
+    @if (loading()) {
     <div class="loading-state">
       <i class="pi pi-spin pi-spinner" style="font-size: 2rem;"></i>
       <p>Cargando información del parqueadero...</p>
@@ -48,10 +49,10 @@
 
     <!-- Detalle por Tipo de Vehículo -->
     <div class="occupancy-details">
-      @for (item of occupancyData(); track item.basicVehicleType?.id || $index) {
+      @for (item of occupancyData(); track item.tipoVehiculo?.id || $index) {
         <p-card class="occupancy-card">
           <div class="card-header">
-            <h3>{{ getVehicleTypeDisplay(item.basicVehicleType) }}</h3>
+            <h3>{{ getVehicleTypeDisplay(item.tipoVehiculo) }}</h3>
             <span 
               class="status-badge" 
               [style.background-color]="getOccupancyColor(item.occupancyPercentage)"
@@ -97,11 +98,12 @@
     </div>
   }
 
-  @if (!loading() && occupancyData().length === 0 && !error()) {
-    <div class="empty-state">
-      <i class="pi pi-info-circle" style="font-size: 3rem; color: var(--text-color-secondary);"></i>
-      <p>No hay configuración de capacidad disponible</p>
-      <small>Configure la capacidad de vehículos en el panel administrativo</small>
-    </div>
-  }
-</div>
+    @if (!loading() && occupancyData().length === 0 && !error()) {
+      <div class="empty-state">
+        <i class="pi pi-info-circle" style="font-size: 3rem; color: var(--text-color-secondary);"></i>
+        <p>No hay configuración de capacidad disponible</p>
+        <small>Configure la capacidad de vehículos en el panel administrativo</small>
+      </div>
+    }
+  </div>
+}

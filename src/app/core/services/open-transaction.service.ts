@@ -51,16 +51,79 @@ export interface OpenTransaction {
   paymentType?: string | EnumResource;
 }
 
+export interface DShiftType {
+  shiftTypeId?: number;
+  typeName?: string;
+  durationHours?: number;
+  companyCompanyId?: number;
+  isActive?: boolean;
+}
+
+export interface DShift {
+  shiftId?: number;
+  shiftTypeId?: number;
+  shiftType?: DShiftType;
+  shiftDate?: string;
+  startTime?: string;
+  endTime?: string;
+  status?: string | EnumResource;
+  companyCompanyId?: number;
+  hoursToConciliate?: number;
+}
+
 export interface ParamVenta {
   serviceCode: string;
   collaboratorId: number;
   collaboratorDescription: string;
   companyBusinessServiceId?: number;
   easyMode: boolean;
-  vehicleType: EnumResource[];
-  basicVehicleType: EnumResource[];
+  vehicleType?: EnumResource[] | null;
+  basicVehicleType?: EnumResource[] | null;
   hasActiveShift?: boolean;
   canManageCashExit?: boolean;
+  dshiftConnectionHistory?: ShiftConnectionHistory;
+}
+
+export interface ShiftConnectionHistory {
+  shiftConnectionHistoryId?: number;
+  appUserId?: number;
+  user?: {
+    appUserId?: number;
+    firstName?: string;
+    secondName?: string;
+    lastName?: string;
+    secondLastName?: string | null;
+    numberIdentity?: string;
+    sha?: string | null;
+    password?: string | null;
+    phoneNumber?: string | null;
+    salt?: string | null;
+    accessCredential?: string | null;
+    loginLimit?: string;
+    companyCompanyId?: number;
+    processorId?: string;
+  };
+  companyCompanyId?: number;
+  connectionTime?: string;
+  userAgent?: string | null;
+  status?: 'ACTIVO' | 'CERRADO' | EnumResource;
+  actualShiftDate?: string;
+  shiftId?: number;
+  shift?: DShift;
+  shiftAssignmentId?: number;
+  totalVehicleExits?: number;
+  totalSubscriptionExits?: number;
+  totalPaidExits?: number;
+  totalCashReceived?: number;
+  totalOtherPayments?: number;
+  closedAt?: string | null;
+  closedByUserId?: number | null;
+  closedBy?: {
+    appUserId?: number;
+    firstName?: string;
+    lastName?: string;
+  } | null;
+  hoursToCloseOnHistory?: number | null;
 }
 
 @Injectable({

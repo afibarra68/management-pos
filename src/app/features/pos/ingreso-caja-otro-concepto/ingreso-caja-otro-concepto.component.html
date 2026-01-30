@@ -2,33 +2,13 @@
   <div class="header">
     <div class="header-left">
       <h1>Ingreso a Caja por Otro Concepto</h1>
-      <p class="subtitle">Registre un ingreso de dinero a la caja por un concepto diferente a pago de vehículo</p>
     </div>
     <div class="header-right">
-      @if (companyName) {
-      <div class="info-item">
-        <i class="pi pi-building"></i>
-        <span>{{ companyName }}</span>
-      </div>
-      }
       @if (currentShift) {
       <div class="info-item shift-info">
-        <i class="pi pi-clock"></i>
         <span><strong>Turno:</strong> {{ getShiftDisplayText() }}</span>
       </div>
       }
-      <div class="info-item time-info">
-        <i class="pi pi-calendar-clock"></i>
-        <span>{{ currentTime }}</span>
-      </div>
-      <div class="info-item pos-button">
-        <p-button 
-          label="Ver Operaciones" 
-          icon="pi pi-home"
-          (onClick)="goToDashboard()"
-          styleClass="p-button-outlined p-button-secondary">
-        </p-button>
-      </div>
     </div>
   </div>
 

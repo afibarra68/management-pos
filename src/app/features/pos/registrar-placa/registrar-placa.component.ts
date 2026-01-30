@@ -4,7 +4,6 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angula
 import { Router } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
-import { Textarea } from 'primeng/textarea';
 import { MessageModule } from 'primeng/message';
 import { FormsModule } from '@angular/forms';
 import { SharedModule } from '../../../shared/shared-module';
@@ -31,14 +30,12 @@ import { Subject, takeUntil, finalize, catchError, of } from 'rxjs';
     FormsModule,
     ButtonModule,
     InputTextModule,
-    Textarea,
     MessageModule,
     ConfirmDialogModule,
     ToastModule,
     SharedModule
   ],
   templateUrl: './registrar-placa.component.html',
-  styleUrls: ['./registrar-placa.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class RegistrarPlacaComponent implements OnInit, OnDestroy {
@@ -53,7 +50,7 @@ export class RegistrarPlacaComponent implements OnInit, OnDestroy {
   private notificationService = inject(NotificationService);
   private shiftService = inject(ShiftService);
   private cdr = inject(ChangeDetectorRef);
-  
+
   form: FormGroup;
   loading = false;
   loadingTipos = false;
@@ -66,12 +63,14 @@ export class RegistrarPlacaComponent implements OnInit, OnDestroy {
   easyMode = false;
   params: ParamVenta | null = null;
   currentShift: DShiftAssignment | null = null;
-  companyName: string = '';
-  currentTime: string = '';
+
+  // Finder modal
+  showPlateFinder = false;
+  finderPlateValue = '';
 
   constructor() {
     this.form = this.fb.group({
-      vehiclePlate: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(8)]],
+      vehiclePlate: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(6)]],
       tipoVehiculo: [''],
       basicVehicleType: [''],
       notes: ['']
@@ -81,8 +80,6 @@ export class RegistrarPlacaComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.loadParams();
     this.loadCurrentShift();
-    this.loadCompanyName();
-    this.updateCurrentTime(); // Actualizar tiempo solo una vez al iniciar
   }
 
   ngOnDestroy(): void {
@@ -106,7 +103,7 @@ export class RegistrarPlacaComponent implements OnInit, OnDestroy {
   private setupFormValidators(isEasyMode: boolean): void {
     const basicVehicleTypeControl = this.form.get('basicVehicleType');
     const tipoVehiculoControl = this.form.get('tipoVehiculo');
-    
+
     if (isEasyMode) {
       basicVehicleTypeControl?.setValidators([Validators.required]);
       tipoVehiculoControl?.clearValidators();
@@ -114,7 +111,7 @@ export class RegistrarPlacaComponent implements OnInit, OnDestroy {
       tipoVehiculoControl?.setValidators([Validators.required]);
       basicVehicleTypeControl?.clearValidators();
     }
-    
+
     basicVehicleTypeControl?.updateValueAndValidity();
     tipoVehiculoControl?.updateValueAndValidity();
   }
@@ -122,9 +119,9 @@ export class RegistrarPlacaComponent implements OnInit, OnDestroy {
   private loadParams(): void {
     this.loadingParams = true;
     this.error = null;
-    
+
     const serviceCode = environment.serviceCode;
-    
+
     this.openTransactionService.getParams(serviceCode)
       .pipe(
         takeUntil(this.destroy$),
@@ -141,63 +138,60 @@ export class RegistrarPlacaComponent implements OnInit, OnDestroy {
           if (!params) {
             return;
           }
-          
+
           this.params = params;
           this.easyMode = params.easyMode;
-          
+
           if (params.easyMode) {
-            this.basicVehicleTypeOptions = this.mapToSelectItems(params.basicVehicleType);
+            this.basicVehicleTypeOptions = this.mapToSelectItems(params.basicVehicleType || []);
           } else {
-            this.tipoVehiculoOptions = this.mapToSelectItems(params.vehicleType);
+            this.tipoVehiculoOptions = this.mapToSelectItems(params.vehicleType || []);
           }
-          
+
           this.setupFormValidators(params.easyMode);
-          this.loadCompanyName();
         }
       });
   }
 
   /**
-   * Carga el turno actual del usuario para la fecha de hoy
+   * Carga el turno actual del usuario desde la configuración de params
    */
   private loadCurrentShift(): void {
-    const userData = this.authService.getUserData();
-    if (!userData?.appUserId) {
-      return;
+    // Usar la información del turno desde params.dshiftConnectionHistory
+    const shiftHistory = this.params?.dshiftConnectionHistory;
+    const shift = shiftHistory?.shift;
+    if (shift && shiftHistory?.shiftAssignmentId) {
+      const shiftAssignment: DShiftAssignment = {
+        shiftAssignmentId: shiftHistory.shiftAssignmentId,
+        shiftId: shiftHistory.shiftId || shift.shiftId,
+        shift: shift,
+        appUserId: shiftHistory.appUserId,
+        status: shift.status || { id: 'CONFIRMED', description: 'Turno confirmado' }
+      };
+      this.currentShift = shiftAssignment;
+      this.cdr.markForCheck();
+    } else {
+      this.currentShift = null;
+      this.cdr.markForCheck();
     }
-
-    this.loadingShift = true;
-    const today = new Date().toISOString().split('T')[0]; // Formato YYYY-MM-DD
-
-    this.shiftService.getByUserAndDate(userData.appUserId, today)
-      .pipe(
-        takeUntil(this.destroy$),
-        finalize(() => this.loadingShift = false),
-        catchError((err) => {
-          // No mostrar error al usuario, simplemente no mostrar información del turno
-          return of([]);
-        })
-      )
-      .subscribe({
-        next: (assignments: DShiftAssignment[]) => {
-          // Obtener el primer turno activo (CONFIRMED o PENDING) para hoy
-          const activeShift = assignments.find(assignment => {
-            const status = assignment.status;
-            const statusId = typeof status === 'string' ? status : status?.id;
-            return statusId === 'CONFIRMED' || statusId === 'PENDING';
-          });
-
-          this.currentShift = activeShift || null;
-          this.cdr.markForCheck();
-        }
-      });
   }
 
-  /**
-   * Obtiene el texto descriptivo del turno para mostrar
-   */
-  goToDashboard(): void {
-    this.router.navigate(['/pos']);
+  getOptionValue(value: any): string {
+    if (!value) return '';
+    if (typeof value === 'string') return value;
+    if (typeof value === 'object' && value.id) return value.id;
+    return String(value);
+  }
+
+  private findEnumResourceById(id: string, options: SelectItem[]): EnumResource | string | null {
+    if (!id || !options) return null;
+    const option = options.find(opt => {
+      const optValue = opt.value;
+      if (typeof optValue === 'string') return optValue === id;
+      if (typeof optValue === 'object' && optValue.id) return optValue.id === id;
+      return false;
+    });
+    return option?.value || null;
   }
 
   getShiftDisplayText(): string {
@@ -220,37 +214,16 @@ export class RegistrarPlacaComponent implements OnInit, OnDestroy {
     return typeName;
   }
 
-  private loadCompanyName(): void {
-    const userData = this.authService.getUserData();
-    if (userData?.companyName) {
-      this.companyName = userData.companyName;
-    } else if (this.params?.collaboratorDescription) {
-      this.companyName = this.params.collaboratorDescription;
-    }
-    this.cdr.markForCheck();
-  }
-
-  private updateCurrentTime(): void {
-    const now = new Date();
-    this.currentTime = now.toLocaleTimeString('es-CO', { 
-      hour: '2-digit', 
-      minute: '2-digit', 
-      second: '2-digit',
-      hour12: true 
-    });
-    this.cdr.markForCheck();
-  }
-
   private loadTiposVehiculoFallback(): void {
     this.loadingTipos = true;
-    
+
     const defaultTypes: EnumResource[] = [
       { id: 'AUTOMOVIL', description: 'Automóvil' },
       { id: 'MOTOCICLETA', description: 'Motocicleta' },
       { id: 'CAMIONETA', description: 'Camioneta' },
       { id: 'CAMION', description: 'Camión' }
     ];
-    
+
     this.enumService.getEnumByName('ETipoVehiculo')
       .pipe(
         takeUntil(this.destroy$),
@@ -284,8 +257,13 @@ export class RegistrarPlacaComponent implements OnInit, OnDestroy {
     }
 
     const vehiclePlate = this.form.value.vehiclePlate.toUpperCase().trim();
-    const tipoVehiculo = this.form.value.tipoVehiculo;
-    const basicVehicleType = this.form.value.basicVehicleType;
+    // Convertir valores del select (pueden ser string o EnumResource)
+    const tipoVehiculo = typeof this.form.value.tipoVehiculo === 'string'
+      ? this.findEnumResourceById(this.form.value.tipoVehiculo, this.tipoVehiculoOptions)
+      : this.form.value.tipoVehiculo;
+    const basicVehicleType = typeof this.form.value.basicVehicleType === 'string'
+      ? this.findEnumResourceById(this.form.value.basicVehicleType, this.basicVehicleTypeOptions)
+      : this.form.value.basicVehicleType;
     const notes = this.form.value.notes?.trim() || null;
 
     // Mostrar diálogo de confirmación
@@ -303,7 +281,7 @@ export class RegistrarPlacaComponent implements OnInit, OnDestroy {
    */
   private normalizeVehicleType(type: EnumResource | string | null): EnumResource | undefined {
     if (!type) return undefined;
-    return typeof type === 'string' 
+    return typeof type === 'string'
       ? { id: type, description: type }
       : type;
   }
@@ -314,10 +292,10 @@ export class RegistrarPlacaComponent implements OnInit, OnDestroy {
   private handleError(err: any): void {
     const status = err?.status;
     const errorResponse = err?.error;
-    
+
     // Extraer el mensaje legible (readableMsg tiene prioridad)
     const errorMessage = errorResponse?.readableMsg || errorResponse?.message || errorResponse?.error || 'Error desconocido';
-    
+
     if (status === 412) {
       const errorDetails = errorResponse?.details ?? errorResponse?.detail;
       this.notificationService.showPreconditionFailed(errorMessage, errorDetails);
@@ -379,11 +357,20 @@ export class RegistrarPlacaComponent implements OnInit, OnDestroy {
             `Placa ${response.vehiclePlate} registrada exitosamente`,
             'Ingreso Confirmado'
           );
-          this.form.reset();
-          
+
+          // Limpiar completamente el formulario
+          this.form.reset({
+            vehiclePlate: '',
+            tipoVehiculo: '',
+            basicVehicleType: '',
+            notes: ''
+          });
+          this.error = null;
+          this.success = null;
+
           // Disparar evento para actualizar el mapa de puestos
           window.dispatchEvent(new CustomEvent('vehicleRegistered'));
-          
+
           if (response.buildTicket) {
             this.printTicket(response.buildTicket);
           }
@@ -403,8 +390,129 @@ export class RegistrarPlacaComponent implements OnInit, OnDestroy {
     this.printService.printTicket(buildTicket)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: () => {},
-        error: (err) => {}
+        next: () => { },
+        error: (err) => { }
       });
+  }
+
+  /**
+   * Abre el modal estilo Finder para ingresar la placa
+   */
+  openPlateFinder(event?: Event): void {
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+
+    this.finderPlateValue = this.form.get('vehiclePlate')?.value || '';
+    this.showPlateFinder = true;
+
+    // Forzar detección de cambios
+    this.cdr.detectChanges();
+
+    // Focus en el input del finder después de que se renderice
+    setTimeout(() => {
+      const finderInput = document.querySelector('.finder-input') as HTMLInputElement;
+      if (finderInput) {
+        finderInput.focus();
+        finderInput.select();
+      } else {
+        // Si no se encuentra, intentar de nuevo
+        setTimeout(() => {
+          const retryInput = document.querySelector('.finder-input') as HTMLInputElement;
+          if (retryInput) {
+            retryInput.focus();
+            retryInput.select();
+          }
+        }, 100);
+      }
+    }, 200);
+  }
+
+  /**
+   * Cierra el modal Finder
+   */
+  closePlateFinder(): void {
+    this.showPlateFinder = false;
+    this.finderPlateValue = '';
+    this.cdr.detectChanges(); // Usar detectChanges para forzar la actualización
+  }
+
+  /**
+   * Maneja la entrada de texto en el finder
+   */
+  onFinderInput(event: Event): void {
+    const target = event.target as HTMLInputElement;
+    this.finderPlateValue = target.value.toUpperCase();
+
+    // Auto-confirmar cuando se alcanzan 6 caracteres
+    if (this.finderPlateValue.length === 6) {
+      setTimeout(() => {
+        this.confirmPlate();
+      }, 100);
+    }
+  }
+
+  /**
+   * Confirma la placa ingresada en el finder
+   */
+  confirmPlate(): void {
+    if (this.finderPlateValue && this.finderPlateValue.length >= 3) {
+      this.form.patchValue({ vehiclePlate: this.finderPlateValue.toUpperCase() });
+      this.closePlateFinder();
+
+      // Auto-focus al siguiente campo (tipo de vehículo)
+      setTimeout(() => {
+        this.focusNextField();
+      }, 100);
+    }
+  }
+
+  /**
+   * Maneja la entrada de texto en el campo de placa normal (por si acaso)
+   */
+  onPlateInput(event: Event): void {
+    const target = event.target as HTMLInputElement;
+    const value = target.value.toUpperCase();
+    this.form.patchValue({ vehiclePlate: value });
+
+    // Auto-focus al siguiente campo cuando se completa la placa (6 caracteres)
+    if (value.length === 6) {
+      setTimeout(() => {
+        this.focusNextField();
+      }, 100);
+    }
+  }
+
+  /**
+   * Enfoca el siguiente campo después de completar uno
+   */
+  onFieldComplete(fieldName: string): void {
+    // Si se completa el tipo de vehículo, pasar a notas
+    if (fieldName === 'basicVehicleType' || fieldName === 'tipoVehiculo') {
+      setTimeout(() => {
+        const notesField = document.getElementById('notes') as HTMLTextAreaElement;
+        if (notesField) {
+          notesField.focus();
+        }
+      }, 100);
+    }
+  }
+
+  /**
+   * Enfoca el siguiente campo disponible
+   */
+  private focusNextField(): void {
+    if (!this.params) {
+      return;
+    }
+
+    // Determinar qué campo es el siguiente según el modo
+    const nextFieldId = this.easyMode ? 'basicVehicleType' : 'tipoVehiculo';
+    const nextField = document.getElementById(nextFieldId) as HTMLSelectElement;
+
+    if (nextField) {
+      nextField.focus();
+    }
   }
 }

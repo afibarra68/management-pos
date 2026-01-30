@@ -10,7 +10,6 @@ import { filter } from 'rxjs/operators';
   standalone: true,
   imports: [RouterModule],
   templateUrl: './dynamic-menu.component.html',
-  styleUrls: ['./dynamic-menu.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DynamicMenuComponent {

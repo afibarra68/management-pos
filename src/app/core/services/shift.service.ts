@@ -14,7 +14,6 @@ export interface ShiftConnectionHistory {
     secondName?: string;
     lastName?: string;
   };
-  shiftAssignmentId?: number;
   shiftAssignment?: {
     shiftAssignmentId?: number;
     shiftId?: number;
@@ -27,6 +26,8 @@ export interface ShiftConnectionHistory {
   userAgent?: string | null;
   status?: 'ACTIVO' | 'CERRADO' | EnumResource;
   actualShiftDate?: string;
+  shiftId?: number; // Identificador del turno (Shift)
+  shiftAssignmentId?: number; // Identificador de la asignación de turno (ShiftAssignment)
   totalVehicleExits?: number;
   totalSubscriptionExits?: number;
   totalPaidExits?: number;
@@ -34,7 +35,8 @@ export interface ShiftConnectionHistory {
   totalOtherPayments?: number;
   closedAt?: string | null;
   closedByUserId?: number | null;
-  closedBy?: { appUserId?: number; firstName?: string; secondName?: string; lastName?: string };
+  closedBy?: { appUserId?: number; firstName?: string; secondName?: string; lastName?: string } | null;
+  hoursToCloseOnHistory?: number | null;
 }
 
 export interface DShiftType {
@@ -80,18 +82,6 @@ export class ShiftService {
   private apiUrl = `${environment.apiUrl}/shift-assignments`;
 
   /**
-   * Obtiene las asignaciones de turnos de un usuario para una fecha específica
-   */
-  getByUserAndDate(userId: number, shiftDate: string): Observable<DShiftAssignment[]> {
-    return this.http.get<DShiftAssignment[]>(`${this.apiUrl}/by-user-date`, {
-      params: {
-        userId: userId.toString(),
-        shiftDate: shiftDate
-      }
-    });
-  }
-
-  /**
    * Obtiene todas las asignaciones de turnos de un usuario
    */
   getByUser(userId: number): Observable<DShiftAssignment[]> {
@@ -110,20 +100,6 @@ export class ShiftService {
    */
   hasActiveShift(): Observable<boolean> {
     return this.http.get<boolean>(`${environment.apiUrl}/shift-validation/has-active-shift`);
-  }
-
-  /**
-   * Obtiene o crea el turno activo del usuario (ShiftConnectionHistory ACTIVO)
-   */
-  getOrCreateActiveShift(): Observable<ShiftConnectionHistory> {
-    return this.http.get<ShiftConnectionHistory>(`${environment.apiUrl}/shift-validation/active-shift`);
-  }
-
-  /**
-   * Valida si se puede cerrar un turno (10 minutos antes de finalizar)
-   */
-  canCloseShift(shiftHistoryId: number): Observable<boolean> {
-    return this.http.get<boolean>(`${environment.apiUrl}/shift-validation/can-close/${shiftHistoryId}`);
   }
 
   /**

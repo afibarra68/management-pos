@@ -11,20 +11,20 @@ import { filter, Subscription } from 'rxjs';
   standalone: true,
   imports: [CommonModule, ButtonModule, AvatarModule],
   templateUrl: './user-control.component.html',
-  styleUrls: ['./user-control.component.scss']
 })
 export class UserControlComponent implements OnDestroy {
   private authService = inject(AuthService);
   private router = inject(Router);
-  
+
   userData: any = null;
+  companyDescription: string = '';
   private routerSubscription?: Subscription;
 
   constructor() {
     // Cargar datos del usuario solo en el navegador
     afterNextRender(() => {
       this.loadUserData();
-      
+
       // Suscribirse a cambios de ruta para actualizar datos del usuario
       // Esto asegura que los datos se actualicen después del login
       this.routerSubscription = this.router.events
@@ -44,6 +44,8 @@ export class UserControlComponent implements OnDestroy {
   loadUserData(): void {
     const data = this.authService.getUserData();
     this.userData = data;
+    // Obtener companyDescription del usuario o usar companyName como fallback
+    this.companyDescription = data?.companyDescription || data?.companyName || '';
   }
 
   logout(): void {

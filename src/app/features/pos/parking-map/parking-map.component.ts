@@ -19,7 +19,6 @@ import { Subject, forkJoin, takeUntil, finalize, catchError, of } from 'rxjs';
     MessageModule
   ],
   templateUrl: './parking-map.component.html',
-  styleUrls: ['./parking-map.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ParkingMapComponent implements OnInit, OnDestroy {
@@ -37,6 +36,9 @@ export class ParkingMapComponent implements OnInit, OnDestroy {
   totalAvailable = signal(0);
   overallOccupancyPercentage = signal(0);
 
+  // Computed signal para verificar si hay datos (público para acceso desde el padre)
+  hasData = computed(() => this.occupancyData().length > 0);
+
   /**
    * Obtiene el color según el porcentaje de ocupación
    */
@@ -49,7 +51,7 @@ export class ParkingMapComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.loadParkingMap();
-    
+
     // Escuchar eventos de actualización
     this.setupEventListeners();
   }
@@ -59,7 +61,7 @@ export class ParkingMapComponent implements OnInit, OnDestroy {
     window.addEventListener('vehicleRegistered', () => {
       this.loadParkingMap();
     });
-    
+
     // Escuchar cuando se procesa una salida
     window.addEventListener('transactionClosed', () => {
       this.loadParkingMap();
@@ -100,17 +102,17 @@ export class ParkingMapComponent implements OnInit, OnDestroy {
       .subscribe({
         next: ({ openTransactions, capacities }) => {
           const occupancy: ParkingOccupancy[] = capacities.map((capacity: any) => {
-            const basicVehicleTypeId = typeof capacity.basicVehicleType === 'string' 
-              ? capacity.basicVehicleType 
-              : capacity.basicVehicleType?.id;
+            const tipoVehiculoId = typeof capacity.tipoVehiculo === 'string'
+              ? capacity.tipoVehiculo
+              : capacity.tipoVehiculo?.id;
 
             // Contar vehículos ocupados de este tipo
             const occupied = openTransactions.filter((transaction: OpenTransaction) => {
-              const transactionType = transaction.basicVehicleType;
+              const transactionType = transaction.tipoVehiculo;
               const transactionTypeId = typeof transactionType === 'string'
                 ? transactionType
                 : transactionType?.id;
-              return transactionTypeId === basicVehicleTypeId;
+              return transactionTypeId === tipoVehiculoId;
             }).length;
 
             const available = (capacity.capacity || 0) - occupied;
@@ -119,7 +121,7 @@ export class ParkingMapComponent implements OnInit, OnDestroy {
               : 0;
 
             return {
-              basicVehicleType: capacity.basicVehicleType,
+              tipoVehiculo: capacity.tipoVehiculo,
               capacity: capacity.capacity || 0,
               occupied,
               available,

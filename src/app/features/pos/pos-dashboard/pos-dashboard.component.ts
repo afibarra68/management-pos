@@ -27,7 +27,6 @@ type ViewType = 'dashboard' | 'ingresar' | 'salida';
     CashRegisterViewComponent
   ],
   templateUrl: './pos-dashboard.component.html',
-  styleUrls: ['./pos-dashboard.component.scss'],
   encapsulation: ViewEncapsulation.None,
   changeDetection: ChangeDetectionStrategy.OnPush
 })
@@ -36,14 +35,14 @@ export class PosDashboardComponent implements OnInit, OnDestroy {
   private notificationService = inject(NotificationService);
   private cdr = inject(ChangeDetectorRef);
   private destroy$ = new Subject<void>();
-  
+
   // Signals para mejor rendimiento y reactividad
   currentView = signal<ViewType>('dashboard');
   stats = signal<ClosedTransactionStats | null>(null);
   loading = signal(false);
   error = signal<string | null>(null);
   totalCash = signal<number>(0); // Total en caja (efectivo inicial + total ingresos)
-  
+
   // Computed signals para valores derivados
   hasStats = computed(() => this.stats() !== null);
   hasError = computed(() => this.error() !== null);
@@ -80,10 +79,10 @@ export class PosDashboardComponent implements OnInit, OnDestroy {
   private handleError(err: any): void {
     const status = err?.status;
     const errorResponse = err?.error;
-    
+
     // Extraer el mensaje legible (readableMsg tiene prioridad)
     const errorMessage = errorResponse?.readableMsg || errorResponse?.message || errorResponse?.error || 'Error desconocido';
-    
+
     if (status === 412) {
       const errorDetails = errorResponse?.details || errorResponse?.detail;
       this.notificationService.showPreconditionFailed(errorMessage, errorDetails);

@@ -6,11 +6,13 @@ import { MessageModule } from 'primeng/message';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { TagModule } from 'primeng/tag';
-import { OpenTransactionService, OpenTransaction } from '../../../core/services/open-transaction.service';
+import { OpenTransactionService, OpenTransaction, ParamVenta } from '../../../core/services/open-transaction.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { EnumService, EnumResource } from '../../../core/services/enum.service';
 import { ShiftService, DShiftAssignment } from '../../../core/services/shift.service';
+import { ClosedTransactionService } from '../../../core/services/closed-transaction.service';
 import { Subject, takeUntil, finalize, catchError, of } from 'rxjs';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-vehiculos-parqueadero',
@@ -25,12 +27,12 @@ import { Subject, takeUntil, finalize, catchError, of } from 'rxjs';
     TagModule
   ],
   templateUrl: './vehiculos-parqueadero.component.html',
-  styleUrls: ['./vehiculos-parqueadero.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class VehiculosParqueaderoComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
   private openTransactionService = inject(OpenTransactionService);
+  private closedTransactionService = inject(ClosedTransactionService);
   private authService = inject(AuthService);
   private enumService = inject(EnumService);
   private shiftService = inject(ShiftService);
@@ -42,8 +44,6 @@ export class VehiculosParqueaderoComponent implements OnInit, OnDestroy {
   filteredVehicles = signal<OpenTransaction[]>([]);
   searchTerm = signal<string>('');
   currentShift = signal<DShiftAssignment | null>(null);
-  companyName = signal<string>('');
-  currentTime = signal<string>('');
 
   // Computed signals
   vehicleCount = computed(() => this.filteredVehicles().length);
@@ -55,7 +55,6 @@ export class VehiculosParqueaderoComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.loadCurrentShift();
     this.loadVehicles();
-    this.updateTime(); // Actualizar tiempo solo una vez al iniciar
     this.setupEventListeners();
   }
 
@@ -69,21 +68,11 @@ export class VehiculosParqueaderoComponent implements OnInit, OnDestroy {
     window.addEventListener('vehicleRegistered', () => {
       this.loadVehicles();
     });
-    
+
     // Escuchar cuando se procesa una salida
     window.addEventListener('transactionClosed', () => {
       this.loadVehicles();
     });
-  }
-
-  private updateTime(): void {
-    const now = new Date();
-    this.currentTime.set(now.toLocaleTimeString('es-CO', {
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-      hour12: true
-    }));
   }
 
   private loadCurrentShift(): void {
@@ -92,25 +81,29 @@ export class VehiculosParqueaderoComponent implements OnInit, OnDestroy {
       return;
     }
 
-    this.companyName.set(userData.companyName || '');
-
-    const today = new Date().toISOString().split('T')[0]; // Formato YYYY-MM-DD
-
-    this.shiftService.getByUserAndDate(userData.appUserId, today)
+    // Obtener información del turno activo desde params
+    const serviceCode = environment.serviceCode;
+    this.closedTransactionService.getParams(serviceCode)
       .pipe(
         takeUntil(this.destroy$),
-        catchError(() => of([]))
+        catchError(() => of(null))
       )
       .subscribe({
-        next: (assignments) => {
-          // Obtener el primer turno activo (CONFIRMED o PENDING) para hoy
-          const activeShift = assignments.find(assignment => {
-            const status = assignment.status;
-            const statusId = typeof status === 'string' ? status : status?.id;
-            return statusId === 'CONFIRMED' || statusId === 'PENDING';
-          });
-
-          this.currentShift.set(activeShift || null);
+        next: (params: ParamVenta | null) => {
+          const shiftHistory = params?.dshiftConnectionHistory;
+          const shift = shiftHistory?.shift;
+          if (shift && shiftHistory?.shiftAssignmentId) {
+            const shiftAssignment: DShiftAssignment = {
+              shiftAssignmentId: shiftHistory.shiftAssignmentId,
+              shiftId: shiftHistory.shiftId || shift.shiftId,
+              shift: shift,
+              appUserId: shiftHistory.appUserId,
+              status: shift.status || { id: 'CONFIRMED', description: 'Turno confirmado' }
+            };
+            this.currentShift.set(shiftAssignment);
+          } else {
+            this.currentShift.set(null);
+          }
           this.cdr.markForCheck();
         }
       });
@@ -119,7 +112,7 @@ export class VehiculosParqueaderoComponent implements OnInit, OnDestroy {
   loadVehicles(): void {
     const userData = this.authService.getUserData();
     const companyId = userData?.companyId;
-    
+
     if (!companyId) {
       this.error.set('No se pudo obtener la información de la empresa');
       return;
@@ -150,11 +143,11 @@ export class VehiculosParqueaderoComponent implements OnInit, OnDestroy {
             const status = transaction.status;
             const statusId = typeof status === 'string' ? status : status?.id;
             const transactionCompanyId = transaction.companyCompanyId;
-            
+
             // Verificar que sea de la empresa y tenga estado OPEN
             return Number(transactionCompanyId) === Number(companyId) && statusId === 'OPEN';
           });
-          
+
           // Ordenar por hora de inicio (más recientes primero)
           companyVehicles.sort((a, b) => {
             const timeA = a.startTime ? new Date(a.startTime).getTime() : 0;
@@ -164,6 +157,7 @@ export class VehiculosParqueaderoComponent implements OnInit, OnDestroy {
 
           this.vehicles.set(companyVehicles);
           this.applyFilter();
+          this.cdr.markForCheck(); // Forzar detección de cambios
         }
       });
   }
@@ -204,13 +198,13 @@ export class VehiculosParqueaderoComponent implements OnInit, OnDestroy {
 
   formatTime(timeString: string | undefined): string {
     if (!timeString) return 'N/A';
-    
+
     // Si ya viene formateado como hora (ej: "10:53:52 PM" o "22:53:52")
     if (timeString.includes(':') && !timeString.includes('T') && !timeString.includes('-')) {
       // Ya es una hora formateada, devolverla tal cual o formatearla mejor
       return timeString;
     }
-    
+
     try {
       const date = new Date(timeString);
       if (isNaN(date.getTime())) {
@@ -244,12 +238,12 @@ export class VehiculosParqueaderoComponent implements OnInit, OnDestroy {
 
   getTimeElapsed(vehicle: OpenTransaction): string {
     if (!vehicle.startTime) return 'N/A';
-    
+
     try {
       let startDateTime: Date;
       const startTime = vehicle.startTime;
       const startDay = vehicle.startDay || vehicle.operationDate;
-      
+
       // Si tenemos fecha y hora, combinarlas
       if (startDay) {
         // Intentar parsear la fecha
@@ -268,7 +262,7 @@ export class VehiculosParqueaderoComponent implements OnInit, OnDestroy {
         } catch {
           datePart = new Date();
         }
-        
+
         // Parsear la hora
         const timeParts = startTime.match(/(\d{1,2}):(\d{2}):(\d{2})\s*(AM|PM)?/i);
         if (timeParts) {
@@ -276,7 +270,7 @@ export class VehiculosParqueaderoComponent implements OnInit, OnDestroy {
           const minutes = parseInt(timeParts[2]);
           const seconds = parseInt(timeParts[3]);
           const ampm = timeParts[4];
-          
+
           // Convertir a formato 24 horas si es necesario
           if (ampm) {
             if (ampm.toUpperCase() === 'PM' && hours !== 12) {
@@ -285,7 +279,7 @@ export class VehiculosParqueaderoComponent implements OnInit, OnDestroy {
               hours = 0;
             }
           }
-          
+
           startDateTime = new Date(datePart);
           startDateTime.setHours(hours, minutes, seconds, 0);
         } else {
@@ -299,14 +293,14 @@ export class VehiculosParqueaderoComponent implements OnInit, OnDestroy {
           return 'N/A';
         }
       }
-      
+
       const now = new Date();
       const diff = now.getTime() - startDateTime.getTime();
-      
+
       if (diff < 0) {
         return 'N/A';
       }
-      
+
       const hours = Math.floor(diff / (1000 * 60 * 60));
       const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
       const seconds = Math.floor((diff % (1000 * 60)) / 1000);

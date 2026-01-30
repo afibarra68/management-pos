@@ -4,15 +4,12 @@ import { FormsModule } from '@angular/forms';
 import { CardModule } from 'primeng/card';
 import { TableModule } from 'primeng/table';
 import { MessageModule } from 'primeng/message';
-import { ButtonModule } from 'primeng/button';
-import { InputNumberModule } from 'primeng/inputnumber';
-import { DialogModule } from 'primeng/dialog';
 import { CashRegisterService, CashRegister } from '../../../core/services/cash-register.service';
 import { ShiftService, DShiftAssignment, ShiftConnectionHistory } from '../../../core/services/shift.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { ClosedTransactionService } from '../../../core/services/closed-transaction.service';
 import { Subject, forkJoin, takeUntil, finalize, catchError, of } from 'rxjs';
-import { MessageService } from 'primeng/api';
-import { ToastModule } from 'primeng/toast';
+import { environment } from '../../../environments/environment';
 
 interface CashRegisterSummary {
   concept: string;
@@ -29,14 +26,9 @@ interface CashRegisterSummary {
     FormsModule,
     CardModule,
     TableModule,
-    MessageModule,
-    ButtonModule,
-    InputNumberModule,
-    DialogModule,
-    ToastModule
+    MessageModule
   ],
   templateUrl: './cash-register-view.component.html',
-  styleUrls: ['./cash-register-view.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class CashRegisterViewComponent implements OnInit, OnDestroy {
@@ -44,7 +36,7 @@ export class CashRegisterViewComponent implements OnInit, OnDestroy {
   private cashRegisterService = inject(CashRegisterService);
   private shiftService = inject(ShiftService);
   private authService = inject(AuthService);
-  private messageService = inject(MessageService);
+  private closedTransactionService = inject(ClosedTransactionService);
   private cdr = inject(ChangeDetectorRef);
 
   loading = signal(false);
@@ -55,9 +47,6 @@ export class CashRegisterViewComponent implements OnInit, OnDestroy {
   summaryByConcept = signal<CashRegisterSummary[]>([]);
   totalAmount = signal(0);
   initialCash = signal(0);
-  showCloseShiftDialog = signal(false);
-  closingShift = signal(false);
-  canCloseShift = signal(false);
 
   ngOnInit(): void {
     this.loadCurrentShift();
@@ -90,16 +79,12 @@ export class CashRegisterViewComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const today = new Date().toISOString().split('T')[0];
     this.loading.set(true);
 
-    // Cargar turno activo del histórico
-    forkJoin({
-      assignments: this.shiftService.getByUserAndDate(user.appUserId, today),
-      activeShift: this.shiftService.getOrCreateActiveShift().pipe(
-        catchError(() => of(null))
-      )
-    })
+    // Obtener configuración con información del turno desde params
+    const serviceCode = environment.serviceCode;
+
+    this.closedTransactionService.getParams(serviceCode)
       .pipe(
         takeUntil(this.destroy$),
         finalize(() => {
@@ -107,47 +92,51 @@ export class CashRegisterViewComponent implements OnInit, OnDestroy {
           this.cdr.markForCheck();
         }),
         catchError(err => {
-          this.error.set('Error al cargar el turno actual');
-          return of({ assignments: [], activeShift: null });
+          this.error.set('Error al cargar la configuración del turno');
+          return of(null);
         })
       )
       .subscribe({
-        next: ({ assignments, activeShift }) => {
-          // Buscar turno confirmado
-          const confirmedShift = assignments.find(a =>
-            (typeof a.status === 'string' && a.status === 'CONFIRMED') ||
-            (a.status && typeof a.status === 'object' && a.status.id === 'CONFIRMED')
-          );
+        next: (params) => {
+          if (!params || !params.dshiftConnectionHistory) {
+            this.currentShift.set(null);
+            this.activeShiftHistory.set(null);
+            this.error.set('No hay un turno activo');
+            return;
+          }
 
-          if (confirmedShift) {
-            this.currentShift.set(confirmedShift);
-            this.activeShiftHistory.set(activeShift);
-            
-            // Validar si se puede cerrar el turno
-            if (activeShift?.shiftConnectionHistoryId) {
-              this.checkCanCloseShift(activeShift.shiftConnectionHistoryId);
-            }
-            
+          const shiftHistory = params.dshiftConnectionHistory;
+
+          // Establecer el histórico de turno activo (convertir al tipo esperado)
+          const shiftHistoryForComponent: ShiftConnectionHistory = {
+            ...shiftHistory,
+            closedBy: shiftHistory.closedBy ? {
+              appUserId: shiftHistory.closedBy.appUserId,
+              firstName: shiftHistory.closedBy.firstName,
+              secondName: undefined, // No está disponible en el tipo de origen
+              lastName: shiftHistory.closedBy.lastName
+            } : undefined // Convertir null a undefined
+          };
+          this.activeShiftHistory.set(shiftHistoryForComponent);
+
+          // Construir DShiftAssignment a partir de la información del turno
+          if (shiftHistory.shift && shiftHistory.shiftAssignmentId) {
+            const shiftAssignment: DShiftAssignment = {
+              shiftAssignmentId: shiftHistory.shiftAssignmentId,
+              shiftId: shiftHistory.shiftId || shiftHistory.shift.shiftId,
+              shift: shiftHistory.shift,
+              appUserId: shiftHistory.appUserId,
+              status: shiftHistory.shift.status || { id: 'CONFIRMED', description: 'Turno confirmado' }
+            };
+
+            this.currentShift.set(shiftAssignment);
+
+            // El backend validará si se puede cerrar el turno cuando se intente cerrar
             this.loadCashRegisters();
           } else {
             this.currentShift.set(null);
-            this.activeShiftHistory.set(null);
-            this.error.set('No hay un turno activo para hoy');
+            this.error.set('Información del turno incompleta');
           }
-        }
-      });
-  }
-
-  private checkCanCloseShift(shiftHistoryId: number): void {
-    this.shiftService.canCloseShift(shiftHistoryId)
-      .pipe(
-        takeUntil(this.destroy$),
-        catchError(() => of(false))
-      )
-      .subscribe({
-        next: (canClose) => {
-          this.canCloseShift.set(canClose);
-          this.cdr.markForCheck();
         }
       });
   }
@@ -243,88 +232,6 @@ export class CashRegisterViewComponent implements OnInit, OnDestroy {
 
   getTotalCash(): number {
     return this.initialCash() + this.totalAmount();
-  }
-
-  openCloseShiftDialog(): void {
-    const activeHistory = this.activeShiftHistory();
-    if (activeHistory?.shiftConnectionHistoryId) {
-      // Verificar nuevamente si se puede cerrar antes de mostrar el diálogo
-      this.checkCanCloseShift(activeHistory.shiftConnectionHistoryId);
-    }
-    this.showCloseShiftDialog.set(true);
-  }
-
-  closeCloseShiftDialog(): void {
-    this.showCloseShiftDialog.set(false);
-  }
-
-  closeShift(): void {
-    const activeHistory = this.activeShiftHistory();
-    if (!activeHistory || !activeHistory.shiftConnectionHistoryId) {
-      this.messageService.add({
-        severity: 'error',
-        summary: 'Error',
-        detail: 'No se encontró el histórico de turno activo'
-      });
-      return;
-    }
-
-    // Validar que se pueda cerrar
-    if (!this.canCloseShift()) {
-      this.messageService.add({
-        severity: 'warn',
-        summary: 'No se puede cerrar',
-        detail: 'Aún en servicio, el turno no se puede cerrar. Debe faltar 10 minutos o menos para finalizar.'
-      });
-      this.showCloseShiftDialog.set(false);
-      return;
-    }
-
-    this.closingShift.set(true);
-    this.error.set(null);
-
-    this.shiftService.closeShiftHistory(activeHistory.shiftConnectionHistoryId)
-      .pipe(
-        takeUntil(this.destroy$),
-        finalize(() => {
-          this.closingShift.set(false);
-          this.cdr.markForCheck();
-        }),
-        catchError(err => {
-          const errorMessage = err?.error?.readableMsg || err?.error?.message || 'Error al cerrar el turno';
-          this.error.set(errorMessage);
-          this.messageService.add({
-            severity: 'error',
-            summary: 'Error',
-            detail: errorMessage
-          });
-          return of(null);
-        })
-      )
-      .subscribe({
-        next: (closedShift) => {
-          if (closedShift) {
-            const totalTransactions = activeHistory.totalVehicleExits || 0;
-            const totalCash = activeHistory.totalCashReceived || 0;
-            
-            this.messageService.add({
-              severity: 'success',
-              summary: 'Turno cerrado',
-              detail: `Turno cerrado exitosamente. Transacciones: ${totalTransactions}, Efectivo: ${this.formatCurrency(totalCash)}`
-            });
-            this.showCloseShiftDialog.set(false);
-            this.currentShift.set(null);
-            this.activeShiftHistory.set(null);
-            this.cashRegisters.set([]);
-            this.summaryByConcept.set([]);
-            this.totalAmount.set(0);
-            this.initialCash.set(0);
-
-            // Recargar turnos para verificar si hay otro turno activo
-            this.loadCurrentShift();
-          }
-        }
-      });
   }
 
   isShiftCompleted(): boolean {

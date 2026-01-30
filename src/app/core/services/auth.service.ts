@@ -22,6 +22,7 @@ export interface LoginResponse {
   roles: string[];
   companyName?: string;
   companyDescription?: string;
+  collaboratorDescription?: string;
   companyId?: number;
   pwdMsgToExpire?: boolean;
   accessLevel?: string;
@@ -118,6 +119,7 @@ export class AuthService {
               roles: response.roles ?? [],
               companyName: response.companyName ?? null,
               companyDescription: response.companyDescription ?? null,
+              collaboratorDescription: response.collaboratorDescription ?? null,
               companyId: response.companyId ?? null,
               accessLevel: response.accessLevel ?? null,
               pwdMsgToExpire: response.pwdMsgToExpire ?? false
