@@ -458,8 +458,12 @@ export class RegistrarPlacaComponent implements OnInit, OnDestroy {
    */
   confirmPlate(): void {
     if (this.finderPlateValue && this.finderPlateValue.length >= 3) {
-      this.form.patchValue({ vehiclePlate: this.finderPlateValue.toUpperCase() });
+      const plateValue = this.finderPlateValue.toUpperCase().trim();
+      this.form.patchValue({ vehiclePlate: plateValue });
       this.closePlateFinder();
+
+      // Buscar si existe una transacción abierta con esta placa para autocompletar el tipo de vehículo
+      this.searchVehicleTypeByPlate(plateValue);
 
       // Auto-focus al siguiente campo (tipo de vehículo)
       setTimeout(() => {
@@ -497,6 +501,70 @@ export class RegistrarPlacaComponent implements OnInit, OnDestroy {
         }
       }, 100);
     }
+  }
+
+  /**
+   * Busca una transacción abierta por placa y autocompleta el tipo de vehículo si existe
+   */
+  private searchVehicleTypeByPlate(vehiclePlate: string): void {
+    if (!vehiclePlate || vehiclePlate.length < 3) {
+      return;
+    }
+
+    this.openTransactionService.findByVehiclePlate(vehiclePlate)
+      .pipe(
+        takeUntil(this.destroy$),
+        catchError(() => {
+          // Si no existe la transacción, no hacer nada (es normal)
+          return of(null);
+        })
+      )
+      .subscribe({
+        next: (transaction: OpenTransaction | null) => {
+          if (!transaction || !this.params) {
+            return;
+          }
+
+          // Si existe una transacción abierta con esta placa, autocompletar el tipo de vehículo
+          if (this.easyMode && transaction.basicVehicleType) {
+            // Buscar el valor en las opciones disponibles
+            const basicType = transaction.basicVehicleType;
+            const basicTypeId = typeof basicType === 'string' ? basicType : basicType?.id;
+
+            if (basicTypeId) {
+              const option = this.basicVehicleTypeOptions.find(opt => {
+                const optValue = opt.value;
+                if (typeof optValue === 'string') return optValue === basicTypeId;
+                if (typeof optValue === 'object' && optValue.id) return optValue.id === basicTypeId;
+                return false;
+              });
+
+              if (option) {
+                this.form.patchValue({ basicVehicleType: this.getOptionValue(option.value) });
+                this.cdr.markForCheck();
+              }
+            }
+          } else if (!this.easyMode && transaction.tipoVehiculo) {
+            // Buscar el valor en las opciones disponibles
+            const tipoVehiculo = transaction.tipoVehiculo;
+            const tipoVehiculoId = typeof tipoVehiculo === 'string' ? tipoVehiculo : tipoVehiculo?.id;
+
+            if (tipoVehiculoId) {
+              const option = this.tipoVehiculoOptions.find(opt => {
+                const optValue = opt.value;
+                if (typeof optValue === 'string') return optValue === tipoVehiculoId;
+                if (typeof optValue === 'object' && optValue.id) return optValue.id === tipoVehiculoId;
+                return false;
+              });
+
+              if (option) {
+                this.form.patchValue({ tipoVehiculo: this.getOptionValue(option.value) });
+                this.cdr.markForCheck();
+              }
+            }
+          }
+        }
+      });
   }
 
   /**

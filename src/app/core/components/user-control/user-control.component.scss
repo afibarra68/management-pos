@@ -19,6 +19,12 @@
       white-space: nowrap;
     }
   }
+
+  .user-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
 }
 
 .user-info {
@@ -86,6 +92,17 @@
     color: #ffffff;
   }
 
+  .btn-change-password {
+    background-color: #1a1a1a;
+    border-color: #555555;
+    color: #ffffff;
+
+    &:hover {
+      background-color: #2a2a2a;
+      border-color: #777777;
+    }
+  }
+
   .btn-logout {
     background-color: #1a1a1a;
     border-color: #555555;
@@ -115,6 +132,11 @@
   .user-avatar {
     width: 32px;
     height: 32px;
+    font-size: 12px;
+  }
+
+  .btn-change-password {
+    padding: 5px 10px;
     font-size: 12px;
   }
 

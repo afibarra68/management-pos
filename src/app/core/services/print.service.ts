@@ -22,7 +22,7 @@ export class PrintService {
       ...buildTicket,
       template: buildTicket.template ? this.stringToBase64(buildTicket.template) : null
     };
-    
+
     return this.http.post<any>(this.printApiUrl, requestPayload);
   }
 

@@ -68,6 +68,16 @@ export class ClosedTransactionService {
   getParams(serviceCode: string): Observable<ParamVenta> {
     return this.http.get<ParamVenta>(`${this.apiUrl}/params/${serviceCode}`);
   }
+
+  /**
+   * Reimprime el ticket de una transacción cerrada.
+   * El backend regenera el ticket y lo envía al servicio parking-printing en el puerto 8080.
+   * @param closedTransactionId ID de la transacción cerrada
+   * @returns Mensaje de confirmación del backend
+   */
+  reprintTicket(closedTransactionId: number): Observable<string> {
+    return this.http.post<string>(`${this.apiUrl}/${closedTransactionId}/reprint`, null);
+  }
 }
 
 export interface ClosedTransactionStats {

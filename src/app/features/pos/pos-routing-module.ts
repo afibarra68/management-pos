@@ -6,6 +6,7 @@ import { RegistrarSalidaComponent } from './registrar-salida/registrar-salida.co
 import { ParkingMapComponent } from './parking-map/parking-map.component';
 import { VehiculosParqueaderoComponent } from './vehiculos-parqueadero/vehiculos-parqueadero.component';
 import { IngresoCajaOtroConceptoComponent } from './ingreso-caja-otro-concepto/ingreso-caja-otro-concepto.component';
+import { ChangePasswordComponent } from './change-password/change-password.component';
 
 const routes: Routes = [
   {
@@ -31,6 +32,10 @@ const routes: Routes = [
   {
     path: 'ingreso-caja-otro-concepto',
     component: IngresoCajaOtroConceptoComponent
+  },
+  {
+    path: 'change-password',
+    component: ChangePasswordComponent
   }
 ];
 
