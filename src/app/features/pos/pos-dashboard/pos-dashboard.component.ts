@@ -9,6 +9,7 @@ import { ParkingMapComponent } from '../parking-map/parking-map.component';
 import { CashRegisterViewComponent } from '../cash-register-view/cash-register-view.component';
 import { ClosedTransactionService, ClosedTransactionStats } from '../../../core/services/closed-transaction.service';
 import { NotificationService } from '../../../core/services/notification.service';
+import { PrintService } from '../../../core/services/print.service';
 import { catchError, of, Subject, takeUntil, finalize } from 'rxjs';
 
 type ViewType = 'dashboard' | 'ingresar' | 'salida';
@@ -144,6 +145,36 @@ export class PosDashboardComponent implements OnInit, OnDestroy {
   showDashboard(): void {
     this.currentView.set('dashboard');
     this.loadStats();
+  }
+
+  /**
+   * Reimprime el ticket de una transacción cerrada.
+   * El backend regenera el ticket y lo envía al servicio parking-printing en el puerto 8080.
+   * @param closedTransactionId ID de la transacción cerrada
+   */
+  reimprimirTicket(closedTransactionId: number): void {
+    if (!closedTransactionId) {
+      this.notificationService.error('ID de transacción inválido');
+      return;
+    }
+
+    this.closedTransactionService.reprintTicket(closedTransactionId)
+      .pipe(
+        takeUntil(this.destroy$),
+        catchError(err => {
+          this.handleError(err);
+          return of(null);
+        })
+      )
+      .subscribe({
+        next: (response) => {
+          if (response) {
+            this.notificationService.success('Ticket reimpreso y enviado a la impresora correctamente');
+          } else {
+            this.notificationService.error('No se pudo reimprimir el ticket');
+          }
+        }
+      });
   }
 }
 

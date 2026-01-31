@@ -1,6 +1,6 @@
 import { Component, OnInit, OnDestroy, PLATFORM_ID, Inject, inject, AfterViewInit, ElementRef, ViewChild } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
-import { AuthService, LoginRequest } from '../../../core/services/auth.service';
+import { AuthService, LoginRequest, LoginResponse } from '../../../core/services/auth.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { ShiftService } from '../../../core/services/shift.service';
 import { Router, ActivatedRoute } from '@angular/router';
@@ -106,11 +106,19 @@ export class LoginComponent implements OnInit, OnDestroy, AfterViewInit {
     const credentials: LoginRequest = this.form.value;
 
     this.auth.login(credentials).subscribe({
-      next: () => {
+      next: (response) => {
         this.loading = false;
-        const returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/pos';
-        // El backend ya crea/valida el turno activo durante el login, solo navegar
-        this.router.navigateByUrl(returnUrl, { replaceUrl: true });
+        // Si debe cambiar la contraseña, redirigir al componente de cambio de contraseña
+        if (response.mustChangePassword) {
+          this.router.navigate(['/pos/change-password'], {
+            queryParams: { mustChange: 'true' },
+            replaceUrl: true
+          });
+        } else {
+          const returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/pos';
+          // El backend ya crea/valida el turno activo durante el login, solo navegar
+          this.router.navigateByUrl(returnUrl, { replaceUrl: true });
+        }
       },
       error: (err) => {
         this.loading = false;

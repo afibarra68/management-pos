@@ -27,6 +27,7 @@ export interface LoginResponse {
   companyId?: number;
   pwdMsgToExpire?: boolean;
   accessLevel?: string;
+  mustChangePassword?: boolean;
 }
 
 export interface CreateUserRequest {
@@ -43,6 +44,18 @@ export interface CreateUserResponse {
   appUserId: number;
   firstName: string;
   secondName: string;
+  lastName: string;
+}
+
+export interface ChangePasswordRequest {
+  username: string;
+  currentPassword: string;
+  newPassword: string;
+}
+
+export interface ChangePasswordResponse {
+  appUserId: number;
+  firstName: string;
   lastName: string;
 }
 
@@ -130,7 +143,8 @@ export class AuthService {
               collaboratorDescription: response.collaboratorDescription ?? null,
               companyId: response.companyId ?? null,
               accessLevel: response.accessLevel ?? null,
-              pwdMsgToExpire: response.pwdMsgToExpire ?? false
+              pwdMsgToExpire: response.pwdMsgToExpire ?? false,
+              mustChangePassword: response.mustChangePassword ?? false
             };
 
             localStorage.setItem(this.userKey, JSON.stringify(userData));
@@ -185,6 +199,29 @@ export class AuthService {
           return throwError(() => error);
         })
       );
+  }
+
+  changePassword(request: ChangePasswordRequest): Observable<ChangePasswordResponse> {
+    return this.http.post<ChangePasswordResponse>(`${this.apiUrl}/auth/change-password`, request)
+      .pipe(
+        tap(() => {
+          // NO guardar tokenización después de cambiar contraseña
+          // El usuario debe hacer login nuevamente con su nueva contraseña
+          // No actualizar localStorage aquí - se limpiará en el componente después del cambio
+        }),
+        catchError(error => {
+          console.error('Error al cambiar contraseña:', error);
+          return throwError(() => error);
+        })
+      );
+  }
+
+  mustChangePassword(): boolean {
+    if (!this.isBrowser) {
+      return false;
+    }
+    const userData = this.getUserData();
+    return userData?.mustChangePassword === true;
   }
 }
 

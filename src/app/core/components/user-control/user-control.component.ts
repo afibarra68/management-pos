@@ -68,5 +68,9 @@ export class UserControlComponent implements OnDestroy {
     const lastName = this.userData.lastName || '';
     return `${firstName} ${lastName}`.trim() || 'Usuario';
   }
+
+  navigateToChangePassword(): void {
+    this.router.navigate(['/pos/change-password']);
+  }
 }
 
