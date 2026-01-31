@@ -1,153 +1,127 @@
 <div class="registrar-salida-container">
-  <div class="header">
-    <div class="header-left">
+  <!-- Contenido Principal -->
+  <div class="main-content">
+    <div class="form-header">
       <h1>Registrar Salida</h1>
       <p class="subtitle">Busque el vehículo por placa para procesar su salida</p>
     </div>
-    <div class="header-right">
-      @if (companyName) {
-      <div class="info-item">
-        <i class="pi pi-building"></i>
-        <span>{{ companyName }}</span>
+
+    <form [formGroup]="form" (ngSubmit)="buscarVehiculo()" class="form-container">
+      <!-- Bloque: Búsqueda de Vehículo -->
+      <div class="form-block">
+        <div class="block-header">
+          <span class="block-title">Búsqueda de Vehículo</span>
+        </div>
+        <div class="block-content">
+          <div class="form-group">
+            <label for="vehiclePlate">Placa del Vehículo *</label>
+            <input id="vehiclePlate" type="text" formControlName="vehiclePlate"
+              [class.invalid]="form.get('vehiclePlate')?.invalid && form.get('vehiclePlate')?.touched"
+              (input)="form.patchValue({vehiclePlate: form.value.vehiclePlate.toUpperCase()})" maxlength="8"
+              placeholder="ABC123">
+            @if (form.get('vehiclePlate')?.invalid && form.get('vehiclePlate')?.touched) {
+            <small class="error-text">
+              @if (form.get('vehiclePlate')?.errors?.['required']) {
+              <span>La placa es requerida</span>
+              }
+              @if (form.get('vehiclePlate')?.errors?.['minlength']) {
+              <span>La placa debe tener al menos 3 caracteres</span>
+              }
+              @if (form.get('vehiclePlate')?.errors?.['maxlength']) {
+              <span>La placa no puede tener más de 8 caracteres</span>
+              }
+            </small>
+            }
+          </div>
+        </div>
       </div>
-      }
-      @if (currentShift) {
-      <div class="info-item shift-info">
-        <i class="pi pi-clock"></i>
-        <span><strong>Turno:</strong> {{ getShiftDisplayText() }}</span>
+
+      <!-- Acciones -->
+      <div class="form-actions">
+        <button type="submit" class="btn-primary" [disabled]="form.invalid || buscando">
+          Buscar Vehículo
+        </button>
       </div>
-      }
-      <div class="info-item time-info">
-        <i class="pi pi-calendar-clock"></i>
-        <span>{{ currentTime }}</span>
+    </form>
+  </div>
+
+  <!-- Modal de Confirmación -->
+  @if (showModal && vehiculoEncontrado) {
+  <div class="modal-overlay" (click)="cerrarModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Vehículo: {{ vehiculoEncontrado.vehiclePlate }}</h2>
+        <button type="button" class="btn-close" (click)="cerrarModal()">×</button>
       </div>
-      <div class="info-item pos-button">
-        <p-button 
-          label="Ver Operaciones" 
-          icon="pi pi-home"
-          (onClick)="goToDashboard()"
-          styleClass="p-button-outlined p-button-secondary">
-        </p-button>
+
+      <div class="modal-body">
+        <!-- Bloque: Información del Vehículo -->
+        <div class="form-block">
+          <div class="block-header">
+            <span class="block-title">Información del Vehículo</span>
+          </div>
+          <div class="block-content">
+            <div class="info-grid">
+              <div class="info-row">
+                <label>Placa:</label>
+                <span>{{ vehiculoEncontrado.vehiclePlate }}</span>
+              </div>
+              <div class="info-row">
+                <label>Fecha Entrada:</label>
+                <span>{{ vehiculoEncontrado.startDay }}</span>
+              </div>
+              <div class="info-row">
+                <label>Hora Entrada:</label>
+                <span>{{ vehiculoEncontrado.startTime }}</span>
+              </div>
+              @if (vehiculoEncontrado.tipoVehiculo || vehiculoEncontrado.basicVehicleType) {
+              <div class="info-row">
+                <label>Tipo de Vehículo:</label>
+                <span>{{ getTipoVehiculoDisplay(vehiculoEncontrado.tipoVehiculo || vehiculoEncontrado.basicVehicleType)
+                  }}</span>
+              </div>
+              }
+              <div class="info-row">
+                <label>Estado:</label>
+                <span>{{ getStatusDisplay(vehiculoEncontrado.status) }}</span>
+              </div>
+              @if (vehiculoEncontrado.notes) {
+              <div class="info-row">
+                <label>Notas:</label>
+                <span>{{ vehiculoEncontrado.notes }}</span>
+              </div>
+              }
+            </div>
+          </div>
+        </div>
+
+        <!-- Bloque: Notas de Salida -->
+        <div class="form-block">
+          <div class="block-header">
+            <span class="block-title">Notas de Salida</span>
+            <span class="block-subtitle">Opcional</span>
+          </div>
+          <div class="block-content">
+            <div class="form-group">
+              <label for="exitNotes">Notas</label>
+              <textarea id="exitNotes" [(ngModel)]="exitNotes" rows="2"
+                placeholder="Agregue cualquier nota adicional sobre la salida del vehículo...">
+                </textarea>
+              <small class="help-text">Información adicional sobre la salida del vehículo</small>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary" (click)="cancelar()" [disabled]="loading">
+          Cancelar
+        </button>
+        <button type="button" class="btn-primary" (click)="procesarSalida()" [disabled]="loading">
+          Procesar Salida
+        </button>
       </div>
     </div>
   </div>
-
-  <form [formGroup]="form" (ngSubmit)="buscarVehiculo()" class="form-container">
-    <div class="form-group">
-      <label for="vehiclePlate">Placa del Vehículo *</label>
-      <input 
-        id="vehiclePlate"
-        type="text" 
-        pInputText 
-        formControlName="vehiclePlate"
-        [class.ng-invalid]="form.get('vehiclePlate')?.invalid && form.get('vehiclePlate')?.touched"
-        (input)="form.patchValue({vehiclePlate: form.value.vehiclePlate.toUpperCase()})"
-        maxlength="8">
-      @if (form.get('vehiclePlate')?.invalid && form.get('vehiclePlate')?.touched) {
-        <small class="p-error">
-          @if (form.get('vehiclePlate')?.errors?.['required']) {
-            <span>La placa es requerida</span>
-          }
-          @if (form.get('vehiclePlate')?.errors?.['minlength']) {
-            <span>La placa debe tener al menos 3 caracteres</span>
-          }
-          @if (form.get('vehiclePlate')?.errors?.['maxlength']) {
-            <span>La placa no puede tener más de 8 caracteres</span>
-          }
-        </small>
-      }
-    </div>
-
-    <div class="form-actions">
-      <p-button 
-        type="submit"
-        label="Buscar Vehículo"
-        icon="pi pi-search"
-        [disabled]="form.invalid || buscando">
-      </p-button>
-    </div>
-  </form>
-
-
-  <p-dialog 
-    [visible]="showModal"
-    [header]="'Vehículo: ' + (vehiculoEncontrado?.vehiclePlate || '')"
-    [modal]="true"
-    [closable]="true"
-    [dismissableMask]="true"
-    [style]="{width: '600px'}"
-    (onHide)="cerrarModal()">
-    @if (vehiculoEncontrado) {
-      <div class="vehicle-info-dialog">
-      <div class="info-grid">
-        <div class="info-item">
-          <label>Placa:</label>
-          <span class="value">{{ vehiculoEncontrado.vehiclePlate }}</span>
-        </div>
-        <div class="info-item">
-          <label>Fecha Entrada:</label>
-          <span class="value">{{ vehiculoEncontrado.startDay }}</span>
-        </div>
-        <div class="info-item">
-          <label>Hora Entrada:</label>
-          <span class="value">{{ vehiculoEncontrado.startTime }}</span>
-        </div>
-        <div class="info-item">
-          <label>Notas:</label>
-          <span class="value notes-text">{{ vehiculoEncontrado.notes || '-' }}</span>
-        </div>
-        @if (vehiculoEncontrado.tipoVehiculo || vehiculoEncontrado.basicVehicleType) {
-          <div class="info-item">
-            <label>Tipo de Vehículo:</label>
-            <span class="value">{{ getTipoVehiculoDisplay(vehiculoEncontrado.tipoVehiculo || vehiculoEncontrado.basicVehicleType) }}</span>
-          </div>
-        }
-        <div class="info-item">
-          <label>Estado:</label>
-          <span class="value status-badge" [class.status-open]="isStatusOpen(vehiculoEncontrado.status)">
-            {{ getStatusDisplay(vehiculoEncontrado.status) }}
-          </span>
-        </div>
-      </div>
-
-      <div class="notes-section">
-        <label for="exitNotes">Notas de Salida (Opcional):</label>
-        <textarea 
-          id="exitNotes"
-          pInputTextarea 
-          [(ngModel)]="exitNotes"
-          rows="3"
-          placeholder="Agregue cualquier nota adicional sobre la salida del vehículo..."
-          class="notes-textarea">
-        </textarea>
-        <small class="p-text-secondary">
-          Información adicional sobre la salida del vehículo
-        </small>
-      </div>
-
-      </div>
-    }
-
-    <ng-template pTemplate="footer">
-      <div class="dialog-footer">
-        <p-button 
-          label="Cancelar"
-          icon="pi pi-times"
-          (onClick)="cancelar()"
-          [disabled]="loading"
-          styleClass="p-button-secondary">
-        </p-button>
-        <p-button 
-          label="Procesar Salida"
-          icon="pi pi-check"
-          (onClick)="procesarSalida()"
-          [disabled]="loading"
-          styleClass="p-button-success">
-        </p-button>
-      </div>
-    </ng-template>
-  </p-dialog>
-
-  <p-toast></p-toast>
+  }
 </div>
-

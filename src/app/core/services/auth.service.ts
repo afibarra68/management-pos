@@ -4,6 +4,7 @@ import { isPlatformBrowser } from '@angular/common';
 import { Observable, tap, catchError, throwError } from 'rxjs';
 import { Router } from '@angular/router';
 import { environment } from '../../environments/environment';
+import { getTimezoneFromToken, configureTimezone } from '../utils/timezone.util';
 
 export interface LoginRequest {
   username: string;
@@ -22,6 +23,7 @@ export interface LoginResponse {
   roles: string[];
   companyName?: string;
   companyDescription?: string;
+  collaboratorDescription?: string;
   companyId?: number;
   pwdMsgToExpire?: boolean;
   accessLevel?: string;
@@ -82,10 +84,11 @@ export class AuthService {
     }
 
     const authPatterns = ['user', 'auth', 'token'];
-    
+
     // Limpiar claves específicas primero
     localStorage.removeItem(this.tokenKey);
     localStorage.removeItem(this.userKey);
+    localStorage.removeItem('user_timezone');
     sessionStorage.removeItem(this.tokenKey);
     sessionStorage.removeItem(this.userKey);
 
@@ -107,6 +110,12 @@ export class AuthService {
             // Guardar el token JWT
             localStorage.setItem(this.tokenKey, response.jwt);
 
+            // Extraer y configurar el timezone del token
+            const timezone = getTimezoneFromToken(response.jwt);
+            if (timezone) {
+              configureTimezone(timezone);
+            }
+
             // Guardar los datos del usuario de forma optimizada
             const userData = {
               firstName: response.firstName ?? null,
@@ -118,6 +127,7 @@ export class AuthService {
               roles: response.roles ?? [],
               companyName: response.companyName ?? null,
               companyDescription: response.companyDescription ?? null,
+              collaboratorDescription: response.collaboratorDescription ?? null,
               companyId: response.companyId ?? null,
               accessLevel: response.accessLevel ?? null,
               pwdMsgToExpire: response.pwdMsgToExpire ?? false
@@ -134,6 +144,10 @@ export class AuthService {
 
   logout(): void {
     this.clearAllAuthData();
+    // Limpiar timezone configurado
+    if (this.isBrowser) {
+      localStorage.removeItem('user_timezone');
+    }
     this.router.navigate(['/auth/login']);
   }
 

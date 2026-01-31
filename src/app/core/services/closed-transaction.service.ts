@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
-import { BuildTicket } from './open-transaction.service';
+import { BuildTicket, ParamVenta } from './open-transaction.service';
 
 export interface ClosedTransaction {
   closedTransactionId?: number;
@@ -59,6 +59,14 @@ export class ClosedTransactionService {
 
   getTodayStats(): Observable<ClosedTransactionStats> {
     return this.http.get<ClosedTransactionStats>(`${this.apiUrl}/today-stats`);
+  }
+
+  /**
+   * Obtiene los parámetros de configuración para un servicio específico
+   * Incluye información completa del turno activo (ShiftConnectionHistory con Shift y ShiftType)
+   */
+  getParams(serviceCode: string): Observable<ParamVenta> {
+    return this.http.get<ParamVenta>(`${this.apiUrl}/params/${serviceCode}`);
   }
 }
 

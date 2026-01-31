@@ -8,14 +8,14 @@ export interface VehicleCapacity {
   vehicleCapacityId?: number;
   companyCompanyId?: number;
   company?: any;
-  basicVehicleType?: EnumResource;
+  tipoVehiculo?: EnumResource;
   capacity?: number;
   isActive?: boolean;
   available?: number;
 }
 
 export interface ParkingOccupancy {
-  basicVehicleType: EnumResource;
+  tipoVehiculo: EnumResource;
   capacity: number;
   occupied: number;
   available: number;
@@ -41,17 +41,17 @@ export class VehicleCapacityService {
       this.getActiveByCompany(companyId).subscribe({
         next: (capacities) => {
           const occupancy: ParkingOccupancy[] = capacities.map(capacity => {
-            const basicVehicleTypeId = typeof capacity.basicVehicleType === 'string' 
-              ? capacity.basicVehicleType 
-              : capacity.basicVehicleType?.id;
+            const tipoVehiculoId = typeof capacity.tipoVehiculo === 'string'
+              ? capacity.tipoVehiculo
+              : capacity.tipoVehiculo?.id;
 
             // Contar vehículos ocupados de este tipo
             const occupied = openTransactions.filter(transaction => {
-              const transactionType = transaction.basicVehicleType;
+              const transactionType = transaction.tipoVehiculo;
               const transactionTypeId = typeof transactionType === 'string'
                 ? transactionType
                 : transactionType?.id;
-              return transactionTypeId === basicVehicleTypeId;
+              return transactionTypeId === tipoVehiculoId;
             }).length;
 
             const available = (capacity.capacity || 0) - occupied;
@@ -60,7 +60,7 @@ export class VehicleCapacityService {
               : 0;
 
             return {
-              basicVehicleType: capacity.basicVehicleType!,
+              tipoVehiculo: capacity.tipoVehiculo!,
               capacity: capacity.capacity || 0,
               occupied,
               available,

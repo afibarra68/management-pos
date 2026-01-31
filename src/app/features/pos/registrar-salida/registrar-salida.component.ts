@@ -4,7 +4,6 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angula
 import { Router } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
-import { Textarea } from 'primeng/textarea';
 import { MessageModule } from 'primeng/message';
 import { DialogModule } from 'primeng/dialog';
 import { FormsModule } from '@angular/forms';
@@ -31,14 +30,12 @@ import { Subject, takeUntil, finalize, catchError, of } from 'rxjs';
     FormsModule,
     ButtonModule,
     InputTextModule,
-    Textarea,
     MessageModule,
     DialogModule,
     SharedModule,
     ToastModule
   ],
   templateUrl: './registrar-salida.component.html',
-  styleUrls: ['./registrar-salida.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class RegistrarSalidaComponent implements OnInit, OnDestroy {
@@ -53,7 +50,7 @@ export class RegistrarSalidaComponent implements OnInit, OnDestroy {
   private shiftService = inject(ShiftService);
   private cdr = inject(ChangeDetectorRef);
   private destroy$ = new Subject<void>();
-  
+
   form: FormGroup;
   loading = false;
   loadingParams = false;
@@ -64,8 +61,6 @@ export class RegistrarSalidaComponent implements OnInit, OnDestroy {
   vehiculoEncontrado: OpenTransaction | null = null;
   params: ParamVenta | null = null;
   currentShift: DShiftAssignment | null = null;
-  companyName: string = '';
-  currentTime: string = '';
 
   exitNotes: string = '';
 
@@ -78,8 +73,6 @@ export class RegistrarSalidaComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.loadParams();
     this.loadCurrentShift();
-    this.loadCompanyName();
-    this.updateCurrentTime(); // Actualizar tiempo solo una vez al iniciar
   }
 
   ngOnDestroy(): void {
@@ -93,10 +86,10 @@ export class RegistrarSalidaComponent implements OnInit, OnDestroy {
   private handleError(err: any, defaultMessage: string): void {
     const status = err?.status;
     const errorResponse = err?.error;
-    
+
     // Extraer el mensaje legible (readableMsg tiene prioridad)
     const errorMessage = errorResponse?.readableMsg || errorResponse?.message || errorResponse?.error || defaultMessage;
-    
+
     if (status === 412) {
       const errorDetails = errorResponse?.details ?? errorResponse?.detail;
       this.notificationService.showPreconditionFailed(errorMessage, errorDetails);
@@ -128,7 +121,6 @@ export class RegistrarSalidaComponent implements OnInit, OnDestroy {
         next: (params: ParamVenta | null) => {
           if (params) {
             this.params = params;
-            this.loadCompanyName();
           }
         }
       });
@@ -138,35 +130,23 @@ export class RegistrarSalidaComponent implements OnInit, OnDestroy {
    * Carga el turno actual del usuario para la fecha de hoy
    */
   private loadCurrentShift(): void {
-    const userData = this.authService.getUserData();
-    if (!userData?.appUserId) {
-      return;
+    // Usar la información del turno desde params.dshiftConnectionHistory
+    const shiftHistory = this.params?.dshiftConnectionHistory;
+    const shift = shiftHistory?.shift;
+    if (shift && shiftHistory?.shiftAssignmentId) {
+      const shiftAssignment: DShiftAssignment = {
+        shiftAssignmentId: shiftHistory.shiftAssignmentId,
+        shiftId: shiftHistory.shiftId || shift.shiftId,
+        shift: shift,
+        appUserId: shiftHistory.appUserId,
+        status: shift.status || { id: 'CONFIRMED', description: 'Turno confirmado' }
+      };
+      this.currentShift = shiftAssignment;
+      this.cdr.markForCheck();
+    } else {
+      this.currentShift = null;
+      this.cdr.markForCheck();
     }
-
-    this.loadingShift = true;
-    const today = new Date().toISOString().split('T')[0]; // Formato YYYY-MM-DD
-
-    this.shiftService.getByUserAndDate(userData.appUserId, today)
-      .pipe(
-        takeUntil(this.destroy$),
-        finalize(() => this.loadingShift = false),
-        catchError((err) => {
-          return of([]);
-        })
-      )
-      .subscribe({
-        next: (assignments: DShiftAssignment[]) => {
-          // Obtener el primer turno activo (CONFIRMED o PENDING) para hoy
-          const activeShift = assignments.find(assignment => {
-            const status = assignment.status;
-            const statusId = typeof status === 'string' ? status : status?.id;
-            return statusId === 'CONFIRMED' || statusId === 'PENDING';
-          });
-
-          this.currentShift = activeShift || null;
-          this.cdr.markForCheck();
-        }
-      });
   }
 
   /**
@@ -191,28 +171,6 @@ export class RegistrarSalidaComponent implements OnInit, OnDestroy {
 
     return typeName;
   }
-
-  private loadCompanyName(): void {
-    const userData = this.authService.getUserData();
-    if (userData?.companyName) {
-      this.companyName = userData.companyName;
-    } else if (this.params?.collaboratorDescription) {
-      this.companyName = this.params.collaboratorDescription;
-    }
-    this.cdr.markForCheck();
-  }
-
-  private updateCurrentTime(): void {
-    const now = new Date();
-    this.currentTime = now.toLocaleTimeString('es-CO', { 
-      hour: '2-digit', 
-      minute: '2-digit', 
-      second: '2-digit',
-      hour12: true 
-    });
-    this.cdr.markForCheck();
-  }
-
 
   buscarVehiculo(): void {
     if (this.form.get('vehiclePlate')?.invalid) {
@@ -294,16 +252,18 @@ export class RegistrarSalidaComponent implements OnInit, OnDestroy {
             this.printTicket(closedTransaction.buildTicket);
           }
 
+          // Limpiar completamente el formulario y estados
           this.cerrarModal();
-          this.form.reset();
+          this.form.reset({
+            vehiclePlate: ''
+          });
+          this.error = null;
+          this.exitNotes = '';
+
           window.dispatchEvent(new CustomEvent('transactionClosed'));
         },
         error: (err) => this.handleError(err, 'Error al procesar la salida del vehículo')
       });
-  }
-
-  goToDashboard(): void {
-    this.router.navigate(['/pos']);
   }
 
   cancelar(): void {
@@ -363,8 +323,8 @@ export class RegistrarSalidaComponent implements OnInit, OnDestroy {
     this.printService.printTicket(buildTicket)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: () => {},
-        error: (err) => {}
+        next: () => { },
+        error: (err) => { }
       });
   }
 

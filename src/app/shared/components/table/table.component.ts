@@ -25,7 +25,6 @@ export interface TableData {
     ButtonModule
   ],
   templateUrl: './table.component.html',
-  styleUrls: ['./table.component.scss']
 })
 export class TableComponent {
   private _dataTable: any[] = [];
@@ -46,11 +45,11 @@ export class TableComponent {
   rows: number = environment.rowsPerPage || 10;
   isNotRowSelected = true;
   _first = 0;
-  
+
   @Input() set first(value: number) {
     this._first = value;
   }
-  
+
   get first(): number {
     return this._first;
   }
@@ -61,7 +60,7 @@ export class TableComponent {
       this._totalRecords = 0;
       return;
     }
-    
+
     if (Array.isArray(data)) {
       this._dataTable = data;
       this._totalRecords = data.length;

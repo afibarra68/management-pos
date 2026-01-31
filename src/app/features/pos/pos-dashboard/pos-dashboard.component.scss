@@ -3,21 +3,97 @@
   height: 100%;
   display: flex;
   flex-direction: column;
+  transition: background-color 0.3s ease, color 0.3s ease;
+
+  // Modo oscuro
+  :host-context(.dark-mode) & {
+    color: #ffffff;
+
+    .header {
+      border-bottom-color: #333333;
+
+      h1 {
+        color: #ffffff !important;
+      }
+
+      .subtitle {
+        color: #cccccc !important;
+      }
+    }
+
+    .stat-card {
+      background-color: #1a1a1a;
+      border-color: #333333;
+
+      ::ng-deep {
+
+        .p-card-body,
+        .p-card-content {
+          background-color: #1a1a1a !important;
+          color: #ffffff !important;
+        }
+      }
+
+      .stat-label {
+        color: #cccccc !important;
+      }
+
+      .stat-value {
+        color: #ffffff !important;
+      }
+    }
+
+    .actions-buttons {
+      .action-card {
+        ::ng-deep {
+
+          .p-card-body,
+          .p-card-content {
+            background-color: #1a1a1a !important;
+            color: #ffffff !important;
+          }
+
+          .card-content {
+
+            h2,
+            p {
+              color: #ffffff !important;
+            }
+          }
+        }
+      }
+    }
+
+    .section-title {
+      color: #ffffff !important;
+      border-bottom-color: #333333;
+    }
+
+    .loading-state,
+    .error-state {
+      p {
+        color: #ffffff !important;
+      }
+    }
+  }
 
   .header {
     text-align: center;
-    margin-bottom: 1rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #e0e0e0;
 
     h1 {
       margin: 0 0 0.5rem 0;
-      color: var(--text-color);
+      color: #1a1a1a;
       font-size: 2rem;
-      font-weight: 600;
+      font-weight: 700;
+      letter-spacing: 0.3px;
     }
 
     .subtitle {
       margin: 0;
-      color: var(--text-color-secondary);
+      color: #666666;
       font-size: 0.9rem;
     }
   }
@@ -49,35 +125,35 @@
         border: 3px solid var(--primary-color);
         box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
         transform: scale(1.05);
-        
+
         ::ng-deep {
           .p-card {
             background: #ffffff !important;
             background-color: #ffffff !important;
             border-color: var(--primary-color) !important;
           }
-          
+
           .p-card-body {
             background: #ffffff !important;
             background-color: #ffffff !important;
           }
-          
+
           .p-card-content {
             background: #ffffff !important;
             background-color: #ffffff !important;
           }
         }
       }
-      
+
       &.active .card-content {
         .card-icon {
           color: var(--primary-color) !important;
         }
-        
+
         h2 {
           color: var(--primary-color) !important;
         }
-        
+
         p {
           color: var(--primary-color) !important;
         }
@@ -92,7 +168,7 @@
         background: var(--surface-card);
         background-color: var(--surface-card);
       }
-      
+
 
       ::ng-deep .p-card-content {
         padding: 0;
@@ -162,6 +238,14 @@
   }
 
   .stat-card {
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    transition: box-shadow 0.2s ease;
+
+    &:hover {
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+
     ::ng-deep .p-card-body {
       padding: 1.5rem;
     }
@@ -175,7 +259,7 @@
     .stat-icon {
       width: 60px;
       height: 60px;
-      border-radius: 12px;
+      border-radius: 8px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -183,11 +267,11 @@
       color: white;
 
       &.total {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background-color: #4a9eff;
       }
 
       &.amount {
-        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        background-color: #4a9eff;
       }
 
       i {
@@ -200,14 +284,16 @@
 
       .stat-label {
         margin: 0 0 0.5rem 0;
-        color: var(--text-color-secondary);
+        color: #666666;
         font-size: 0.9rem;
-        font-weight: 500;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
       }
 
       .stat-value {
         margin: 0;
-        color: var(--text-color);
+        color: #1a1a1a;
         font-size: 1.8rem;
         font-weight: 700;
       }
@@ -232,7 +318,7 @@
 
   .parking-map-section {
     margin-top: 2rem;
-    
+
     app-parking-map {
       display: block;
     }
@@ -240,7 +326,7 @@
 
   .cash-register-section {
     margin-top: 2rem;
-    
+
     app-cash-register-view {
       display: block;
     }
@@ -253,9 +339,12 @@
 
     .section-title {
       margin: 0 0 1rem 0;
-      color: var(--text-color);
+      color: #1a1a1a;
       font-size: 1.5rem;
-      font-weight: 600;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid #e0e0e0;
     }
 
     ::ng-deep {
@@ -287,6 +376,39 @@
         .p-datatable-wrapper {
           flex: 1;
           overflow: auto;
+        }
+
+        .p-datatable-thead>tr>th {
+          color: #1a1a1a;
+        }
+
+        .p-datatable-tbody>tr>td {
+          color: #1a1a1a;
+        }
+      }
+    }
+  }
+
+  // Modo oscuro para tablas
+  :host-context(.dark-mode) & {
+    .transactions-section {
+      ::ng-deep {
+        .p-datatable {
+          .p-datatable-thead>tr>th {
+            background-color: #2a2a2a !important;
+            color: #ffffff !important;
+            border-color: #333333 !important;
+          }
+
+          .p-datatable-tbody>tr>td {
+            background-color: #1a1a1a !important;
+            color: #ffffff !important;
+            border-color: #333333 !important;
+          }
+
+          .p-datatable-tbody>tr:hover {
+            background-color: #2a2a2a !important;
+          }
         }
       }
     }
@@ -396,54 +518,54 @@
   .cursor-pointer {
     cursor: pointer;
   }
-  
+
   .active-card {
     .p-card {
       background: #ffffff !important;
       background-color: #ffffff !important;
       border-color: var(--primary-color) !important;
     }
-    
+
     .p-card-body {
       background: #ffffff !important;
       background-color: #ffffff !important;
     }
-    
+
     .p-card-content {
       background: #ffffff !important;
       background-color: #ffffff !important;
     }
-    
+
     .card-content {
+
       .card-icon,
       i {
         color: var(--primary-color) !important;
       }
-      
+
       h2 {
         color: var(--primary-color) !important;
       }
-      
+
       p {
         color: var(--primary-color) !important;
       }
     }
   }
-  
+
   .action-card.active {
     .p-card-body {
       h2 {
         color: var(--primary-color) !important;
       }
-      
+
       p {
         color: var(--primary-color) !important;
       }
-      
+
       i {
         color: var(--primary-color) !important;
       }
     }
   }
 }
-

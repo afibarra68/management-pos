@@ -13,10 +13,9 @@ import { ButtonModule } from 'primeng/button';
     ButtonModule
   ],
   templateUrl: './under-construction.component.html',
-  styleUrls: ['./under-construction.component.scss']
 })
 export class UnderConstructionComponent {
-  constructor(private router: Router) {}
+  constructor(private router: Router) { }
 
   goToLogin(): void {
     this.router.navigate(['/auth/login']);

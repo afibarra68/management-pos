@@ -9,7 +9,6 @@ import { SidebarService } from '../../services/sidebar.service';
   standalone: true,
   imports: [RouterModule, DynamicMenuComponent, ButtonModule],
   templateUrl: './sidebar.component.html',
-  styleUrls: ['./sidebar.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class SidebarComponent {

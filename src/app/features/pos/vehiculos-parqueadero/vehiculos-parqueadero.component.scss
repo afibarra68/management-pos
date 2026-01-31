@@ -5,6 +5,229 @@
   margin: 0 auto;
   width: 100%;
 
+  // Modo oscuro
+  :host-context(.dark-mode) & {
+    color: #ffffff;
+
+    .header {
+      .header-left {
+        h1 {
+          color: #ffffff !important;
+        }
+
+        .subtitle {
+          color: #cccccc !important;
+        }
+      }
+
+      .header-right {
+        .info-item {
+          background-color: #1a1a1a !important;
+          border-color: #333333;
+
+          i {
+            color: #4a9eff !important;
+          }
+
+          span {
+            color: #ffffff !important;
+          }
+
+          &.shift-info {
+            background-color: #2a2a2a !important;
+
+            i,
+            span,
+            strong {
+              color: #ffffff !important;
+            }
+          }
+
+          &.time-info {
+            background-color: #2a2a2a !important;
+            color: #ffffff !important;
+
+            i {
+              color: #4a9eff !important;
+            }
+          }
+        }
+      }
+    }
+
+    .summary-card {
+      background-color: #1a1a1a;
+      border-color: #333333;
+
+      .summary-label {
+        color: #cccccc !important;
+      }
+
+      .summary-value {
+        color: #4a9eff !important;
+      }
+    }
+
+    .loading-state,
+    .empty-state {
+      color: #ffffff !important;
+
+      p,
+      small {
+        color: #ffffff !important;
+      }
+    }
+
+    .actions-section {
+      .search-bar {
+        .p-input-icon-left {
+          i {
+            color: #8fa8c2 !important;
+          }
+        }
+
+        .search-input {
+          background-color: #2a3441 !important;
+          border-color: #3d4a5c !important;
+          color: #e0e8f0 !important;
+
+          &::placeholder {
+            color: #8fa8c2 !important;
+          }
+
+          &:focus {
+            background-color: #2f3a4a !important;
+            border-color: #4a9eff !important;
+            color: #ffffff !important;
+          }
+        }
+      }
+    }
+
+    ::ng-deep {
+
+      // Estilos para el card que contiene la tabla
+      .p-card {
+        background-color: #1e2530 !important;
+        border-color: #2a3441 !important;
+
+        .p-card-body {
+          background-color: #1e2530 !important;
+        }
+      }
+
+      // Estilos para la tabla
+      .p-datatable {
+        background-color: #1e2530 !important;
+
+        .p-datatable-thead>tr>th {
+          background-color: #2a3441 !important;
+          color: #e0e8f0 !important;
+          border-color: #3d4a5c !important;
+          font-weight: 600;
+        }
+
+        .p-datatable-tbody {
+          background-color: #1e2530 !important;
+
+          >tr {
+            background-color: #1e2530 !important;
+            border-color: #2a3441 !important;
+
+            >td {
+              background-color: #1e2530 !important;
+              color: #e0e8f0 !important;
+              border-color: #2a3441 !important;
+
+              strong {
+                color: #ffffff !important;
+              }
+            }
+
+            &:hover {
+              background-color: #252d3a !important;
+
+              >td {
+                background-color: #252d3a !important;
+              }
+            }
+          }
+        }
+
+        .notes-text {
+          color: #b8c5d4 !important;
+        }
+
+        .text-center {
+          color: #b8c5d4 !important;
+        }
+
+        // Estilos para tags dentro de la tabla
+        .p-tag {
+          &.p-tag-info {
+            background-color: #3d5a7a !important;
+            color: #e0e8f0 !important;
+          }
+
+          &.p-tag-success {
+            background-color: #2d5a3d !important;
+            color: #c8e6d4 !important;
+          }
+        }
+      }
+
+      // Estilos para la paginación
+      .p-paginator {
+        background-color: #1e2530 !important;
+        border-color: #2a3441 !important;
+        color: #e0e8f0 !important;
+
+        .p-paginator-pages {
+          .p-paginator-page {
+            background-color: #2a3441 !important;
+            border-color: #3d4a5c !important;
+            color: #e0e8f0 !important;
+
+            &:hover {
+              background-color: #3d4a5c !important;
+              color: #ffffff !important;
+            }
+
+            &.p-highlight {
+              background-color: #4a9eff !important;
+              border-color: #4a9eff !important;
+              color: #ffffff !important;
+            }
+          }
+        }
+
+        .p-paginator-first,
+        .p-paginator-prev,
+        .p-paginator-next,
+        .p-paginator-last {
+          background-color: #2a3441 !important;
+          border-color: #3d4a5c !important;
+          color: #e0e8f0 !important;
+
+          &:hover {
+            background-color: #3d4a5c !important;
+            color: #ffffff !important;
+          }
+
+          &:disabled {
+            background-color: #1e2530 !important;
+            border-color: #2a3441 !important;
+            color: #5a6b7a !important;
+          }
+        }
+
+        .p-paginator-current {
+          color: #e0e8f0 !important;
+        }
+      }
+    }
+  }
+
   .header {
     margin-bottom: 2rem;
     display: flex;
@@ -204,14 +427,14 @@
 
   ::ng-deep {
     .p-datatable {
-      .p-datatable-thead > tr > th {
+      .p-datatable-thead>tr>th {
         background: var(--surface-50);
         font-weight: 600;
         color: var(--text-color);
         padding: 1rem;
       }
 
-      .p-datatable-tbody > tr > td {
+      .p-datatable-tbody>tr>td {
         padding: 1rem;
       }
 

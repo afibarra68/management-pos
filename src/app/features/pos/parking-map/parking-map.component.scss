@@ -2,21 +2,95 @@
   padding: 2rem;
   max-width: 1400px;
   margin: 0 auto;
+  transition: background-color 0.3s ease, color 0.3s ease;
+
+  // Modo oscuro
+  :host-context(.dark-mode) & {
+    color: #ffffff;
+
+    .header {
+      border-bottom-color: #333333;
+
+      h2 {
+        color: #ffffff !important;
+      }
+
+      .subtitle {
+        color: #cccccc !important;
+      }
+    }
+
+    .summary-card {
+      background-color: #1a1a1a;
+      border-color: #333333;
+
+      ::ng-deep {
+
+        .p-card-body,
+        .p-card-content {
+          background-color: #1a1a1a !important;
+          color: #ffffff !important;
+        }
+      }
+
+      .summary-label {
+        color: #cccccc !important;
+      }
+
+      .summary-value {
+        color: #ffffff !important;
+      }
+    }
+
+    .occupancy-card {
+      background-color: #1a1a1a;
+      border-color: #333333;
+
+      .card-header {
+        border-bottom-color: #333333;
+
+        h3 {
+          color: #ffffff !important;
+        }
+      }
+
+      .stat-label {
+        color: #cccccc !important;
+      }
+
+      .stat-value {
+        color: #ffffff !important;
+      }
+    }
+
+    .loading-state,
+    .empty-state {
+      color: #ffffff !important;
+
+      p,
+      small {
+        color: #ffffff !important;
+      }
+    }
+  }
 
   .header {
     margin-bottom: 2rem;
     text-align: center;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #e0e0e0;
 
     h2 {
       margin: 0 0 0.5rem 0;
-      color: var(--text-color);
+      color: #1a1a1a;
       font-size: 2rem;
-      font-weight: 600;
+      font-weight: 700;
+      letter-spacing: 0.3px;
     }
 
     .subtitle {
       margin: 0;
-      color: var(--text-color-secondary);
+      color: #666666;
       font-size: 1rem;
     }
   }
@@ -38,6 +112,14 @@
     margin-bottom: 2rem;
 
     .summary-card {
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      transition: box-shadow 0.2s ease;
+
+      &:hover {
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      }
+
       ::ng-deep .p-card-body {
         padding: 1.5rem;
       }
@@ -89,6 +171,14 @@
     gap: 1.5rem;
 
     .occupancy-card {
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      transition: box-shadow 0.2s ease;
+
+      &:hover {
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      }
+
       ::ng-deep .p-card-body {
         padding: 1.5rem;
       }
@@ -99,7 +189,7 @@
         align-items: center;
         margin-bottom: 1rem;
         padding-bottom: 1rem;
-        border-bottom: 2px solid var(--surface-border);
+        border-bottom: 1px solid #e0e0e0;
         gap: 0.5rem;
 
         h3 {

@@ -2,158 +2,114 @@
   <div class="header">
     <div class="header-left">
       <h1>Vehículos en el Parqueadero</h1>
-      <p class="subtitle">Vehículos bajo tu cuidado en este momento</p>
     </div>
     <div class="header-right">
-      @if (companyName()) {
-      <div class="info-item">
-        <i class="pi pi-building"></i>
-        <span>{{ companyName() }}</span>
-      </div>
-      }
       @if (currentShift()) {
       <div class="info-item shift-info">
-        <i class="pi pi-clock"></i>
         <span><strong>Turno:</strong> {{ getShiftDisplayText() }}</span>
       </div>
       }
-      <div class="info-item time-info">
-        <i class="pi pi-calendar-clock"></i>
-        <span>{{ currentTime() }}</span>
-      </div>
     </div>
   </div>
 
-  <!-- Resumen de vehículos -->
-  <div class="summary-section">
-    <p-card class="summary-card">
-      <div class="summary-content">
-        <div class="summary-item">
-          <div class="summary-icon">
-            <i class="pi pi-car"></i>
-          </div>
-          <div class="summary-info">
-            <div class="summary-label">Vehículos bajo tu cuidado</div>
-            <div class="summary-value">{{ vehicleCount() }}</div>
-          </div>
-        </div>
-      </div>
-    </p-card>
-  </div>
 
   <!-- Barra de búsqueda y acciones -->
   <div class="actions-section">
     <div class="search-bar">
       <span class="p-input-icon-left">
         <i class="pi pi-search"></i>
-        <input 
-          type="text" 
-          pInputText 
-          placeholder="Buscar por placa o tipo de vehículo..."
-          [value]="searchTerm()"
-          (input)="onSearchChange($event)"
-          class="search-input">
+        <input type="text" pInputText placeholder="Buscar por placa o tipo de vehículo..." [value]="searchTerm()"
+          (input)="onSearchChange($event)" class="search-input">
       </span>
     </div>
-    <p-button 
-      label="Actualizar" 
-      icon="pi pi-refresh" 
-      (onClick)="refresh()"
-      [loading]="loading()"
+    <p-button label="Actualizar" icon="pi pi-refresh" (onClick)="refresh()" [loading]="loading()"
       styleClass="p-button-outlined">
     </p-button>
   </div>
 
 
-  <!-- Tabla de vehículos -->
-  @if (loading()) {
-    <div class="loading-state">
-      <i class="pi pi-spin pi-spinner" style="font-size: 2rem;"></i>
-      <p>Cargando vehículos...</p>
-    </div>
+  <!-- Mensaje de error -->
+  @if (error()) {
+  <div class="error-state">
+    <p-message severity="error" [text]="error() || 'Error desconocido'" [closable]="false"></p-message>
+  </div>
   }
 
-  @if (!loading() && filteredVehicles().length > 0) {
-    <p-card>
-      <p-table 
-        [value]="filteredVehicles()" 
-        [paginator]="true" 
-        [rows]="10"
-        [showCurrentPageReport]="true"
-        currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} vehículos"
-        styleClass="p-datatable-sm"
-        [globalFilterFields]="['vehiclePlate']">
-        <ng-template pTemplate="header">
-          <tr>
-            <th>Placa</th>
-            <th>Tipo de Vehículo</th>
-            <th>Fecha de Ingreso</th>
-            <th>Hora de Ingreso</th>
-            <th>Notas</th>
-            <th>Suscripción</th>
-            <th>Estado</th>
-          </tr>
-        </ng-template>
-        <ng-template pTemplate="body" let-vehicle>
-          <tr>
-            <td>
-              <strong>{{ vehicle.vehiclePlate || 'N/A' }}</strong>
-            </td>
-            <td>
-              <p-tag 
-                [value]="getVehicleTypeDisplay(vehicle.basicVehicleType || vehicle.tipoVehiculo)"
-                severity="info">
-              </p-tag>
-            </td>
-            <td>{{ formatDate(vehicle.startDay || vehicle.operationDate) }}</td>
-            <td>{{ formatTime(vehicle.startTime) }}</td>
-            <td>
-              <span class="notes-text">
-                {{ vehicle.notes || '-' }}
-              </span>
-            </td>
-            <td>
-              @if (vehicle.bySubscription) {
-                <p-tag 
-                  value="Por Suscripción"
-                  severity="success"
-                  icon="pi pi-check-circle">
-                </p-tag>
-              } @else {
-                <p-tag 
-                  value="Pago Normal"
-                  severity="info">
-                </p-tag>
-              }
-            </td>
-            <td>
-              <p-tag 
-                value="En Parqueadero"
-                severity="success">
-              </p-tag>
-            </td>
-          </tr>
-        </ng-template>
-        <ng-template pTemplate="emptymessage">
-          <tr>
-            <td colspan="7" class="text-center">
-              @if (searchTerm()) {
-                No se encontraron vehículos que coincidan con la búsqueda
-              } @else {
-                No hay vehículos en el parqueadero
-              }
-            </td>
-          </tr>
-        </ng-template>
-      </p-table>
-    </p-card>
+  <!-- Tabla de vehículos -->
+  @if (loading()) {
+  <div class="loading-state">
+    <i class="pi pi-spin pi-spinner" style="font-size: 2rem;"></i>
+    <p>Cargando vehículos...</p>
+  </div>
+  }
+
+  @if (!loading() && !error() && filteredVehicles().length > 0) {
+  <p-card>
+    <p-table [value]="filteredVehicles()" [paginator]="true" [rows]="10" [showCurrentPageReport]="true"
+      currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} vehículos" styleClass="p-datatable-sm"
+      [globalFilterFields]="['vehiclePlate']">
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Placa</th>
+          <th>Tipo de Vehículo</th>
+          <th>Fecha de Ingreso</th>
+          <th>Hora de Ingreso</th>
+          <th>Notas</th>
+          <th>Suscripción</th>
+          <th>Estado</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-vehicle>
+        <tr>
+          <td>
+            <strong>{{ vehicle.vehiclePlate || 'N/A' }}</strong>
+          </td>
+          <td>
+            <p-tag [value]="getVehicleTypeDisplay(vehicle.basicVehicleType || vehicle.tipoVehiculo)" severity="info">
+            </p-tag>
+          </td>
+          <td>{{ formatDate(vehicle.startDay || vehicle.operationDate) }}</td>
+          <td>{{ formatTime(vehicle.startTime) }}</td>
+          <td>
+            <span class="notes-text">
+              {{ vehicle.notes || '-' }}
+            </span>
+          </td>
+          <td>
+            @if (vehicle.bySubscription) {
+            <p-tag value="Por Suscripción" severity="success" icon="pi pi-check-circle">
+            </p-tag>
+            } @else {
+            <p-tag value="Pago Normal" severity="info">
+            </p-tag>
+            }
+          </td>
+          <td>
+            <p-tag value="En Parqueadero" severity="success">
+            </p-tag>
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="7" class="text-center">
+            @if (searchTerm()) {
+            No se encontraron vehículos que coincidan con la búsqueda
+            } @else {
+            No hay vehículos en el parqueadero
+            }
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </p-card>
   }
 
   @if (!loading() && filteredVehicles().length === 0 && !error()) {
-    <div class="empty-state">
-      <i class="pi pi-inbox" style="font-size: 3rem; color: var(--text-color-secondary);"></i>
-      <p>No hay vehículos bajo tu cuidado en este momento</p>
-      <small>Los vehículos que registres aparecerán aquí</small>
-    </div>
+  <div class="empty-state">
+    <i class="pi pi-inbox" style="font-size: 3rem; color: var(--text-color-secondary);"></i>
+    <p>No hay vehículos bajo tu cuidado en este momento</p>
+    <small>Los vehículos que registres aparecerán aquí</small>
+  </div>
   }
 </div>

@@ -79,12 +79,18 @@ export class NotificationService {
    * Muestra una notificación para errores 412 (PRECONDITION_FAILED)
    */
   showPreconditionFailed(message: string, details?: string): void {
-    const fullMessage = details ? `${message}\n${details}` : message;
+    // Combinar mensaje y detalles de forma legible
+    let fullMessage = message;
+    if (details && details.trim() && details !== message) {
+      // Si hay detalles diferentes al mensaje, agregarlos
+      fullMessage = `${message}${details.trim() ? ' - ' + details : ''}`;
+    }
+
     this.show({
       severity: 'warn',
       summary: 'Validación fallida',
       detail: fullMessage,
-      life: 8000 // Más tiempo para que el usuario lea el mensaje
+      life: 10000 // Más tiempo para que el usuario lea el mensaje completo
     });
   }
 

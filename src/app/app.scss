@@ -5,6 +5,68 @@
   overflow-x: hidden;
   overflow-y: auto;
   position: relative;
+  transition: background-color 0.3s ease;
+  background-color: #f5f5f5 !important; // Forzar modo claro por defecto, ignorar temas del sistema
+
+  // Modo claro (por defecto) - Forzar colores claros
+  &:not(.dark-mode) {
+    background-color: #f5f5f5 !important;
+  }
+
+  // Modo oscuro - Mayor contraste (solo cuando se activa explícitamente)
+  &.dark-mode {
+    background-color: #0a0a0a !important;
+
+    .app-header {
+      background-color: #1a1a1a;
+      border-bottom-color: #333333;
+
+      .header-left .system-name {
+        color: #ffffff;
+      }
+
+      .header-right {
+        .current-time {
+          background-color: #2a2a2a;
+          color: #ffffff;
+        }
+
+        .btn-outline {
+          background-color: #1a1a1a;
+          border-color: #555555;
+          color: #ffffff;
+
+          &:hover {
+            background-color: #2a2a2a;
+            border-color: #777777;
+          }
+        }
+
+        .btn-toggle-theme {
+          background-color: #1a1a1a;
+          border-color: #555555;
+          color: #ffffff;
+
+          &:hover {
+            background-color: #2a2a2a;
+            border-color: #777777;
+          }
+        }
+      }
+    }
+
+    .main-content {
+      background-color: #0a0a0a !important;
+    }
+  }
+
+  // Asegurar modo claro cuando NO está en dark-mode
+  &:not(.dark-mode) {
+    .main-content {
+      background-color: #f5f5f5 !important;
+      color: #1a1a1a !important;
+    }
+  }
 
   // Cuando está en la página de login, deshabilitar scroll
   &:has(app-login) {
@@ -92,10 +154,10 @@
 
 .app-header {
   background-color: #ffffff;
-  border-bottom: 1px solid #e9ecef;
+  border-bottom: 1px solid #e0e0e0;
   padding: 0 1rem;
   display: flex;
-  justify-content: space-between; // Espacio entre elementos izquierda y derecha
+  justify-content: space-between;
   align-items: center;
   height: 64px;
   position: absolute;
@@ -103,22 +165,81 @@
   left: 0;
   right: 0;
   width: 100%;
-  z-index: 100; // Por debajo del sidebar (z-index: 1000)
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  transition: left 0.3s ease, width 0.3s ease;
-  gap: 1rem; // Espacio entre elementos
+  z-index: 100;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: left 0.3s ease, width 0.3s ease, background-color 0.3s ease, border-color 0.3s ease;
+  gap: 1rem;
 
   .header-left {
     display: flex;
     align-items: center;
     flex-shrink: 0;
+    gap: 1rem;
+
+    .system-name {
+      font-weight: 700;
+      font-size: 16px;
+      letter-spacing: 0.5px;
+      color: #1a1a1a;
+    }
   }
 
   .header-right {
     display: flex;
     align-items: center;
-    margin-left: auto; // Empujar hacia la derecha
+    margin-left: auto;
     flex-shrink: 0;
+    gap: 0.75rem;
+
+    .current-time {
+      font-size: 13px;
+      color: #666666;
+      font-weight: 500;
+      padding: 4px 8px;
+      background-color: #f5f5f5;
+      border-radius: 4px;
+      white-space: nowrap;
+    }
+
+    .btn-outline {
+      padding: 6px 14px;
+      border: 1px solid #e0e0e0;
+      background-color: #ffffff;
+      color: #1a1a1a;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      border-radius: 4px;
+      transition: all 0.2s ease;
+      font-family: inherit;
+      white-space: nowrap;
+
+      &:hover {
+        background-color: #f5f5f5;
+        border-color: #c0c0c0;
+      }
+    }
+
+    .btn-toggle-theme {
+      padding: 6px 10px;
+      border: 1px solid #e0e0e0;
+      background-color: #ffffff;
+      color: #1a1a1a;
+      font-size: 16px;
+      cursor: pointer;
+      border-radius: 4px;
+      transition: all 0.2s ease;
+      min-width: 36px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      &:hover {
+        background-color: #f5f5f5;
+        border-color: #c0c0c0;
+      }
+    }
   }
 
   // Estado inicial: sin sidebar
@@ -148,25 +269,57 @@
     left: 0 !important;
     width: 100% !important;
     padding: 0 0.75rem;
-    justify-content: space-between; // Mantener espacio entre elementos
+    justify-content: space-between;
     gap: 0.5rem;
-    z-index: 100; // Mantener por debajo del sidebar móvil (z-index: 1000)
+    z-index: 100;
 
     .header-left {
       flex-shrink: 0;
+      gap: 0.5rem;
+
+      .system-name {
+        font-size: 14px;
+      }
     }
 
     .header-right {
       margin-left: auto;
       flex-shrink: 0;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+
+      .current-time {
+        font-size: 11px;
+        padding: 3px 6px;
+      }
+
+      .btn-outline {
+        padding: 5px 10px;
+        font-size: 12px;
+      }
+
+      .btn-toggle-theme {
+        padding: 5px 8px;
+        font-size: 14px;
+        min-width: 32px;
+        height: 28px;
+      }
     }
 
-    // Asegurar que el botón del menú sea visible
     app-mobile-menu-button {
       display: block !important;
       visibility: visible !important;
       opacity: 1 !important;
       flex-shrink: 0;
+    }
+  }
+}
+
+// Modo oscuro para app-container
+.app-container.dark-mode {
+  .app-header {
+    .header-left .system-name {
+      color: #e5e5e5;
     }
   }
 }
@@ -177,8 +330,9 @@
   height: auto;
   overflow-x: hidden;
   overflow-y: visible;
-  background-color: #ffffff;
-  padding: 0;
+  background-color: #f5f5f5;
+  padding: 0 2rem;
+  transition: background-color 0.3s ease;
 
   // Cuando está en login, eliminar padding y margin, ocupar todo el espacio
   &:has(app-login) {
@@ -196,6 +350,7 @@
     height: auto;
     overflow-y: visible;
     overflow-x: hidden;
+    padding: 0 1rem;
 
     // Cuando está en login, eliminar padding y margin también en móviles
     &:has(app-login) {
