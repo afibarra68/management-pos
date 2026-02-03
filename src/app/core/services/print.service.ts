@@ -9,8 +9,8 @@ import { environment } from '../../environments/environment';
 })
 export class PrintService {
   private http = inject(HttpClient);
-  /** URL del servicio de impresión: en dev usa /print (proxy a localhost:8080), evita CORS */
-  private printApiUrl = environment.printApiUrl ?? '/print';
+  /** URL del servicio de impresión: 127.0.0.1:8080/v2/bi/print (parking-printing V2) */
+  private printApiUrl = environment.printApiUrl ?? 'http://127.0.0.1:8080/v2/bi/print';
 
   /**
    * Envía el ticket a imprimir al servicio parking-printing

@@ -1,6 +1,8 @@
 <div class="cash-register-view-container">
   <div class="header">
     <h2>Estado de Caja</h2>
+    <p-button label="Retirar vehículo" icon="pi pi-sign-out" (onClick)="goToRegistrarSalida()"
+      styleClass="p-button-outlined p-button-sm" [disabled]="!currentShift()"></p-button>
   </div>
 
 

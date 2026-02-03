@@ -231,7 +231,8 @@ export class RegistrarSalidaComponent implements OnInit, OnDestroy {
       receiptModel: 'LIQUID',
       vehiclePlate: vehicle.vehiclePlate.toUpperCase().trim(),
       codeService: this.params.serviceCode,
-      notes: this.exitNotes?.trim() || undefined
+      notes: this.exitNotes?.trim() || undefined,
+      shiftConnectionHistoryId: this.params?.dshiftConnectionHistory?.shiftConnectionHistoryId
     };
 
     this.closedTransactionService.closeTransactionWithModel(finalizeTransaction)

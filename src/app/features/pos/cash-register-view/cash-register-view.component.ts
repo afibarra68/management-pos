@@ -1,6 +1,8 @@
 import { Component, OnInit, OnDestroy, inject, signal, computed, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
 import { TableModule } from 'primeng/table';
 import { MessageModule } from 'primeng/message';
@@ -24,6 +26,7 @@ interface CashRegisterSummary {
   imports: [
     CommonModule,
     FormsModule,
+    ButtonModule,
     CardModule,
     TableModule,
     MessageModule
@@ -37,6 +40,7 @@ export class CashRegisterViewComponent implements OnInit, OnDestroy {
   private shiftService = inject(ShiftService);
   private authService = inject(AuthService);
   private closedTransactionService = inject(ClosedTransactionService);
+  private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
 
   loading = signal(false);
@@ -243,5 +247,9 @@ export class CashRegisterViewComponent implements OnInit, OnDestroy {
       ? shift.status
       : shift.status.id;
     return statusId === 'COMPLETED';
+  }
+
+  goToRegistrarSalida(): void {
+    this.router.navigate(['/pos/registrar-salida']);
   }
 }
