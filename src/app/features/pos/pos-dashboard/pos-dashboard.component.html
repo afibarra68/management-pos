@@ -87,7 +87,9 @@
               <td>{{ transaction.sellerName ?? 'N/A' }}</td>
               <td>
                 <p-button icon="pi pi-print" label="Reimprimir" [outlined]="true" size="small"
-                  (onClick)="reimprimirTicket(transaction.closedTransactionId)" styleClass="p-button-sm">
+                  (onClick)="reimprimirTicket(transaction.closedTransactionId)"
+                  [loading]="reprintingId() === transaction.closedTransactionId" [disabled]="reprintingId() !== null"
+                  styleClass="p-button-sm">
                 </p-button>
               </td>
             </tr>

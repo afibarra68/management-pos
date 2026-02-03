@@ -1,10 +1,13 @@
 @if (userData) {
 <div class="user-control">
-  @if (companyDescription) {
   <div class="company-info">
+    @if (companyDescription) {
     <span class="company-name">{{ companyDescription }}</span>
+    }
+    @if (companyNit) {
+    <span class="company-nit">NIT: {{ companyNit }}</span>
+    }
   </div>
-  }
   <div class="user-info">
     <div class="user-avatar">{{ getInitials() }}</div>
     <span class="user-name">{{ getFullName() }}</span>
@@ -14,7 +17,7 @@
       <i class="pi pi-key"></i> Cambiar Contraseña
     </button>
     <button type="button" class="btn-logout" (click)="logout()">
-      Cerrar Sesión
+      <i class="pi pi-sign-out"></i> Cerrar Sesión
     </button>
   </div>
 </div>

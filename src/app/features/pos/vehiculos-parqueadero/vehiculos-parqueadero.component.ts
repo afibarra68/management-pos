@@ -11,6 +11,7 @@ import { AuthService } from '../../../core/services/auth.service';
 import { EnumService, EnumResource } from '../../../core/services/enum.service';
 import { ShiftService, DShiftAssignment } from '../../../core/services/shift.service';
 import { ClosedTransactionService } from '../../../core/services/closed-transaction.service';
+import { PrintService } from '../../../core/services/print.service';
 import { Subject, takeUntil, finalize, catchError, of } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
@@ -33,6 +34,7 @@ export class VehiculosParqueaderoComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
   private openTransactionService = inject(OpenTransactionService);
   private closedTransactionService = inject(ClosedTransactionService);
+  private printService = inject(PrintService);
   private authService = inject(AuthService);
   private enumService = inject(EnumService);
   private shiftService = inject(ShiftService);
@@ -44,6 +46,7 @@ export class VehiculosParqueaderoComponent implements OnInit, OnDestroy {
   filteredVehicles = signal<OpenTransaction[]>([]);
   searchTerm = signal<string>('');
   currentShift = signal<DShiftAssignment | null>(null);
+  reprintingId = signal<number | null>(null);
 
   // Computed signals
   vehicleCount = computed(() => this.filteredVehicles().length);
@@ -188,6 +191,66 @@ export class VehiculosParqueaderoComponent implements OnInit, OnDestroy {
 
   refresh(): void {
     this.loadVehicles();
+  }
+
+  /**
+   * Reimprime la tirilla de ingreso del vehículo: consulta al backend la data actual,
+   * genera DDataPrinting (buildTicket) y la envía al servicio de impresión (parking-printing).
+   */
+  reprintTicket(vehicle: OpenTransaction): void {
+    const id = vehicle.openTransactionId;
+    if (id == null) {
+      this.error.set('No se puede reimprimir: ID de transacción no disponible');
+      this.cdr.markForCheck();
+      return;
+    }
+    this.reprintingId.set(id);
+    this.error.set(null);
+    this.cdr.markForCheck();
+
+    this.openTransactionService.getReprintTicketData(id)
+      .pipe(
+        takeUntil(this.destroy$),
+        finalize(() => {
+          this.reprintingId.set(null);
+          this.cdr.markForCheck();
+        }),
+        catchError((err: unknown) => {
+          const msg = (err as { error?: { message?: string; readableMsg?: string } })?.error?.readableMsg
+            ?? (err as { error?: { message?: string } })?.error?.message
+            ?? 'Error al obtener datos para reimprimir';
+          this.error.set(msg);
+          this.cdr.markForCheck();
+          return of(null);
+        })
+      )
+      .subscribe({
+        next: (buildTicket) => {
+          if (!buildTicket?.template) {
+            this.error.set('No se recibieron datos de impresión');
+            this.cdr.markForCheck();
+            return;
+          }
+          this.printService.printTicket(buildTicket)
+            .pipe(
+              takeUntil(this.destroy$),
+              catchError((printErr: unknown) => {
+                const printMsg = (printErr as { error?: string; message?: string })?.error
+                  ?? (printErr as { message?: string })?.message
+                  ?? 'Error al enviar a la impresora';
+                this.error.set(printMsg);
+                this.cdr.markForCheck();
+                return of(null);
+              })
+            )
+            .subscribe({
+              next: () => {
+                this.error.set(null);
+                this.cdr.markForCheck();
+              }
+            });
+        }
+      });
   }
 
   getVehicleTypeDisplay(enumResource: EnumResource | string | null | undefined): string {

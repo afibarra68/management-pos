@@ -18,6 +18,8 @@ export class UserControlComponent implements OnDestroy {
 
   userData: any = null;
   companyDescription: string = '';
+  /** NIT de la empresa (número de identificación tributaria) */
+  companyNit: string = '';
   private routerSubscription?: Subscription;
 
   constructor() {
@@ -44,8 +46,9 @@ export class UserControlComponent implements OnDestroy {
   loadUserData(): void {
     const data = this.authService.getUserData();
     this.userData = data;
-    // Obtener companyDescription del usuario o usar companyName como fallback
-    this.companyDescription = data?.companyDescription || data?.companyName || '';
+    this.companyDescription = data?.companyName || data?.companyDescription || '';
+    // NIT: prioridad companyNumberIdentity (nuevo), fallback companyDescription (legacy backend)
+    this.companyNit = data?.companyNumberIdentity ?? data?.companyDescription ?? '';
   }
 
   logout(): void {
