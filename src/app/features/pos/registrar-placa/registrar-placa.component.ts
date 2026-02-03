@@ -16,7 +16,6 @@ import { PrintService } from '../../../core/services/print.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { ShiftService, DShiftAssignment } from '../../../core/services/shift.service';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
-import { DialogModule } from 'primeng/dialog';
 import { ToastModule } from 'primeng/toast';
 import { SelectItem } from 'primeng/api';
 import { environment } from '../../../environments/environment';
@@ -33,7 +32,6 @@ import { Subject, takeUntil, finalize, catchError, of } from 'rxjs';
     InputTextModule,
     MessageModule,
     ConfirmDialogModule,
-    DialogModule,
     ToastModule,
     SharedModule
   ],

@@ -111,6 +111,11 @@
   position: relative;
   z-index: 1; // Asegurar que esté por debajo del sidebar
 
+  // Modales de reimpresión / solicitar impresión por delante del navbar
+  &:has(.modal-content.modal-print) {
+    z-index: 150;
+  }
+
   // Cuando está en login, eliminar padding y margin
   &:has(app-login) {
     padding-top: 0 !important;

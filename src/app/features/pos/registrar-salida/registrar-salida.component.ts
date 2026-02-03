@@ -64,6 +64,11 @@ export class RegistrarSalidaComponent implements OnInit, OnDestroy {
 
   exitNotes: string = '';
 
+  // Modal confirmar impresión (igual que en registrar ingreso)
+  showTicketPreview = false;
+  pendingBuildTicket: any = null;
+  pendingTotalAmount: number | null = null;
+
   constructor() {
     this.form = this.fb.group({
       vehiclePlate: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(8)]]
@@ -249,11 +254,7 @@ export class RegistrarSalidaComponent implements OnInit, OnDestroy {
             life: 5000
           });
 
-          if (closedTransaction.buildTicket) {
-            this.printTicket(closedTransaction.buildTicket);
-          }
-
-          // Limpiar completamente el formulario y estados
+          // Limpiar modal de vehículo y formulario
           this.cerrarModal();
           this.form.reset({
             vehiclePlate: ''
@@ -262,6 +263,14 @@ export class RegistrarSalidaComponent implements OnInit, OnDestroy {
           this.exitNotes = '';
 
           window.dispatchEvent(new CustomEvent('transactionClosed'));
+
+          // Mostrar modal confirmar impresión (igual que en registrar ingreso)
+          if (closedTransaction.buildTicket) {
+            this.pendingBuildTicket = closedTransaction.buildTicket;
+            this.pendingTotalAmount = closedTransaction.totalAmount ?? null;
+            this.showTicketPreview = true;
+            this.cdr.markForCheck();
+          }
         },
         error: (err) => this.handleError(err, 'Error al procesar la salida del vehículo')
       });
@@ -311,6 +320,41 @@ export class RegistrarSalidaComponent implements OnInit, OnDestroy {
     if (!status) return false;
     const statusId = typeof status === 'string' ? status : status.id;
     return statusId === 'OPEN';
+  }
+
+  /**
+   * Convierte el template ESC/POS a texto legible para previsualización (igual que registrar ingreso).
+   */
+  getPreviewText(buildTicket: any): string {
+    const raw = buildTicket?.template;
+    if (!raw || typeof raw !== 'string') {
+      return '';
+    }
+    return raw.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '').trim() || '(Sin contenido)';
+  }
+
+  /**
+   * Usuario confirma imprimir la tirilla: envía al servicio parking-printing y cierra el modal.
+   */
+  confirmPrintTicket(): void {
+    const ticket = this.pendingBuildTicket;
+    this.showTicketPreview = false;
+    this.pendingBuildTicket = null;
+    this.pendingTotalAmount = null;
+    this.cdr.markForCheck();
+    if (ticket) {
+      this.printTicket(ticket);
+    }
+  }
+
+  /**
+   * Usuario decide no imprimir: cierra el modal sin enviar a imprimir.
+   */
+  cancelPrintTicket(): void {
+    this.showTicketPreview = false;
+    this.pendingBuildTicket = null;
+    this.pendingTotalAmount = null;
+    this.cdr.markForCheck();
   }
 
   /**

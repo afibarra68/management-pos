@@ -8,8 +8,8 @@ export const environment = {
     // Las peticiones van directamente al backend sin proxy
     apiAuthJwt: 'https://api-flux.alparquear.com',
     apiUrl: 'https://api-flux.alparquear.com',
-    /** URL del servicio de impresión en productivo: parking-printing V2 (byte[] base64) */
-    printApiUrl: 'http://127.0.0.1:8080/v2/bi/print',
+    /** URL del servicio de impresión en producción (parking-printing); ajustar si va por otro dominio/puerto */
+    printApiUrl: '/print',
     serviceCode: '100000001' // Código de servicio para transacciones de parqueadero
 };
 
