@@ -3536,6 +3536,53 @@ body.dark-mode {
   }
 }
 
+// Modal previsualización tirilla: máscara debajo del navbar (overlay en body → estilos globales)
+.p-dialog-mask:has(.tirilla-preview-dialog),
+.p-overlay-mask:has(.tirilla-preview-dialog) {
+  top: 64px !important;
+  height: calc(100vh - 64px) !important;
+  min-height: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background-color: rgba(0, 0, 0, 0.5) !important;
+  backdrop-filter: blur(4px) !important;
+}
+
+// Panel del diálogo tirilla (también en body) — compacto y scrolleable
+.tirilla-preview-dialog.p-dialog {
+  max-height: min(calc(420px + 10rem), calc(100vh - 64px - 2rem)) !important;
+  margin: 0.5rem;
+  display: flex;
+  flex-direction: column;
+
+  .p-dialog-header {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.9375rem;
+    flex-shrink: 0;
+  }
+
+  .p-dialog-content {
+    padding: 0.5rem 0.75rem;
+    overflow-y: auto !important;
+    overflow-x: hidden;
+    min-height: 0;
+    flex: 1 1 auto;
+    max-height: calc(240px + 10rem);
+  }
+
+  .p-dialog-footer {
+    padding: 0.5rem 0.75rem;
+    gap: 0.5rem;
+    flex-shrink: 0;
+
+    .p-button {
+      padding: 0.4rem 0.75rem;
+      font-size: 0.8125rem;
+    }
+  }
+}
+
 // Estilos para Finder Modal (estilo Apple)
 .finder-overlay {
   position: fixed;
