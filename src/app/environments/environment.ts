@@ -9,8 +9,8 @@ export const environment = {
     activeMocks: false,
     apiAuthJwt: '/mt-api',
     apiUrl: '/mt-api',
-    /** URL del servicio de impresión: relativa para usar proxy en dev (/print -> localhost:8080) */
-    printApiUrl: '/print',
+    /** URL del servicio de impresión: parking-printing V2 (mismo endpoint que productivo) */
+    printApiUrl: 'http://127.0.0.1:8080/v2/bi/print',
     serviceCode: '100000001' // Código de servicio para transacciones de parqueadero
 };
 

@@ -102,4 +102,6 @@ export interface FinalizeTransaction {
   vehiclePlate: string;
   codeService: string;
   notes?: string;
+  /** ID del turno activo para registrar el pago en caja. Se envía cuando el usuario tiene turno (params.dshiftConnectionHistory). */
+  shiftConnectionHistoryId?: number;
 }
