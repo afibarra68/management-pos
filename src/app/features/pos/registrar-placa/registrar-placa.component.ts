@@ -16,6 +16,7 @@ import { PrintService } from '../../../core/services/print.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { ShiftService, DShiftAssignment } from '../../../core/services/shift.service';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { DialogModule } from 'primeng/dialog';
 import { ToastModule } from 'primeng/toast';
 import { SelectItem } from 'primeng/api';
 import { environment } from '../../../environments/environment';
@@ -32,6 +33,7 @@ import { Subject, takeUntil, finalize, catchError, of } from 'rxjs';
     InputTextModule,
     MessageModule,
     ConfirmDialogModule,
+    DialogModule,
     ToastModule,
     SharedModule
   ],
@@ -67,6 +69,10 @@ export class RegistrarPlacaComponent implements OnInit, OnDestroy {
   // Finder modal
   showPlateFinder = false;
   finderPlateValue = '';
+
+  // Preview de tirilla antes de imprimir
+  showTicketPreview = false;
+  pendingBuildTicket: any = null;
 
   constructor() {
     this.form = this.fb.group({
@@ -372,11 +378,47 @@ export class RegistrarPlacaComponent implements OnInit, OnDestroy {
           window.dispatchEvent(new CustomEvent('vehicleRegistered'));
 
           if (response.buildTicket) {
-            this.printTicket(response.buildTicket);
+            this.pendingBuildTicket = response.buildTicket;
+            this.showTicketPreview = true;
+            this.cdr.markForCheck();
           }
         },
         error: (err) => this.handleError(err)
       });
+  }
+
+  /**
+   * Convierte el template ESC/POS a texto legible para previsualización (quita códigos de control).
+   */
+  getPreviewText(buildTicket: any): string {
+    const raw = buildTicket?.template;
+    if (!raw || typeof raw !== 'string') {
+      return '';
+    }
+    // Quitar caracteres de control ESC/POS (0x00-0x1F excepto \n, \r, \t) y DEL (0x7F)
+    return raw.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '').trim() || '(Sin contenido)';
+  }
+
+  /**
+   * Usuario confirma imprimir la tirilla: envía al servicio parking-printing y cierra el diálogo.
+   */
+  confirmPrintTicket(): void {
+    const ticket = this.pendingBuildTicket;
+    this.showTicketPreview = false;
+    this.pendingBuildTicket = null;
+    this.cdr.markForCheck();
+    if (ticket) {
+      this.printTicket(ticket);
+    }
+  }
+
+  /**
+   * Usuario decide no imprimir: cierra el diálogo sin enviar a imprimir.
+   */
+  cancelPrintTicket(): void {
+    this.showTicketPreview = false;
+    this.pendingBuildTicket = null;
+    this.cdr.markForCheck();
   }
 
   /**

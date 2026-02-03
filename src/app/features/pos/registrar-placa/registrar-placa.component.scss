@@ -461,3 +461,105 @@
     }
   }
 }
+
+// Máscara y panel del diálogo tirilla se estilizan en styles.scss (overlay en body)
+
+// Previsualización de tirilla — formato de tirilla térmica con corte de papel
+.ticket-preview-label {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--p-text-color);
+}
+
+// Contenedor que centra la tirilla (papel térmico 80mm ~302px)
+.tirilla-wrapper {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 0.75rem;
+  padding: 0.25rem 0;
+  min-height: 0;
+}
+
+// Franja de tirilla: ancho fijo, altura limitada y muy scrolleable
+.tirilla-strip {
+  position: relative;
+  width: 302px; // ~80mm
+  min-height: 60px;
+  max-height: calc(180px + 10rem);
+  overflow-y: auto;
+  overflow-x: hidden;
+  background: #fffef8;
+  border-left: 2px dashed #c0b8a8;
+  border-right: 2px dashed #c0b8a8;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.5),
+    0 2px 8px rgba(0, 0, 0, 0.06);
+  padding: 0 12px 0;
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: #f0ebe0;
+    border-radius: 3px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: #c0b8a8;
+    border-radius: 3px;
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background: #a89e8e;
+  }
+}
+
+// Forma del corte del papel (zigzag) arriba y abajo — como en previsualizar tirilla del admin
+.tirilla-cut {
+  display: block;
+  width: 100%;
+  height: 6px;
+  background-repeat: repeat-x;
+  flex-shrink: 0;
+}
+
+.tirilla-cut-top {
+  background-image:
+    linear-gradient(135deg, #fffef8 50%, #c0b8a8 50%),
+    linear-gradient(225deg, #fffef8 50%, #c0b8a8 50%);
+  background-size: 8px 6px;
+  background-position: 0 0, 4px 0;
+  margin-bottom: 2px;
+}
+
+.tirilla-cut-bottom {
+  background-image:
+    linear-gradient(45deg, #c0b8a8 50%, #fffef8 50%),
+    linear-gradient(315deg, #c0b8a8 50%, #fffef8 50%);
+  background-size: 8px 6px;
+  background-position: 0 0, 4px 0;
+  margin-top: 2px;
+}
+
+.tirilla-text {
+  margin: 0;
+  padding: 8px 0 10px;
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  font-size: 11px;
+  line-height: 1.35;
+  letter-spacing: 0.02em;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: #1a1a1a;
+}
+
+.ticket-preview-question {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--p-text-color);
+}

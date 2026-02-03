@@ -34,6 +34,7 @@ type ViewType = 'dashboard' | 'ingresar' | 'salida';
 export class PosDashboardComponent implements OnInit, OnDestroy {
   private closedTransactionService = inject(ClosedTransactionService);
   private notificationService = inject(NotificationService);
+  private printService = inject(PrintService);
   private cdr = inject(ChangeDetectorRef);
   private destroy$ = new Subject<void>();
 
@@ -43,6 +44,7 @@ export class PosDashboardComponent implements OnInit, OnDestroy {
   loading = signal(false);
   error = signal<string | null>(null);
   totalCash = signal<number>(0); // Total en caja (efectivo inicial + total ingresos)
+  reprintingId = signal<number | null>(null);
 
   // Computed signals para valores derivados
   hasStats = computed(() => this.stats() !== null);
@@ -148,8 +150,8 @@ export class PosDashboardComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Reimprime el ticket de una transacción cerrada.
-   * El backend regenera el ticket y lo envía al servicio parking-printing en el puerto 8080.
+   * Reimprime el ticket de una transacción cerrada: consulta al backend DDataPrinting (buildTicket)
+   * y lo envía al servicio de impresión (parking-printing).
    * @param closedTransactionId ID de la transacción cerrada
    */
   reimprimirTicket(closedTransactionId: number): void {
@@ -158,21 +160,41 @@ export class PosDashboardComponent implements OnInit, OnDestroy {
       return;
     }
 
-    this.closedTransactionService.reprintTicket(closedTransactionId)
+    this.reprintingId.set(closedTransactionId);
+    this.cdr.markForCheck();
+
+    this.closedTransactionService.getReprintTicketData(closedTransactionId)
       .pipe(
         takeUntil(this.destroy$),
         catchError(err => {
           this.handleError(err);
           return of(null);
+        }),
+        finalize(() => {
+          this.reprintingId.set(null);
+          this.cdr.markForCheck();
         })
       )
       .subscribe({
-        next: (response) => {
-          if (response) {
-            this.notificationService.success('Ticket reimpreso y enviado a la impresora correctamente');
-          } else {
-            this.notificationService.error('No se pudo reimprimir el ticket');
+        next: (buildTicket) => {
+          if (!buildTicket?.template) {
+            this.notificationService.error('No se recibieron datos de impresión');
+            return;
           }
+          this.printService.printTicket(buildTicket)
+            .pipe(
+              takeUntil(this.destroy$),
+              catchError(printErr => {
+                const msg = (printErr as { error?: string; message?: string })?.error
+                  ?? (printErr as { message?: string })?.message
+                  ?? 'Error al enviar a la impresora';
+                this.notificationService.error(msg);
+                return of(null);
+              })
+            )
+            .subscribe({
+              next: () => this.notificationService.success('Ticket reimpreso y enviado a la impresora correctamente')
+            });
         }
       });
   }

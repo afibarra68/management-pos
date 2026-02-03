@@ -57,6 +57,7 @@
           <th>Notas</th>
           <th>Suscripción</th>
           <th>Estado</th>
+          <th style="width: 120px;">Acciones</th>
         </tr>
       </ng-template>
       <ng-template pTemplate="body" let-vehicle>
@@ -88,11 +89,17 @@
             <p-tag value="En Parqueadero" severity="success">
             </p-tag>
           </td>
+          <td>
+            <p-button label="Reimprimir" icon="pi pi-print" (onClick)="reprintTicket(vehicle)"
+              [loading]="reprintingId() === vehicle.openTransactionId" [disabled]="reprintingId() !== null"
+              styleClass="p-button-sm p-button-outlined">
+            </p-button>
+          </td>
         </tr>
       </ng-template>
       <ng-template pTemplate="emptymessage">
         <tr>
-          <td colspan="7" class="text-center">
+          <td colspan="8" class="text-center">
             @if (searchTerm()) {
             No se encontraron vehículos que coincidan con la búsqueda
             } @else {

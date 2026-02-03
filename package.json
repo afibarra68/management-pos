@@ -24,6 +24,7 @@
   },
   "private": true,
   "dependencies": {
+    "-": "^0.0.1",
     "@angular/common": "^20.3.0",
     "@angular/compiler": "^20.3.0",
     "@angular/core": "^20.3.0",
@@ -33,6 +34,7 @@
     "@angular/router": "^20.3.0",
     "@angular/ssr": "^20.3.7",
     "@primeuix/themes": "^1.0.0",
+    "baseline-browser-mapping": "^2.9.19",
     "express": "^5.1.0",
     "primeng": "^20.0.0",
     "rxjs": "~7.8.0",

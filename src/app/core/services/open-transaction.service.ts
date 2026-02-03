@@ -147,11 +147,11 @@ export class OpenTransactionService {
 
   getAll(companyId?: number): Observable<OpenTransaction[]> {
     let params = new HttpParams().set('status', 'OPEN');
-    
+
     if (companyId) {
       params = params.set('companyId', companyId.toString());
     }
-    
+
     return this.http.get<PageResponse<OpenTransaction>>(this.apiUrl, { params }).pipe(
       map(response => {
         // Filtrar también en el frontend por si acaso
@@ -170,7 +170,7 @@ export class OpenTransactionService {
       .set('page', page.toString())
       .set('size', size.toString())
       .set('status', 'OPEN');
-    
+
     return this.http.get<PageResponse<OpenTransaction>>(this.apiUrl, { params }).pipe(
       map(response => {
         // Filtrar también en el frontend por si acaso
@@ -180,7 +180,7 @@ export class OpenTransactionService {
           const statusId = typeof status === 'string' ? status : status?.id;
           return statusId === 'OPEN';
         });
-        
+
         return {
           ...response,
           content: filteredContent,
@@ -199,6 +199,15 @@ export class OpenTransactionService {
 
   getParams(serviceCode: string): Observable<ParamVenta> {
     return this.http.get<ParamVenta>(`${this.apiUrl}/params/${serviceCode}`);
+  }
+
+  /**
+   * Obtiene DDataPrinting para reimprimir la tirilla de ingreso de un vehículo en parqueadero.
+   * Consulta por openTransactionId, el backend mapea desde OpenTransaction, pasa por buildTicket
+   * y retorna la data lista para enviar al servicio de impresión.
+   */
+  getReprintTicketData(openTransactionId: number): Observable<BuildTicket> {
+    return this.http.get<BuildTicket>(`${this.apiUrl}/${openTransactionId}/reprint-ticket`);
   }
 }
 

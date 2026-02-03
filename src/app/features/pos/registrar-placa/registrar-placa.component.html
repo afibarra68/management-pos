@@ -122,4 +122,25 @@
     </div>
   </div>
   }
+
+  <!-- Diálogo previsualización de tirilla: debajo del navbar, auto ajustado -->
+  <p-dialog header="Previsualización de tirilla" [(visible)]="showTicketPreview" [modal]="true" [closable]="true"
+    [style]="{ width: '360px' }" [contentStyle]="{ overflow: 'auto' }" (onHide)="cancelPrintTicket()"
+    [draggable]="false" [resizable]="false" styleClass="tirilla-preview-dialog">
+    <p class="ticket-preview-label">Vista previa del ticket de ingreso:</p>
+    <div class="tirilla-wrapper">
+      <div class="tirilla-strip">
+        <span class="tirilla-cut tirilla-cut-top" aria-hidden="true"></span>
+        <pre class="tirilla-text">{{ getPreviewText(pendingBuildTicket) }}</pre>
+        <span class="tirilla-cut tirilla-cut-bottom" aria-hidden="true"></span>
+      </div>
+    </div>
+    <p class="ticket-preview-question">¿Desea imprimir la tirilla?</p>
+    <ng-template pTemplate="footer">
+      <p-button label="Imprimir tirilla" icon="pi pi-print" (onClick)="confirmPrintTicket()"
+        styleClass="p-button-primary"></p-button>
+      <p-button label="No imprimir" icon="pi pi-times" (onClick)="cancelPrintTicket()"
+        styleClass="p-button-secondary"></p-button>
+    </ng-template>
+  </p-dialog>
 </div>

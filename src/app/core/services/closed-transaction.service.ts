@@ -70,13 +70,14 @@ export class ClosedTransactionService {
   }
 
   /**
-   * Reimprime el ticket de una transacción cerrada.
-   * El backend regenera el ticket y lo envía al servicio parking-printing en el puerto 8080.
+   * Obtiene DDataPrinting para reimprimir la tirilla de salida de una transacción cerrada.
+   * El backend consulta por closedTransactionId, mapea desde ClosedTransaction/OpenTransaction,
+   * pasa por buildTicket (OUT) y retorna la data para enviar al servicio de impresión.
    * @param closedTransactionId ID de la transacción cerrada
-   * @returns Mensaje de confirmación del backend
+   * @returns BuildTicket (DDataPrinting) listo para enviar a PrintService
    */
-  reprintTicket(closedTransactionId: number): Observable<string> {
-    return this.http.post<string>(`${this.apiUrl}/${closedTransactionId}/reprint`, null);
+  getReprintTicketData(closedTransactionId: number): Observable<BuildTicket> {
+    return this.http.get<BuildTicket>(`${this.apiUrl}/${closedTransactionId}/reprint-ticket`);
   }
 }
 
