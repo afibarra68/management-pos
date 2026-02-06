@@ -1,0 +1,13 @@
+<div class="pos-v2-dashboard-container">
+  <div class="header">
+    <p-button label="Terminar turno!" icon="pi pi-sign-out" (onClick)="terminarTurno()"
+      [loading]="closingShift || loadingCash" [disabled]="closingShift || loadingCash"
+      styleClass="p-button-warning p-button-outlined">
+    </p-button>
+  </div>
+  <div class="dashboard-content">
+    <app-pos-v2-dashboard-content [mostrandoLiquidacion]="mostrandoLiquidacion" [liquidacionData]="liquidacionData"
+      [closingShift]="closingShift" (confirmarCerrarTurno)="confirmarCerrarTurno()">
+    </app-pos-v2-dashboard-content>
+  </div>
+</div>

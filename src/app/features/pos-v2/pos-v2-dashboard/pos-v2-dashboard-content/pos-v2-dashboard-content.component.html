@@ -1,0 +1,76 @@
+@if (mostrandoLiquidacion && liquidacionData) {
+<section class="liquidacion-section">
+  <div class="liquidacion-layout">
+    <div class="col-movimientos">
+      <div class="movimientos-caja">
+        <div class="movimientos-header">
+          <span class="movimientos-badge">Detalle</span>
+          <h3>Movimientos de caja</h3>
+        </div>
+        <p-table [value]="liquidacionData.registers" [tableStyle]="{ 'min-width': '100%' }">
+          <ng-template pTemplate="header">
+            <tr>
+              <th>Fecha</th>
+              <th>Concepto</th>
+              <th>Monto</th>
+              <th>Notas</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-reg>
+            <tr>
+              <td>{{ formatDate(reg.registerDate || '') }}</td>
+              <td>{{ getConceptDisplay(reg.concept) }}</td>
+              <td>{{ formatCurrency(reg.amount ?? 0) }}</td>
+              <td>{{ reg.notes || '-' }}</td>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="emptymessage">
+            <tr>
+              <td colspan="4">Sin movimientos además del efectivo inicial.</td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
+    </div>
+    <div class="col-totales">
+      <div class="tabla-entrega-wrap">
+        <div class="tabla-entrega-header">
+          <span class="tabla-entrega-badge">Cierre de turno</span>
+          <h2 class="tabla-entrega-titulo">Totales</h2>
+        </div>
+        <table class="tabla-entrega">
+          <thead>
+            <tr>
+              <th>Concepto</th>
+              <th class="col-monto">Valor</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Efectivo inicial</td>
+              <td class="col-monto">{{ formatCurrency(liquidacionData.initialCash) }}</td>
+            </tr>
+            <tr>
+              <td>Total ingresos (movimientos)</td>
+              <td class="col-monto">{{ formatCurrency(liquidacionData.total) }}</td>
+            </tr>
+            <tr class="fila-total">
+              <td>Total a entregar</td>
+              <td class="col-monto total">{{ formatCurrency(totalAEntregar) }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="liquidacion-actions">
+        <p-button label="Finalizar turno" icon="pi pi-check" (onClick)="onConfirmar()" [loading]="closingShift"
+          [disabled]="closingShift" styleClass="p-button-warning">
+        </p-button>
+      </div>
+    </div>
+  </div>
+</section>
+} @else {
+<p-card class="welcome-card">
+  <p>Contenido del dashboard v2. Aquí se integrarán las secciones propias de la nueva versión.</p>
+</p-card>
+}

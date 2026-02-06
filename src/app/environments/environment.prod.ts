@@ -10,6 +10,10 @@ export const environment = {
     apiUrl: 'https://api-flux.alparquear.com',
     /** URL del servicio de impresión en producción (parking-printing); ajustar si va por otro dominio/puerto */
     printApiUrl: '/print',
-    serviceCode: '100000001' // Código de servicio para transacciones de parqueadero
+    serviceCode: '100000001', // Código de servicio para transacciones de parqueadero
+    /** Si true, la app usa el módulo POS v2 (/v2pos); si false, usa el POS actual (/pos) */
+    seeVersion2: false,
+    /** Ruta por defecto del POS (debe coincidir con seeVersion2) */
+    defaultPosPath: '/pos'
 };
 

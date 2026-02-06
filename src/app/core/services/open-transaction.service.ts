@@ -82,6 +82,10 @@ export interface ParamVenta {
   hasActiveShift?: boolean;
   canManageCashExit?: boolean;
   dshiftConnectionHistory?: ShiftConnectionHistory;
+  /** Si true, debe ir al POS a terminar turno antes de poder cerrar sesión (validado por backend). */
+  mustFinishShiftBeforeLogout?: boolean;
+  /** Validación backend: true si se puede cerrar el turno por horario (hora actual >= fin del turno). */
+  canCloseShiftNow?: boolean;
 }
 
 export interface ShiftConnectionHistory {
