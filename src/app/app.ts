@@ -6,6 +6,7 @@ import { CommonModule } from '@angular/common';
 import { filter, distinctUntilChanged } from 'rxjs/operators';
 import { AuthService } from './core/services/auth.service';
 import { SidebarService } from './core/services/sidebar.service';
+import { RequirePasswordChangeService } from './core/services/require-password-change.service';
 import { ToastModule } from 'primeng/toast';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { getTimezoneFromToken, configureTimezone } from './core/utils/timezone.util';
@@ -22,6 +23,7 @@ export class App implements OnInit, OnDestroy {
   private router = inject(Router);
   private authService = inject(AuthService);
   private sidebarService = inject(SidebarService);
+  private requirePasswordChange = inject(RequirePasswordChangeService);
 
   // Modo oscuro global
   darkMode = signal(false);
@@ -55,12 +57,13 @@ export class App implements OnInit, OnDestroy {
     }
   }
 
-  // Computed signal para mostrar/ocultar sidebar
+  // Computed signal para mostrar/ocultar sidebar (ocultar también cuando obligatorio cambio de contraseña)
   readonly showSidebar = computed(() => {
     const auth = this.isAuthenticated();
     const route = this.currentRoute();
     const isAuthPage = route.startsWith('/auth') || route === '/login';
-    return auth && !isAuthPage;
+    const onlyChangePassword = this.requirePasswordChange.shouldShowOnlyChangePassword(route);
+    return auth && !isAuthPage && !onlyChangePassword;
   });
 
   toggleDarkMode(): void {

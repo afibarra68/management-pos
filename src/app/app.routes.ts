@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 import { redirectIfAuthenticatedGuard } from './core/guards/redirect-if-authenticated.guard';
 import { authGuard } from './core/guards/auth.guard';
+import { mustChangePasswordGuard } from './core/guards/must-change-password.guard';
 import { UnderConstructionComponent } from './features/under-construction/under-construction.component';
 
 export const routes: Routes = [
@@ -16,7 +17,7 @@ export const routes: Routes = [
   },
   {
     path: 'pos',
-    canActivate: [authGuard],
+    canActivate: [authGuard, mustChangePasswordGuard],
     loadChildren: () => import('./features/pos/pos-module').then(m => m.PosModule),
   },
   {
