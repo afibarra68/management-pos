@@ -77,6 +77,23 @@
         }
       }
 
+      .modal-body .ticket-preview-question {
+        color: #ffffff;
+      }
+
+      .total-a-pagar-block {
+        background: linear-gradient(135deg, #1e3a5f 0%, #152a47 100%);
+        border-color: #4a9eff;
+      }
+
+      .total-a-pagar-label {
+        color: #7eb8ff;
+      }
+
+      .total-a-pagar-monto {
+        color: #ffffff;
+      }
+
       .modal-footer {
         background-color: #2a2a2a;
         border-color: #333333;
@@ -403,6 +420,11 @@
   backdrop-filter: blur(2px);
 }
 
+// Overlay del modal solicitar impresión: por delante del navbar
+.modal-overlay:has(.modal-content.modal-print) {
+  z-index: 9999;
+}
+
 .modal-content {
   background-color: #ffffff;
   border: 2px solid #e0e0e0;
@@ -414,6 +436,10 @@
   flex-direction: column;
   overflow: hidden;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+.modal-content.modal-print {
+  max-width: 400px;
 }
 
 .modal-header {
@@ -465,6 +491,131 @@
   flex-direction: column;
   gap: 12px;
   min-height: 0;
+
+  .form-block {
+    margin: 0;
+  }
+
+  .ticket-preview-question {
+    margin: 0.75rem 0 0;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #1a1a1a;
+  }
+}
+
+// Total a pagar grande en modal confirmar impresión
+.total-a-pagar-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem 1.25rem;
+  background: linear-gradient(135deg, #f0f7ff 0%, #e8f0fe 100%);
+  border: 2px solid #4a9eff;
+  border-radius: 10px;
+  margin-bottom: 4px;
+}
+
+.total-a-pagar-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #357abd;
+  margin-bottom: 0.25rem;
+}
+
+.total-a-pagar-monto {
+  font-size: 2rem;
+  font-weight: 800;
+  line-height: 1.2;
+  color: #1a1a1a;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (min-width: 360px) {
+  .total-a-pagar-monto {
+    font-size: 2.25rem;
+  }
+}
+
+// Vista previa tirilla (modal solicitar impresión, igual que registrar ingreso)
+.tirilla-wrapper {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 0.75rem;
+  padding: 0.25rem 0;
+  min-height: 0;
+}
+
+.tirilla-strip {
+  position: relative;
+  width: 302px;
+  min-height: 60px;
+  max-height: calc(180px + 10rem);
+  overflow-y: auto;
+  overflow-x: hidden;
+  background: #fffef8;
+  border-left: 2px dashed #c0b8a8;
+  border-right: 2px dashed #c0b8a8;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.5), 0 2px 8px rgba(0, 0, 0, 0.06);
+  padding: 0 12px 0;
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: #f0ebe0;
+    border-radius: 3px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: #c0b8a8;
+    border-radius: 3px;
+  }
+}
+
+.tirilla-cut {
+  display: block;
+  width: 100%;
+  height: 6px;
+  background-repeat: repeat-x;
+  flex-shrink: 0;
+}
+
+.tirilla-cut-top {
+  background-image:
+    linear-gradient(135deg, #fffef8 50%, #c0b8a8 50%),
+    linear-gradient(225deg, #fffef8 50%, #c0b8a8 50%);
+  background-size: 8px 6px;
+  background-position: 0 0, 4px 0;
+  margin-bottom: 2px;
+}
+
+.tirilla-cut-bottom {
+  background-image:
+    linear-gradient(45deg, #c0b8a8 50%, #fffef8 50%),
+    linear-gradient(315deg, #c0b8a8 50%, #fffef8 50%);
+  background-size: 8px 6px;
+  background-position: 0 0, 4px 0;
+  margin-top: 2px;
+}
+
+.tirilla-text {
+  margin: 0;
+  padding: 8px 0 10px;
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  font-size: 11px;
+  line-height: 1.35;
+  letter-spacing: 0.02em;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: #1a1a1a;
 }
 
 .info-grid {

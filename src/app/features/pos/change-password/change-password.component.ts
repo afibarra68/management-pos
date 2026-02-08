@@ -9,6 +9,7 @@ import { ButtonModule } from 'primeng/button';
 import { PasswordModule } from 'primeng/password';
 import { MessageModule } from 'primeng/message';
 import { NotificationService } from '../../../core/services/notification.service';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-change-password',
@@ -124,7 +125,6 @@ export class ChangePasswordComponent implements OnInit {
     if (this.mustChange) {
       return;
     }
-    // Volver al dashboard del POS solo si no es obligatorio
-    this.router.navigate(['/pos']);
+    this.router.navigate([environment.defaultPosPath]);
   }
 }

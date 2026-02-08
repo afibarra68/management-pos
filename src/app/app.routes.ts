@@ -1,12 +1,16 @@
 import { Routes } from '@angular/router';
 import { redirectIfAuthenticatedGuard } from './core/guards/redirect-if-authenticated.guard';
 import { authGuard } from './core/guards/auth.guard';
+import { mustChangePasswordGuard } from './core/guards/must-change-password.guard';
 import { UnderConstructionComponent } from './features/under-construction/under-construction.component';
+import { environment } from './environments/environment';
+
+const defaultPosPath = environment.defaultPosPath;
 
 export const routes: Routes = [
   {
     path: '',
-    redirectTo: '/pos',
+    redirectTo: defaultPosPath,
     pathMatch: 'full'
   },
   {
@@ -16,8 +20,13 @@ export const routes: Routes = [
   },
   {
     path: 'pos',
-    canActivate: [authGuard],
+    canActivate: [authGuard, mustChangePasswordGuard],
     loadChildren: () => import('./features/pos/pos-module').then(m => m.PosModule),
+  },
+  {
+    path: 'v2pos',
+    canActivate: [authGuard, mustChangePasswordGuard],
+    loadChildren: () => import('./features/pos-v2/pos-v2-module').then(m => m.PosV2Module),
   },
   {
     path: 'under-construction',
@@ -25,6 +34,6 @@ export const routes: Routes = [
   },
   {
     path: '**',
-    redirectTo: '/pos'
+    redirectTo: defaultPosPath
   }
 ];

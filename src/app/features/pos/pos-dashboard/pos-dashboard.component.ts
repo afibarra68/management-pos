@@ -10,7 +10,10 @@ import { CashRegisterViewComponent } from '../cash-register-view/cash-register-v
 import { ClosedTransactionService, ClosedTransactionStats } from '../../../core/services/closed-transaction.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { PrintService } from '../../../core/services/print.service';
-import { catchError, of, Subject, takeUntil, finalize } from 'rxjs';
+import { ShiftService } from '../../../core/services/shift.service';
+import { environment } from '../../../environments/environment';
+import { of, Subject } from 'rxjs';
+import { catchError, takeUntil, finalize, switchMap } from 'rxjs/operators';
 
 type ViewType = 'dashboard' | 'ingresar' | 'salida';
 
@@ -35,6 +38,7 @@ export class PosDashboardComponent implements OnInit, OnDestroy {
   private closedTransactionService = inject(ClosedTransactionService);
   private notificationService = inject(NotificationService);
   private printService = inject(PrintService);
+  private shiftService = inject(ShiftService);
   private cdr = inject(ChangeDetectorRef);
   private destroy$ = new Subject<void>();
 
@@ -45,6 +49,7 @@ export class PosDashboardComponent implements OnInit, OnDestroy {
   error = signal<string | null>(null);
   totalCash = signal<number>(0); // Total en caja (efectivo inicial + total ingresos)
   reprintingId = signal<number | null>(null);
+  closingShift = signal(false);
 
   // Computed signals para valores derivados
   hasStats = computed(() => this.stats() !== null);
@@ -147,6 +152,42 @@ export class PosDashboardComponent implements OnInit, OnDestroy {
   showDashboard(): void {
     this.currentView.set('dashboard');
     this.loadStats();
+  }
+
+  /**
+   * Cierra el turno activo del usuario (ShiftConnectionHistory).
+   */
+  terminarTurno(): void {
+    this.closingShift.set(true);
+    this.closedTransactionService.getParams(environment.serviceCode)
+      .pipe(
+        takeUntil(this.destroy$),
+        switchMap(params => {
+          const historyId = params?.dshiftConnectionHistory?.shiftConnectionHistoryId;
+          if (!historyId) {
+            this.notificationService.warn('No hay un turno activo para terminar');
+            return of(null);
+          }
+          return this.shiftService.closeShiftHistory(historyId);
+        }),
+        finalize(() => {
+          this.closingShift.set(false);
+          this.cdr.markForCheck();
+        }),
+        catchError(err => {
+          this.handleError(err);
+          return of(null);
+        })
+      )
+      .subscribe({
+        next: (result) => {
+          if (result != null) {
+            this.notificationService.success('Turno terminado correctamente');
+            this.loadStats();
+            window.dispatchEvent(new Event('shiftClosed'));
+          }
+        }
+      });
   }
 
   /**

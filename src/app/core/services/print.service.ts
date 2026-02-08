@@ -2,15 +2,14 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { BuildTicket } from './open-transaction.service';
-import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class PrintService {
   private http = inject(HttpClient);
-  /** URL del servicio de impresión: 127.0.0.1:8080/v2/bi/print (parking-printing V2) */
-  private printApiUrl = environment.printApiUrl ?? 'http://127.0.0.1:8080/v2/bi/print';
+  // URL del servicio de impresión parking-printing V2 (con byte[] base64)
+  private printApiUrl = 'http://127.0.0.1:8080/v2/bi/print';
 
   /**
    * Envía el ticket a imprimir al servicio parking-printing

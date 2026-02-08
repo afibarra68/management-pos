@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
+import { environment } from '../../environments/environment';
 
 @Component({
   selector: 'app-under-construction',
@@ -22,7 +23,7 @@ export class UnderConstructionComponent {
   }
 
   goToPOS(): void {
-    this.router.navigate(['/pos']);
+    this.router.navigate([environment.defaultPosPath]);
   }
 }
 
