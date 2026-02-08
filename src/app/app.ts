@@ -10,6 +10,7 @@ import { RequirePasswordChangeService } from './core/services/require-password-c
 import { ToastModule } from 'primeng/toast';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { getTimezoneFromToken, configureTimezone } from './core/utils/timezone.util';
+import { environment } from './environments/environment';
 
 @Component({
   selector: 'app-root',
@@ -127,7 +128,7 @@ export class App implements OnInit, OnDestroy {
   });
 
   goToDashboard(): void {
-    this.router.navigate(['/pos']);
+    this.router.navigate([environment.defaultPosPath]);
   }
 
   private startTimeUpdate(): void {

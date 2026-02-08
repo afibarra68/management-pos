@@ -14,6 +14,7 @@ import { DialogModule } from 'primeng/dialog';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { RouterModule } from '@angular/router';
 import { finalize } from 'rxjs/operators';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-login',
@@ -49,7 +50,7 @@ export class LoginComponent implements OnInit, OnDestroy, AfterViewInit {
   ) {
     // Verificar autenticación en el constructor para redirigir antes de renderizar
     if (isPlatformBrowser(this.platformId) && this.auth.isAuthenticated()) {
-      const returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/pos';
+      const returnUrl = this.route.snapshot.queryParams['returnUrl'] || environment.defaultPosPath;
       this.router.navigate([returnUrl], { replaceUrl: true });
     }
 
@@ -63,7 +64,7 @@ export class LoginComponent implements OnInit, OnDestroy, AfterViewInit {
     if (isPlatformBrowser(this.platformId)) {
       // Verificar nuevamente en caso de que el constructor no haya redirigido
       if (this.auth.isAuthenticated()) {
-        const returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/pos';
+        const returnUrl = this.route.snapshot.queryParams['returnUrl'] || environment.defaultPosPath;
         this.router.navigate([returnUrl], { replaceUrl: true });
         return;
       }
@@ -115,8 +116,7 @@ export class LoginComponent implements OnInit, OnDestroy, AfterViewInit {
             replaceUrl: true
           });
         } else {
-          const returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/pos';
-          // El backend ya crea/valida el turno activo durante el login, solo navegar
+          const returnUrl = this.route.snapshot.queryParams['returnUrl'] || environment.defaultPosPath;
           this.router.navigateByUrl(returnUrl, { replaceUrl: true });
         }
       },

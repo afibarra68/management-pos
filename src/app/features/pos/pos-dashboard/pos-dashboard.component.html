@@ -1,8 +1,15 @@
 <div class="pos-dashboard-container">
   <div class="header">
-    <h1>Punto de Venta</h1>
+    <div class="header-title">
+      <h1>Punto de Venta</h1>
+      @if (isDashboardView()) {
+      <p class="subtitle">Dashboard del día de hoy</p>
+      }
+    </div>
     @if (isDashboardView()) {
-    <p class="subtitle">Dashboard del día de hoy</p>
+    <p-button label="Terminar turno!" icon="pi pi-sign-out" (onClick)="terminarTurno()"
+      [loading]="closingShift()" [disabled]="closingShift()" styleClass="p-button-warning p-button-outlined">
+    </p-button>
     }
   </div>
 

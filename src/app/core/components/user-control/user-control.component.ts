@@ -2,6 +2,9 @@ import { Component, inject, afterNextRender, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, NavigationEnd } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
+import { ClosedTransactionService } from '../../services/closed-transaction.service';
+import { NotificationService } from '../../services/notification.service';
+import { environment } from '../../../environments/environment';
 import { ButtonModule } from 'primeng/button';
 import { AvatarModule } from 'primeng/avatar';
 import { filter, Subscription } from 'rxjs';
@@ -15,6 +18,8 @@ import { filter, Subscription } from 'rxjs';
 export class UserControlComponent implements OnDestroy {
   private authService = inject(AuthService);
   private router = inject(Router);
+  private closedTransactionService = inject(ClosedTransactionService);
+  private notificationService = inject(NotificationService);
 
   userData: any = null;
   companyDescription: string = '';
@@ -52,10 +57,21 @@ export class UserControlComponent implements OnDestroy {
   }
 
   logout(): void {
-    // Limpiar la variable local del componente antes de hacer logout
-    this.userData = null;
-    // Ejecutar logout del servicio
-    this.authService.logout();
+    this.closedTransactionService.getParams(environment.serviceCode).subscribe({
+      next: (params) => {
+        if (params?.mustFinishShiftBeforeLogout) {
+          this.notificationService.warn('Debe terminar el turno antes de cerrar sesión. Redirigiendo al POS.');
+          this.router.navigate([environment.defaultPosPath]);
+          return;
+        }
+        this.userData = null;
+        this.authService.logout();
+      },
+      error: () => {
+        this.userData = null;
+        this.authService.logout();
+      }
+    });
   }
 
   getInitials(): string {

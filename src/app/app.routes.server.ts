@@ -12,6 +12,10 @@ export const serverRoutes: ServerRoute[] = [
     renderMode: RenderMode.Client // Renderizar solo en el cliente, no en el servidor
   },
   {
+    path: 'v2pos/**',
+    renderMode: RenderMode.Client
+  },
+  {
     // Solo prerenderizar rutas públicas que no requieren autenticación
     // Las rutas protegidas se renderizan en el cliente
     path: '**',
