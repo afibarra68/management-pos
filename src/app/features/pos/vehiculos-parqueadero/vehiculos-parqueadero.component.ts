@@ -13,6 +13,7 @@ import { ShiftService, DShiftAssignment } from '../../../core/services/shift.ser
 import { ClosedTransactionService } from '../../../core/services/closed-transaction.service';
 import { PrintService } from '../../../core/services/print.service';
 import { Subject, takeUntil, finalize, catchError, of } from 'rxjs';
+import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 
 @Component({
@@ -42,14 +43,17 @@ export class VehiculosParqueaderoComponent implements OnInit, OnDestroy {
 
   loading = signal(false);
   error = signal<string | null>(null);
-  vehicles = signal<OpenTransaction[]>([]);
+  /** Contenido de la página actual (paginación lazy como en t-parking). */
   filteredVehicles = signal<OpenTransaction[]>([]);
+  /** Total de registros devuelto por el backend (para el paginador). */
+  totalRecords = signal(0);
   searchTerm = signal<string>('');
   currentShift = signal<DShiftAssignment | null>(null);
   reprintingId = signal<number | null>(null);
+  paginatorFirst = signal(0);
+  paginatorRows = signal(10);
+  private searchTerm$ = new Subject<string>();
 
-  // Computed signals
-  vehicleCount = computed(() => this.filteredVehicles().length);
   sellerId = computed(() => {
     const userData = this.authService.getUserData();
     return userData?.appUserId || null;
@@ -57,7 +61,8 @@ export class VehiculosParqueaderoComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.loadCurrentShift();
-    this.loadVehicles();
+    this.setupSearchDebounce();
+    this.loadPage(0, this.paginatorRows());
     this.setupEventListeners();
   }
 
@@ -66,15 +71,25 @@ export class VehiculosParqueaderoComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  private setupEventListeners(): void {
-    // Escuchar cuando se registra un vehículo
-    window.addEventListener('vehicleRegistered', () => {
-      this.loadVehicles();
-    });
+  private setupSearchDebounce(): void {
+    this.searchTerm$
+      .pipe(
+        debounceTime(400),
+        distinctUntilChanged(),
+        takeUntil(this.destroy$)
+      )
+      .subscribe(() => {
+        this.paginatorFirst.set(0);
+        this.loadPage(0, this.paginatorRows());
+      });
+  }
 
-    // Escuchar cuando se procesa una salida
+  private setupEventListeners(): void {
+    window.addEventListener('vehicleRegistered', () => {
+      this.loadPage(Math.floor(this.paginatorFirst() / this.paginatorRows()), this.paginatorRows());
+    });
     window.addEventListener('transactionClosed', () => {
-      this.loadVehicles();
+      this.loadPage(Math.floor(this.paginatorFirst() / this.paginatorRows()), this.paginatorRows());
     });
   }
 
@@ -112,7 +127,11 @@ export class VehiculosParqueaderoComponent implements OnInit, OnDestroy {
       });
   }
 
-  loadVehicles(): void {
+  /**
+   * Carga una página desde el backend (paginación lazy como en t-parking).
+   * Actualiza filteredVehicles con content y totalRecords con totalElements.
+   */
+  loadPage(page: number, size: number): void {
     const userData = this.authService.getUserData();
     const companyId = userData?.companyId;
 
@@ -124,8 +143,10 @@ export class VehiculosParqueaderoComponent implements OnInit, OnDestroy {
     this.loading.set(true);
     this.error.set(null);
 
-    // Pasar companyId al servicio para filtrar por empresa
-    this.openTransactionService.getAll(companyId)
+    const plateFilter = this.searchTerm().trim() || undefined;
+
+    this.openTransactionService
+      .getPage({ companyId, page, size, vehiclePlate: plateFilter })
       .pipe(
         takeUntil(this.destroy$),
         finalize(() => {
@@ -135,32 +156,21 @@ export class VehiculosParqueaderoComponent implements OnInit, OnDestroy {
         catchError((err: any) => {
           const errorResponse = err?.error;
           this.error.set(errorResponse?.readableMsg || errorResponse?.message || 'Error al cargar vehículos');
-          return of([]);
+          this.filteredVehicles.set([]);
+          this.totalRecords.set(0);
+          return of(null);
         })
       )
       .subscribe({
-        next: (transactions) => {
-          // Filtrar solo los vehículos de la empresa actual y con estado OPEN
-          // El backend ya filtra por companyId, pero hacemos un filtro adicional por seguridad
-          const companyVehicles = transactions.filter(transaction => {
-            const status = transaction.status;
-            const statusId = typeof status === 'string' ? status : status?.id;
-            const transactionCompanyId = transaction.companyCompanyId;
-
-            // Verificar que sea de la empresa y tenga estado OPEN
-            return Number(transactionCompanyId) === Number(companyId) && statusId === 'OPEN';
-          });
-
-          // Ordenar por hora de inicio (más recientes primero)
-          companyVehicles.sort((a, b) => {
-            const timeA = a.startTime ? new Date(a.startTime).getTime() : 0;
-            const timeB = b.startTime ? new Date(b.startTime).getTime() : 0;
-            return timeB - timeA;
-          });
-
-          this.vehicles.set(companyVehicles);
-          this.applyFilter();
-          this.cdr.markForCheck(); // Forzar detección de cambios
+        next: (response) => {
+          if (!response) return;
+          const content = response.content || [];
+          const total = response.totalElements ?? 0;
+          this.filteredVehicles.set(content);
+          this.totalRecords.set(total);
+          this.paginatorFirst.set(page * size);
+          this.paginatorRows.set(size);
+          this.cdr.markForCheck();
         }
       });
   }
@@ -168,29 +178,21 @@ export class VehiculosParqueaderoComponent implements OnInit, OnDestroy {
   onSearchChange(event: Event): void {
     const target = event.target as HTMLInputElement;
     this.searchTerm.set(target.value);
-    this.applyFilter();
+    this.searchTerm$.next(target.value);
   }
 
-  private applyFilter(): void {
-    const term = this.searchTerm().toLowerCase().trim();
-    const allVehicles = this.vehicles();
-
-    if (!term) {
-      this.filteredVehicles.set(allVehicles);
-      return;
+  onLazyLoad(event: { first?: number | null; rows?: number | null }): void {
+    const first = event.first ?? 0;
+    const rows = event.rows ?? this.paginatorRows();
+    const page = Math.floor(first / rows);
+    if (this.paginatorFirst() !== first || this.paginatorRows() !== rows) {
+      this.loadPage(page, rows);
     }
-
-    const filtered = allVehicles.filter(vehicle => {
-      const plate = vehicle.vehiclePlate?.toLowerCase() || '';
-      const vehicleType = this.getVehicleTypeDisplay(vehicle.basicVehicleType || vehicle.tipoVehiculo).toLowerCase();
-      return plate.includes(term) || vehicleType.includes(term);
-    });
-
-    this.filteredVehicles.set(filtered);
   }
 
   refresh(): void {
-    this.loadVehicles();
+    this.paginatorFirst.set(0);
+    this.loadPage(0, this.paginatorRows());
   }
 
   /**

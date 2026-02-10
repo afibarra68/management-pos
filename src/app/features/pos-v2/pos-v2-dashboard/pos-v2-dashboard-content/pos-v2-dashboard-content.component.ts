@@ -4,6 +4,7 @@ import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
 import { TableModule } from 'primeng/table';
 import { CashRegister } from '../../../../core/services/cash-register.service';
+import { CashRegisterViewComponent } from '../../../pos/cash-register-view/cash-register-view.component';
 
 /** Datos del turno para el reporte de cierre (impresión/PDF). */
 export interface ShiftInfoForReport {
@@ -26,7 +27,13 @@ export interface LiquidacionCajaData {
 @Component({
   selector: 'app-pos-v2-dashboard-content',
   standalone: true,
-  imports: [CommonModule, ButtonModule, CardModule, TableModule],
+  imports: [
+    CommonModule,
+    ButtonModule,
+    CardModule,
+    TableModule,
+    CashRegisterViewComponent
+  ],
   templateUrl: './pos-v2-dashboard-content.component.html',
   styleUrls: ['./pos-v2-dashboard-content.component.scss']
 })

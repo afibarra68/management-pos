@@ -7,8 +7,8 @@
       }
     </div>
     @if (isDashboardView()) {
-    <p-button label="Terminar turno!" icon="pi pi-sign-out" (onClick)="terminarTurno()"
-      [loading]="closingShift()" [disabled]="closingShift()" styleClass="p-button-warning p-button-outlined">
+    <p-button label="Terminar turno!" icon="pi pi-sign-out" (onClick)="terminarTurno()" [loading]="closingShift()"
+      [disabled]="closingShift()" styleClass="p-button-danger">
     </p-button>
     }
   </div>
@@ -56,7 +56,7 @@
     </div>
     }
 
-    <!-- Mapa de Puestos -->
+    <!-- Capacidad -->
     <div class="parking-map-section">
       <app-parking-map></app-parking-map>
     </div>
@@ -74,7 +74,9 @@
       </div>
       <p-card class="summary-card">
         @if (stats(); as currentStats) {
-        <p-table [value]="currentStats.transactions" [paginator]="true" [rows]="10" [showCurrentPageReport]="true"
+        <p-table [value]="currentStats.transactions" [paginator]="true" [rows]="10"
+          [totalRecords]="currentStats.transactions.length" [showCurrentPageReport]="true" [showPageLinks]="true"
+          [alwaysShowPaginator]="true"
           currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} transacciones"
           styleClass="p-datatable-sm">
           <ng-template pTemplate="header">

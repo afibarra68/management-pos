@@ -3,17 +3,257 @@
   height: 100%;
   display: flex;
   flex-direction: column;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-.header {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
+.stats-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
   margin-bottom: 1.5rem;
-  border-bottom: 1px solid var(--surface-border, #e5e7eb);
-  padding-bottom: 1rem;
-  flex-wrap: wrap;
-  gap: 1rem;
+}
+
+.action-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.action-card-link {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+  min-height: 0;
+
+  &.action-card-button {
+    cursor: pointer;
+
+    &.disabled {
+      pointer-events: none;
+      opacity: 0.7;
+    }
+  }
+}
+
+.action-card {
+  height: 100%;
+  min-height: 120px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  cursor: pointer;
+  border: 1px solid #e0e0e0;
+  border-radius: 10px;
+
+  .action-card-link:hover & {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+
+  .action-card-button:hover & {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+
+  &.action-card-danger {
+    border-color: #dc2626;
+    background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+
+    .card-icon {
+      color: #dc2626;
+    }
+
+    h3 {
+      color: #b91c1c;
+    }
+
+    .card-horario {
+      margin-top: 0.25rem;
+      font-size: 0.75rem;
+      color: #991b1b;
+      font-weight: 500;
+    }
+  }
+
+  ::ng-deep .p-card-body,
+  ::ng-deep .p-card-content {
+    padding: 1.25rem;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .card-content {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.35rem;
+
+    .card-icon {
+      font-size: 2rem;
+      color: #4a9eff;
+    }
+
+    h3 {
+      margin: 0;
+      font-size: 1rem;
+      font-weight: 600;
+      color: #1a1a1a;
+    }
+
+    p {
+      margin: 0;
+      font-size: 0.8rem;
+      color: #666;
+    }
+  }
+}
+
+.action-card-loading {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 10px;
+
+  .pi-spinner {
+    font-size: 2rem;
+    color: #4a9eff;
+  }
+}
+
+.action-card-button {
+  position: relative;
+}
+
+.stat-card {
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  transition: box-shadow 0.2s ease;
+
+  &:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  }
+
+  ::ng-deep .p-card-body,
+  ::ng-deep .p-card-content {
+    padding: 1.25rem;
+  }
+
+  .stat-content {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+  }
+
+  .stat-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: white;
+
+    &.total {
+      background-color: #4a9eff;
+    }
+
+    &.amount {
+      background-color: #22c55e;
+    }
+
+    i {
+      font-size: 1.8rem;
+    }
+  }
+
+  .stat-info {
+    flex: 1;
+
+    .stat-label {
+      margin: 0 0 0.5rem 0;
+      color: #666666;
+      font-size: 0.9rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .stat-value {
+      margin: 0;
+      color: #1a1a1a;
+      font-size: 1.8rem;
+      font-weight: 700;
+    }
+  }
+}
+
+// Modo oscuro
+:host-context(.dark-mode) {
+  .stat-card {
+    border-color: #333;
+
+    ::ng-deep .p-card-body,
+    ::ng-deep .p-card-content {
+      background-color: #1a1a1a !important;
+      color: #fff !important;
+    }
+
+    .stat-label {
+      color: #cccccc !important;
+    }
+
+    .stat-value {
+      color: #ffffff !important;
+    }
+  }
+
+  .action-card {
+    border-color: #333;
+
+    ::ng-deep .p-card-body,
+    ::ng-deep .p-card-content {
+      background-color: #1a1a1a !important;
+      color: #fff !important;
+    }
+
+    .card-content h3 {
+      color: #e5e7eb !important;
+    }
+
+    .card-content p {
+      color: #9ca3af !important;
+    }
+
+    &.action-card-danger {
+      background: linear-gradient(135deg, #450a0a 0%, #7f1d1d 100%);
+      border-color: #b91c1c;
+
+      .card-icon {
+        color: #fca5a5 !important;
+      }
+
+      .card-content h3 {
+        color: #fecaca !important;
+      }
+
+      .card-horario {
+        color: #fecaca !important;
+      }
+    }
+  }
+
+  .action-card-loading {
+    background: rgba(0, 0, 0, 0.6);
+  }
 }
 
 .dashboard-content {

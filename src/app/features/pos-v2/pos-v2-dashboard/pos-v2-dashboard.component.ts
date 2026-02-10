@@ -1,40 +1,136 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
+import { CardModule } from 'primeng/card';
 import { AuthService } from '../../../core/services/auth.service';
-import { ClosedTransactionService } from '../../../core/services/closed-transaction.service';
+import { ClosedTransactionService, ClosedTransactionStats, getParamsSessionKey } from '../../../core/services/closed-transaction.service';
 import { ShiftService } from '../../../core/services/shift.service';
 import { CashRegisterService } from '../../../core/services/cash-register.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { environment } from '../../../environments/environment';
-import { of } from 'rxjs';
-import { switchMap, catchError, finalize } from 'rxjs/operators';
+import { of, Subject } from 'rxjs';
+import { switchMap, catchError, finalize, takeUntil } from 'rxjs/operators';
 import {
   PosV2DashboardContentComponent,
   LiquidacionCajaData
 } from './pos-v2-dashboard-content/pos-v2-dashboard-content.component';
 import { CashRegister } from '../../../core/services/cash-register.service';
-import { ShiftConnectionHistory } from '../../../core/services/open-transaction.service';
+import { ParamVenta, ShiftConnectionHistory } from '../../../core/services/open-transaction.service';
 
 @Component({
   selector: 'app-pos-v2-dashboard',
   standalone: true,
-  imports: [CommonModule, ButtonModule, PosV2DashboardContentComponent],
+  imports: [CommonModule, RouterModule, ButtonModule, CardModule, PosV2DashboardContentComponent],
   templateUrl: './pos-v2-dashboard.component.html',
   styleUrls: ['./pos-v2-dashboard.component.scss']
 })
-export class PosV2DashboardComponent {
+export class PosV2DashboardComponent implements OnInit, OnDestroy {
   private authService = inject(AuthService);
   private closedTransactionService = inject(ClosedTransactionService);
   private shiftService = inject(ShiftService);
   private cashRegisterService = inject(CashRegisterService);
   private notificationService = inject(NotificationService);
+  private destroy$ = new Subject<void>();
 
   closingShift = false;
   loadingCash = false;
   mostrandoLiquidacion = false;
   liquidacionData: LiquidacionCajaData | null = null;
   historyIdForClose: number | null = null;
+
+  /** Estadísticas del día (Total Operaciones). */
+  stats: ClosedTransactionStats | null = null;
+  /** Total en caja (efectivo inicial + total ingresos del turno). */
+  totalCash = 0;
+  /** Horario del turno actual para mostrar en la card Terminar turno (ej: "Turno tarde (02:00 PM - 10:00 PM)"). */
+  shiftDisplayText = '';
+
+  ngOnInit(): void {
+    this.loadStats();
+    this.loadCash();
+    this.loadParamsForShift();
+    window.addEventListener('cashRegisterUpdated', this.onCashRegisterUpdated);
+    window.addEventListener('transactionClosed', this.onTransactionClosed);
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+    window.removeEventListener('cashRegisterUpdated', this.onCashRegisterUpdated);
+    window.removeEventListener('transactionClosed', this.onTransactionClosed);
+  }
+
+  private onTransactionClosed = (): void => {
+    this.loadStats();
+    this.loadCash();
+  };
+
+  private onCashRegisterUpdated = (event: Event): void => {
+    const totalInCash = (event as CustomEvent).detail?.totalInCash ?? 0;
+    this.totalCash = totalInCash;
+  };
+
+  private loadStats(): void {
+    this.closedTransactionService.getTodayStats()
+      .pipe(takeUntil(this.destroy$), catchError(() => of(null)))
+      .subscribe(data => {
+        if (data) this.stats = data;
+      });
+  }
+
+  private loadCash(): void {
+    this.closedTransactionService.getParams(environment.serviceCode)
+      .pipe(
+        takeUntil(this.destroy$),
+        switchMap(params => {
+          const historyId = params?.dshiftConnectionHistory?.shiftConnectionHistoryId;
+          if (!historyId) return of(null);
+          return this.cashRegisterService.getCashInfoByShiftHistory(historyId);
+        }),
+        catchError(() => of(null))
+      )
+      .subscribe(data => {
+        if (data) this.totalCash = (data.initialCash ?? 0) + (data.total ?? 0);
+      });
+  }
+
+  private loadParamsForShift(): void {
+    const key = getParamsSessionKey(environment.serviceCode);
+    if (typeof sessionStorage !== 'undefined') {
+      const cached = sessionStorage.getItem(key);
+      if (cached) {
+        try {
+          const params = JSON.parse(cached) as ParamVenta;
+          this.shiftDisplayText = this.getShiftDisplayTextFromParams(params);
+          return;
+        } catch {
+          // invalid cache, fetch below
+        }
+      }
+    }
+    this.closedTransactionService.getParams(environment.serviceCode)
+      .pipe(takeUntil(this.destroy$), catchError(() => of(null)))
+      .subscribe(params => {
+        this.shiftDisplayText = params ? this.getShiftDisplayTextFromParams(params) : '';
+      });
+  }
+
+  private getShiftDisplayTextFromParams(params: ParamVenta): string {
+    const shift = params?.dshiftConnectionHistory?.shift;
+    if (!shift) return '';
+    const shiftType = shift.shiftType as { typeName?: string; description?: string; startTime?: string; endTime?: string } | undefined;
+    const typeName = shiftType?.typeName || shiftType?.description || 'Turno';
+    const startTime = shift.startTime || shiftType?.startTime || '';
+    const endTime = shift.endTime || shiftType?.endTime || '';
+    if (startTime && endTime) return `${typeName} (${startTime} - ${endTime})`;
+    if (startTime) return `${typeName} (${startTime})`;
+    return typeName;
+  }
+
+  formatCurrency(amount: number, currency?: string): string {
+    return new Intl.NumberFormat('es-CO', { style: 'currency', currency: currency || 'COP' }).format(amount ?? 0);
+  }
 
   terminarTurno(): void {
     this.closedTransactionService.getParams(environment.serviceCode).pipe(

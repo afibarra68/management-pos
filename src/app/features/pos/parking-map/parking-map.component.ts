@@ -144,7 +144,7 @@ export class ParkingMapComponent implements OnInit, OnDestroy {
         },
         error: (err: any) => {
           const errorResponse = err?.error;
-          this.error.set(errorResponse?.readableMsg || errorResponse?.message || 'Error al cargar el mapa de puestos');
+          this.error.set(errorResponse?.readableMsg || errorResponse?.message || 'Error al cargar la capacidad');
         }
       });
   }

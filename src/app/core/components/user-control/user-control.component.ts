@@ -1,25 +1,30 @@
-import { Component, inject, afterNextRender, OnDestroy } from '@angular/core';
+import { Component, inject, afterNextRender, OnDestroy, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, NavigationEnd } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
-import { ClosedTransactionService } from '../../services/closed-transaction.service';
 import { NotificationService } from '../../services/notification.service';
 import { environment } from '../../../environments/environment';
 import { ButtonModule } from 'primeng/button';
 import { AvatarModule } from 'primeng/avatar';
+import { Popover } from 'primeng/popover';
 import { filter, Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-user-control',
   standalone: true,
-  imports: [CommonModule, ButtonModule, AvatarModule],
+  imports: [CommonModule, ButtonModule, AvatarModule, Popover],
   templateUrl: './user-control.component.html',
+  styleUrl: './user-control.component.scss',
 })
 export class UserControlComponent implements OnDestroy {
   private authService = inject(AuthService);
   private router = inject(Router);
-  private closedTransactionService = inject(ClosedTransactionService);
   private notificationService = inject(NotificationService);
+
+  /** Estado del modo oscuro (desde el padre). */
+  @Input() darkMode = false;
+  /** Emite cuando el usuario cambia el modo oscuro/claro. */
+  @Output() toggleDarkMode = new EventEmitter<void>();
 
   userData: any = null;
   companyDescription: string = '';
@@ -57,17 +62,18 @@ export class UserControlComponent implements OnDestroy {
   }
 
   logout(): void {
-    this.closedTransactionService.getParams(environment.serviceCode).subscribe({
-      next: (params) => {
-        if (params?.mustFinishShiftBeforeLogout) {
+    this.authService.logoutRequest(environment.serviceCode).subscribe({
+      next: () => {
+        this.userData = null;
+        this.authService.logout();
+      },
+      error: (err) => {
+        const mustFinishShift = err?.error?.wbErrorCode === 'MUST_FINISH_SHIFT_BEFORE_LOGOUT';
+        if (mustFinishShift) {
           this.notificationService.warn('Debe terminar el turno antes de cerrar sesión. Redirigiendo al POS.');
           this.router.navigate([environment.defaultPosPath]);
           return;
         }
-        this.userData = null;
-        this.authService.logout();
-      },
-      error: () => {
         this.userData = null;
         this.authService.logout();
       }
@@ -90,6 +96,26 @@ export class UserControlComponent implements OnDestroy {
 
   navigateToChangePassword(): void {
     this.router.navigate(['/pos/change-password']);
+  }
+
+  navigateToChangePasswordAndClose(popover: Popover): void {
+    popover.hide();
+    this.navigateToChangePassword();
+  }
+
+  onLogoutClick(popover: Popover): void {
+    popover.hide();
+    this.logout();
+  }
+
+  /** Navega al dashboard POS (Ver operaciones) y cierra el menú. */
+  navigateToOperacionesAndClose(popover: Popover): void {
+    popover.hide();
+    this.router.navigate([environment.defaultPosPath]);
+  }
+
+  onToggleDarkMode(): void {
+    this.toggleDarkMode.emit();
   }
 }
 

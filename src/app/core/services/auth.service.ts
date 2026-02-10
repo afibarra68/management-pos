@@ -98,7 +98,7 @@ export class AuthService {
       return;
     }
 
-    const authPatterns = ['user', 'auth', 'token'];
+    const authPatterns = ['user', 'auth', 'token', 'mt_params'];
 
     // Limpiar claves específicas primero
     localStorage.removeItem(this.tokenKey);
@@ -157,6 +157,15 @@ export class AuthService {
           return throwError(() => error);
         })
       );
+  }
+
+  /**
+   * Valida en el backend si el usuario puede cerrar sesión (ej. si debe terminar el turno antes).
+   * Si el backend responde 200, se puede proceder a limpiar token y redirigir; si responde 403
+   * con MUST_FINISH_SHIFT_BEFORE_LOGOUT, el cliente debe redirigir al POS.
+   */
+  logoutRequest(serviceCode: string): Observable<void> {
+    return this.http.post<void>(`${this.apiUrl}/auth/logout`, { serviceCode });
   }
 
   logout(): void {

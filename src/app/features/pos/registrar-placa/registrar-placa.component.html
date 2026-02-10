@@ -3,6 +3,9 @@
   <div class="main-content">
     <div class="form-header">
       <h1>Registrar Ingreso de Vehículo</h1>
+      @if (currentShift) {
+      <p class="shift-info"><strong>Turno:</strong> {{ getShiftDisplayText() }}</p>
+      }
     </div>
 
     <form [formGroup]="form" (ngSubmit)="submit()" class="form-container">

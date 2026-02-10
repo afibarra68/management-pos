@@ -1814,6 +1814,22 @@ html:not(.dark-mode) body {
 
 // Grid para Estado de Caja (3 columnas: Efectivo Inicial | Total en Caja | Total Ingresos)
 .cash-register-view-container {
+
+  // Espaciado reducido entre Resumen por Concepto y Registros Recientes
+  .concept-summary-section {
+    margin-bottom: 0 !important;
+
+    .p-table,
+    p-table,
+    .p-datatable {
+      margin-bottom: 0 !important;
+    }
+  }
+
+  .recent-registers-section {
+    margin-top: 0.5rem !important;
+  }
+
   .summary-section {
     .summary-card {
       ::ng-deep .p-card-body {
@@ -3218,6 +3234,176 @@ body.dark-mode {
     &:hover {
       background-color: #f5f5f5;
       border-color: #c0c0c0;
+    }
+  }
+}
+
+/* ============================================
+   Overlay menú de usuario (Cerrar sesión / Cambiar contraseña)
+   Popover renderizado fuera del componente; estilos globales.
+   ============================================ */
+.p-popover.user-menu-popover,
+.user-menu-popover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  overflow: hidden;
+
+  .p-popover-content {
+    padding: 0;
+    background-color: #ffffff;
+    color: #111827;
+  }
+
+  .user-menu-content {
+    min-width: 260px;
+    padding: 0.25rem 0;
+    background-color: #ffffff;
+    color: #111827;
+  }
+
+  .user-menu-header {
+    padding: 0.5rem 1rem;
+    border-bottom: none;
+    background-color: #ffffff;
+  }
+
+  .user-menu-value {
+    display: block;
+    font-size: 0.9rem;
+    color: #111827;
+
+    &.name {
+      font-weight: 700;
+      font-size: 1rem;
+      color: #000000;
+    }
+
+    &.company {
+      font-weight: 500;
+      font-size: 0.85rem;
+      color: #64748b;
+      margin-top: 0.25rem;
+    }
+  }
+
+  .user-menu-config {
+    padding: 0.35rem 0.75rem 0.75rem 1rem;
+    background-color: #ffffff;
+    border-bottom: 1px solid #e5e7eb;
+
+    .config-btn .pi {
+      color: #0d9488;
+    }
+
+    .config-btn:hover .pi {
+      color: #0f766e;
+    }
+  }
+
+  .user-menu-theme {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.5rem 1rem;
+    border-bottom: 1px solid #e5e7eb;
+    background-color: #ffffff;
+    gap: 0.75rem;
+
+    .theme-label {
+      font-size: 0.95rem;
+      color: #111827;
+      font-weight: 500;
+    }
+
+    .theme-toggle {
+      width: 40px;
+      height: 28px;
+      border: 1px solid #e5e7eb;
+      border-radius: 6px;
+      background: #f9fafb;
+      cursor: pointer;
+      font-size: 1.1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background-color 0.2s, border-color 0.2s;
+
+      &:hover {
+        background: #f3f4f6;
+        border-color: #d1d5db;
+      }
+    }
+  }
+
+  .menu-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    border: none;
+    border-radius: 4px;
+    background: transparent;
+    cursor: pointer;
+    font: inherit;
+    font-size: 0.95rem;
+    color: #111827;
+    text-align: left;
+    transition: background-color 0.2s, color 0.2s;
+
+    &:hover {
+      background-color: #f3f4f6;
+    }
+  }
+
+  .config-btn {
+    font-weight: 600;
+  }
+
+  .user-menu-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 0.5rem 0.75rem;
+    margin-top: 0;
+    border-top: 1px solid #e5e7eb;
+    background-color: #ffffff;
+  }
+
+  .logout-btn {
+    color: #dc2626;
+    font-weight: 500;
+
+    .pi {
+      color: #dc2626;
+    }
+
+    &:hover {
+      background-color: #fef2f2;
+      color: #b91c1c;
+    }
+  }
+}
+
+/* Modo oscuro: overlay menú de usuario (popover en body) */
+.dark-mode .p-popover.user-menu-popover .user-menu-theme,
+.dark-mode .user-menu-popover .user-menu-theme {
+  border-bottom-color: #333;
+  background-color: #1a1a1a;
+
+  .theme-label {
+    color: #e5e7eb;
+  }
+
+  .theme-toggle {
+    background: #2a2a2a;
+    border-color: #444;
+    color: #e5e7eb;
+
+    &:hover {
+      background: #333;
+      border-color: #555;
     }
   }
 }

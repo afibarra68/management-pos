@@ -372,7 +372,7 @@ export class RegistrarPlacaComponent implements OnInit, OnDestroy {
           this.error = null;
           this.success = null;
 
-          // Disparar evento para actualizar el mapa de puestos
+          // Disparar evento para actualizar la capacidad
           window.dispatchEvent(new CustomEvent('vehicleRegistered'));
 
           if (response.buildTicket) {

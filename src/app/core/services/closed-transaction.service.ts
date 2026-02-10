@@ -1,8 +1,16 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, of } from 'rxjs';
+import { tap } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 import { BuildTicket, ParamVenta } from './open-transaction.service';
+
+/** Prefijo de la clave en sessionStorage para params (params por serviceCode). Se limpia al cerrar sesión. */
+export const PARAMS_SESSION_KEY_PREFIX = 'mt_params_';
+
+export function getParamsSessionKey(serviceCode: string): string {
+  return `${PARAMS_SESSION_KEY_PREFIX}${serviceCode}`;
+}
 
 export interface ClosedTransaction {
   closedTransactionId?: number;
@@ -62,11 +70,34 @@ export class ClosedTransactionService {
   }
 
   /**
-   * Obtiene los parámetros de configuración para un servicio específico
-   * Incluye información completa del turno activo (ShiftConnectionHistory con Shift y ShiftType)
+   * Obtiene los parámetros de configuración para un servicio específico.
+   * Incluye información completa del turno activo (ShiftConnectionHistory con Shift y ShiftType).
+   * Usa sessionStorage para no consultar el API en cada llamada (se invalida al cerrar sesión).
    */
   getParams(serviceCode: string): Observable<ParamVenta> {
-    return this.http.get<ParamVenta>(`${this.apiUrl}/params/${serviceCode}`);
+    const key = getParamsSessionKey(serviceCode);
+    if (typeof sessionStorage !== 'undefined') {
+      const cached = sessionStorage.getItem(key);
+      if (cached) {
+        try {
+          const parsed = JSON.parse(cached) as ParamVenta;
+          return of(parsed);
+        } catch {
+          sessionStorage.removeItem(key);
+        }
+      }
+    }
+    return this.http.get<ParamVenta>(`${this.apiUrl}/params/${serviceCode}`).pipe(
+      tap(data => {
+        if (typeof sessionStorage !== 'undefined' && data) {
+          try {
+            sessionStorage.setItem(key, JSON.stringify(data));
+          } catch {
+            // ignore quota or serialization errors
+          }
+        }
+      })
+    );
   }
 
   /**

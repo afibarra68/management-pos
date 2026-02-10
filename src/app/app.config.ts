@@ -1,5 +1,5 @@
 import { ApplicationConfig, provideBrowserGlobalErrorListeners, provideZonelessChangeDetection } from '@angular/core';
-import { provideRouter, withComponentInputBinding, withViewTransitions } from '@angular/router';
+import { provideRouter, withComponentInputBinding } from '@angular/router';
 import { provideHttpClient, withInterceptors, withFetch } from '@angular/common/http';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { providePrimeNG } from 'primeng/config';
@@ -25,8 +25,9 @@ export const appConfig: ApplicationConfig = {
     MessageService,
     provideRouter(
       routes,
-      withComponentInputBinding(), // Permite pasar datos del router directamente a los componentes
-      withViewTransitions() // Transiciones suaves entre vistas
+      withComponentInputBinding() // Permite pasar datos del router directamente a los componentes
+      // withViewTransitions() desactivado: en POS el cambio de vista puede tardar y provoca
+      // "TimeoutError: Transition was aborted because of timeout in DOM update" al saltar de componente
     ),
     provideClientHydration(withEventReplay()),
     provideAnimationsAsync(),
