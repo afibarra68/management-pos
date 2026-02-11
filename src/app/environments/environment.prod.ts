@@ -14,6 +14,6 @@ export const environment = {
     /** Si true, la app usa el módulo POS v2 (/v2pos); si false, usa el POS actual (/pos) */
     seeVersion2: true,
     /** Ruta por defecto del POS (debe coincidir con seeVersion2) */
-    defaultPosPath: '/pos'
+    get defaultPosPath(): string { return this.seeVersion2 ? '/v2pos' : '/pos'; }
 };
 
