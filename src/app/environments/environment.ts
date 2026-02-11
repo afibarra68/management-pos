@@ -13,7 +13,7 @@ export const environment = {
     printApiUrl: 'http://127.0.0.1:8080/v2/bi/print',
     serviceCode: '100000001', // Código de servicio para transacciones de parqueadero
     /** Si true, la app usa el módulo POS v2 (/v2pos); si false, usa el POS actual (/pos) */
-    seeVersion2: false,
+    seeVersion2: true,
     /** Ruta por defecto del POS (según seeVersion2). Usar en redirects. */
     get defaultPosPath(): string { return this.seeVersion2 ? '/v2pos' : '/pos'; }
 };
