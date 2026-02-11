@@ -1,0 +1,127 @@
+.orden-llegada-carton-america-container {
+  padding: 1rem;
+
+  .header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+
+    h1 {
+      margin: 0;
+      font-size: 1.5rem;
+    }
+
+    .subtitle {
+      margin: 0.25rem 0 0 0;
+      width: 100%;
+      color: var(--text-color-secondary);
+      font-size: 0.9rem;
+    }
+
+    .header-info {
+      margin: 0.2rem 0 0 0;
+      width: 100%;
+      font-size: 0.9rem;
+      color: var(--text-color-secondary);
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+  }
+
+  .loading-state,
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    gap: 1rem;
+    color: var(--text-color-secondary);
+  }
+
+  .table-actions {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    padding: 0.5rem 0;
+  }
+
+  .notes-cell {
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .edit-dialog-content {
+    .form-field {
+      margin-top: 1rem;
+
+      label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+      }
+
+      .w-full {
+        width: 100%;
+      }
+    }
+  }
+}
+
+// El diálogo se renderiza en un overlay fuera del componente; estos estilos lo acaparan con ::ng-deep
+:host ::ng-deep .orden-llegada-edit-dialog {
+  .edit-dialog-content {
+    padding: 0.25rem 0;
+
+    .edit-dialog-placa {
+      margin: 0 0 1rem 0;
+      font-size: 1rem;
+    }
+
+    .form-field {
+      margin-top: 1rem;
+
+      label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+        color: var(--p-text-color, var(--text-color, #495057));
+      }
+
+      .edit-datetime-wrapper {
+        display: block;
+        width: 100%;
+      }
+
+      .edit-datetime-input {
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+        padding: 0.5rem 0.75rem;
+        font-size: 1rem;
+        font-family: inherit;
+        color: var(--p-text-color, var(--text-color, #495057));
+        background: var(--p-input-background, #fff);
+        border: 1px solid var(--p-input-border-color, #ced4da);
+        border-radius: var(--p-input-border-radius, 6px);
+        transition: border-color 0.2s, box-shadow 0.2s;
+
+        &:focus {
+          outline: 0 none;
+          border-color: var(--p-focus-ring-color, var(--p-primary-color, #3b82f6));
+          box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+        }
+      }
+    }
+  }
+}

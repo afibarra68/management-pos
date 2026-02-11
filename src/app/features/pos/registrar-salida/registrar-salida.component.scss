@@ -30,6 +30,10 @@
       .subtitle {
         color: #cccccc;
       }
+
+      .shift-info {
+        color: #cccccc;
+      }
     }
 
     .form-block {
@@ -234,6 +238,12 @@
     font-size: 13px;
     color: #666666;
     line-height: 1.6;
+  }
+
+  .shift-info {
+    margin: 8px 0 0 0;
+    font-size: 14px;
+    color: #555;
   }
 }
 

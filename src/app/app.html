@@ -7,12 +7,7 @@
     </div>
     <div class="header-right">
       <span class="current-time">{{ currentTime() }}</span>
-      <button type="button" class="btn-outline" (click)="goToDashboard()">Ver Operaciones</button>
-      <button type="button" class="btn-toggle-theme" (click)="toggleDarkMode()"
-        [attr.aria-label]="darkMode() ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'">
-        {{ darkMode() ? '☀' : '☾' }}
-      </button>
-      <app-user-control></app-user-control>
+      <app-user-control [darkMode]="darkMode()" (toggleDarkMode)="toggleDarkMode()"></app-user-control>
     </div>
   </header>
   <div class="content-wrapper" [class.with-sidebar]="showSidebar()" [class.sidebar-collapsed]="sidebarCollapsed()">

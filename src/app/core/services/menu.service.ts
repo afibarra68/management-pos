@@ -25,7 +25,13 @@ export class MenuService {
       visible: true
     },
     {
-      label: 'Mapa de Puestos',
+      label: 'Parqueo Cartón América',
+      icon: 'pi pi-truck',
+      routerLink: '/pos/orden-llegada-carton-america',
+      visible: true
+    },
+    {
+      label: 'Capacidad',
       icon: 'pi pi-th-large',
       routerLink: '/pos/mapa-puestos',
       visible: true

@@ -1,10 +1,79 @@
 <div class="pos-v2-dashboard-container">
-  <div class="header">
-    <p-button label="Terminar turno!" icon="pi pi-sign-out" (onClick)="terminarTurno()"
-      [loading]="closingShift || loadingCash" [disabled]="closingShift || loadingCash"
-      styleClass="p-button-warning p-button-outlined">
-    </p-button>
+  @if (!mostrandoLiquidacion) {
+  <!-- Acciones como cards (arriba del todo) -->
+  <div class="action-cards">
+    <a routerLink="/v2pos/ingresar-vehiculo" class="action-card-link">
+      <p-card class="action-card">
+        <div class="card-content">
+          <i class="pi pi-plus-circle card-icon"></i>
+          <h3>Registrar entrada</h3>
+          <p>Ingreso de vehículo</p>
+        </div>
+      </p-card>
+    </a>
+    <a routerLink="/v2pos/registrar-salida" class="action-card-link">
+      <p-card class="action-card">
+        <div class="card-content">
+          <i class="pi pi-sign-out card-icon"></i>
+          <h3>Registrar salida</h3>
+          <p>Retiro de vehículo</p>
+        </div>
+      </p-card>
+    </a>
+    <a routerLink="/v2pos/vehiculos-parqueadero" class="action-card-link">
+      <p-card class="action-card">
+        <div class="card-content">
+          <i class="pi pi-list card-icon"></i>
+          <h3>Vehículos en parqueadero</h3>
+          <p>Ver listado</p>
+        </div>
+      </p-card>
+    </a>
+    <div class="action-card-link action-card-button" (click)="terminarTurno()"
+      [class.disabled]="closingShift || loadingCash">
+      <p-card class="action-card action-card-danger">
+        <div class="card-content">
+          <i class="pi pi-times-circle card-icon"></i>
+          <h3>Terminar turno</h3>
+          <p>Cerrar y liquidar</p>
+          @if (shiftDisplayText) {
+          <p class="card-horario">{{ shiftDisplayText }}</p>
+          }
+        </div>
+      </p-card>
+      @if (closingShift || loadingCash) {
+      <div class="action-card-loading">
+        <i class="pi pi-spin pi-spinner"></i>
+      </div>
+      }
+    </div>
   </div>
+  <!-- Total Operaciones y Total en Caja -->
+  <div class="stats-cards">
+    <p-card class="stat-card">
+      <div class="stat-content">
+        <div class="stat-icon total">
+          <i class="pi pi-chart-line"></i>
+        </div>
+        <div class="stat-info">
+          <h3 class="stat-label">Total Operaciones</h3>
+          <p class="stat-value">{{ stats?.totalTransactions ?? 0 }}</p>
+        </div>
+      </div>
+    </p-card>
+    <p-card class="stat-card">
+      <div class="stat-content">
+        <div class="stat-icon amount">
+          <i class="pi pi-money-bill"></i>
+        </div>
+        <div class="stat-info">
+          <h3 class="stat-label">Total en Caja</h3>
+          <p class="stat-value">{{ formatCurrency(totalCash, 'COP') }}</p>
+        </div>
+      </div>
+    </p-card>
+  </div>
+  }
   <div class="dashboard-content">
     <app-pos-v2-dashboard-content [mostrandoLiquidacion]="mostrandoLiquidacion" [liquidacionData]="liquidacionData"
       [closingShift]="closingShift" (confirmarCerrarTurno)="confirmarCerrarTurno()">

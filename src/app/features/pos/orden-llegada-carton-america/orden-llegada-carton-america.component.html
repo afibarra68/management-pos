@@ -1,0 +1,97 @@
+<div class="orden-llegada-carton-america-container">
+  <div class="header">
+    <h1>Cartón América - Orden de llegada</h1>
+    <p class="subtitle">Vehículos en parqueadero (camión, doble troque, tractomula) ordenados por fecha y hora de
+      ingreso</p>
+    @if (companyName()) {
+    <p class="header-info"><strong>Empresa:</strong> {{ companyName() }}</p>
+    }
+    <p class="header-info"><strong>Cantidad:</strong> {{ cantidad() }} vehículos</p>
+    <div class="header-actions">
+      <p-button label="Actualizar" icon="pi pi-refresh" (onClick)="load()" [loading]="loading()"
+        styleClass="p-button-outlined"></p-button>
+    </div>
+  </div>
+
+  @if (error()) {
+  <p-message severity="error" [text]="error()!" [closable]="true"></p-message>
+  }
+
+  @if (loading()) {
+  <div class="loading-state">
+    <i class="pi pi-spin pi-spinner" style="font-size: 2rem;"></i>
+    <p>Cargando...</p>
+  </div>
+  }
+
+  @if (!loading() && !error()) {
+  <p-card>
+    @if (list().length === 0) {
+    <div class="empty-state">
+      <i class="pi pi-inbox" style="font-size: 3rem; color: var(--gray-400);"></i>
+      <p>No hay vehículos Cartón América en parqueadero</p>
+    </div>
+    } @else {
+    <p-table [value]="list()" [paginator]="true" [rows]="100" [totalRecords]="list().length"
+      [showCurrentPageReport]="true" [showPageLinks]="true" [alwaysShowPaginator]="true"
+      currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} vehículos"
+      styleClass="p-datatable-sm p-datatable-striped">
+      <ng-template pTemplate="header">
+        <tr>
+          <th style="width: 100px;">Orden de llegada</th>
+          <th>Placa</th>
+          <th>Tipo de vehículo</th>
+          <th>Fecha y hora de ingreso</th>
+          <th>Datos informativos del vehículo</th>
+          <th style="width: 140px;">Acciones</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-row>
+        <tr>
+          <td><strong>{{ row.ordenDeLlegada }}</strong></td>
+          <td><strong>{{ row.vehiclePlate || '-' }}</strong></td>
+          <td>{{ row.tipoVehiculoLabel || '-' }}</td>
+          <td>{{ formatDateTime(row.operationDate) }}</td>
+          <td class="notes-cell">{{ row.notes || '-' }}</td>
+          <td>
+            <p-button icon="pi pi-pencil" label="Editar" size="small" styleClass="p-button-outlined p-button-sm"
+              (onClick)="openEditDialog(row)" [disabled]="saving()"></p-button>
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="summary">
+        <div class="table-actions">
+          <p-button icon="pi pi-file-pdf" label="Exportar" [disabled]="loading() || list().length === 0"
+            (onClick)="exportToPdf()" styleClass="p-button-secondary">
+          </p-button>
+        </div>
+      </ng-template>
+    </p-table>
+    }
+  </p-card>
+  }
+
+  <!-- Diálogo editar fecha y hora de ingreso -->
+  <p-dialog header="Editar fecha y hora de ingreso" [visible]="showEditDialog()" [modal]="true" [closable]="true"
+    styleClass="orden-llegada-edit-dialog" [style]="{ width: '400px' }" (onHide)="closeEditDialog()" [draggable]="false"
+    [resizable]="false">
+    @if (editingRow(); as row) {
+    <div class="edit-dialog-content">
+      <p class="edit-dialog-placa"><strong>Placa:</strong> {{ row.vehiclePlate }}</p>
+      <div class="form-field">
+        <label for="edit-datetime">Fecha y hora de ingreso</label>
+        <div class="edit-datetime-wrapper">
+          <input id="edit-datetime" type="datetime-local" class="edit-datetime-input" [value]="editDateTimeValue()"
+            (input)="editDateTimeValue.set($any($event.target).value)" />
+        </div>
+      </div>
+    </div>
+    }
+    <ng-template pTemplate="footer">
+      <p-button label="Cancelar" icon="pi pi-times" styleClass="p-button-text" (onClick)="closeEditDialog()"
+        [disabled]="saving()"></p-button>
+      <p-button label="Guardar" icon="pi pi-check" (onClick)="saveEditedDateTime()" [loading]="saving()"
+        [disabled]="saving() || !editDateTimeValue().trim()"></p-button>
+    </ng-template>
+  </p-dialog>
+</div>

@@ -71,6 +71,18 @@ export interface DShift {
   hoursToConciliate?: number;
 }
 
+/** Respuesta del endpoint orden de llegada Cartón América (solo tipos CAMION_C_AMERICA, DBLTR_C_AMER, TRACQ_C_AMER). */
+export interface CartonAmericaOrdenLlegada {
+  ordenDeLlegada: number;
+  openTransactionId?: number;
+  vehiclePlate?: string;
+  tipoVehiculoLabel?: string;
+  startDay?: string;
+  startTime?: string;
+  operationDate?: string;
+  notes?: string;
+}
+
 export interface ParamVenta {
   serviceCode: string;
   collaboratorId: number;
@@ -136,6 +148,8 @@ export interface ShiftConnectionHistory {
 export class OpenTransactionService {
   private http = inject(HttpClient);
   private apiUrl = `${environment.apiUrl}/open-transactions`;
+  /** API modelo POS (orden de llegada Cartón América, fecha ingreso) */
+  private posApiUrl = `${environment.apiUrl}/pos`;
 
   create(transaction: OpenTransaction): Observable<OpenTransaction> {
     return this.http.post<OpenTransaction>(this.apiUrl, transaction);
@@ -143,6 +157,17 @@ export class OpenTransactionService {
 
   update(transaction: OpenTransaction): Observable<OpenTransaction> {
     return this.http.put<OpenTransaction>(this.apiUrl, transaction);
+  }
+
+  /**
+   * Actualiza solo fecha y hora de ingreso por UPDATE nativo (modelo POS).
+   * PUT /pos/fecha-ingreso — body: { openTransactionId, operationDate }.
+   */
+  updateFechaHoraIngreso(payload: {
+    openTransactionId: number;
+    operationDate: string;
+  }): Observable<OpenTransaction> {
+    return this.http.put<OpenTransaction>(`${this.posApiUrl}/fecha-ingreso`, payload);
   }
 
   getById(id: number): Observable<OpenTransaction> {
@@ -165,6 +190,44 @@ export class OpenTransactionService {
           const statusId = typeof status === 'string' ? status : status?.id;
           return statusId === 'OPEN';
         });
+      })
+    );
+  }
+
+  /**
+   * Obtiene una página de transacciones abiertas (para paginación lazy como en t-parking).
+   * Respeta totalElements y totalPages del backend.
+   */
+  getPage(params: {
+    companyId: number;
+    page: number;
+    size: number;
+    vehiclePlate?: string;
+  }): Observable<PageResponse<OpenTransaction>> {
+    let httpParams = new HttpParams()
+      .set('status', 'OPEN')
+      .set('page', params.page.toString())
+      .set('size', params.size.toString());
+    // Backend usa companyCompanyId
+    httpParams = httpParams.set('companyCompanyId', params.companyId.toString());
+    if (params.vehiclePlate != null && params.vehiclePlate.trim() !== '') {
+      httpParams = httpParams.set('vehiclePlate', params.vehiclePlate.trim().toUpperCase());
+    }
+
+    return this.http.get<PageResponse<OpenTransaction>>(this.apiUrl, { params: httpParams }).pipe(
+      map(response => {
+        const content = response.content || [];
+        const filtered = content.filter(transaction => {
+          const status = transaction.status;
+          const statusId = typeof status === 'string' ? status : status?.id;
+          return statusId === 'OPEN';
+        });
+        return {
+          ...response,
+          content: filtered,
+          numberOfElements: filtered.length
+          // totalElements y totalPages se mantienen del backend
+        };
       })
     );
   }
@@ -212,6 +275,14 @@ export class OpenTransactionService {
    */
   getReprintTicketData(openTransactionId: number): Observable<BuildTicket> {
     return this.http.get<BuildTicket>(`${this.apiUrl}/${openTransactionId}/reprint-ticket`);
+  }
+
+  /**
+   * Lista vehículos Cartón América con orden de llegada (modelo POS).
+   * GET /pos/carton-america/orden-llegada
+   */
+  getCartonAmericaOrdenLlegada(): Observable<CartonAmericaOrdenLlegada[]> {
+    return this.http.get<CartonAmericaOrdenLlegada[]>(`${this.posApiUrl}/carton-america/orden-llegada`);
   }
 }
 

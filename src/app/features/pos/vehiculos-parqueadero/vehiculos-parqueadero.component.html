@@ -43,11 +43,21 @@
   </div>
   }
 
-  @if (!loading() && !error() && filteredVehicles().length > 0) {
+  @if (!loading() && !error() && totalRecords() === 0 && filteredVehicles().length === 0) {
+  <div class="empty-state">
+    <i class="pi pi-inbox" style="font-size: 3rem; color: var(--text-color-secondary);"></i>
+    <p>No hay vehículos bajo tu cuidado en este momento</p>
+    <small>Los vehículos que registres aparecerán aquí</small>
+  </div>
+  }
+
+  @if (!loading() && !error() && (totalRecords() > 0 || filteredVehicles().length > 0)) {
   <p-card>
-    <p-table [value]="filteredVehicles()" [paginator]="true" [rows]="10" [showCurrentPageReport]="true"
-      currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} vehículos" styleClass="p-datatable-sm"
-      [globalFilterFields]="['vehiclePlate']">
+    <p-table [value]="filteredVehicles()" [paginator]="true" [lazy]="true" [rows]="paginatorRows()"
+      [first]="paginatorFirst()" (onLazyLoad)="onLazyLoad($event)" [totalRecords]="totalRecords()"
+      [showCurrentPageReport]="true" [showPageLinks]="true" [alwaysShowPaginator]="true"
+      currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} vehículos | Página {currentPage} de {totalPages}"
+      styleClass="p-datatable-sm" [rowsPerPageOptions]="[10, 25, 50]" [paginatorPosition]="'bottom'">
       <ng-template pTemplate="header">
         <tr>
           <th>Placa</th>
@@ -110,13 +120,5 @@
       </ng-template>
     </p-table>
   </p-card>
-  }
-
-  @if (!loading() && filteredVehicles().length === 0 && !error()) {
-  <div class="empty-state">
-    <i class="pi pi-inbox" style="font-size: 3rem; color: var(--text-color-secondary);"></i>
-    <p>No hay vehículos bajo tu cuidado en este momento</p>
-    <small>Los vehículos que registres aparecerán aquí</small>
-  </div>
   }
 </div>

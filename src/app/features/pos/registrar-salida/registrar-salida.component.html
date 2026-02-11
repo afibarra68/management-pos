@@ -4,6 +4,9 @@
     <div class="form-header">
       <h1>Registrar Salida</h1>
       <p class="subtitle">Busque el vehículo por placa para procesar su salida</p>
+      @if (currentShift) {
+      <p class="shift-info"><strong>Turno:</strong> {{ getShiftDisplayText() }}</p>
+      }
     </div>
 
     <form [formGroup]="form" (ngSubmit)="buscarVehiculo()" class="form-container">

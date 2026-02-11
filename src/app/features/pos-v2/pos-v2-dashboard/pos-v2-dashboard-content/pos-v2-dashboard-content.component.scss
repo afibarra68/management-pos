@@ -29,6 +29,7 @@ $text-muted: var(--text-color-secondary, #6b7280);
     opacity: 0;
     transform: translateY(-10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -110,6 +111,7 @@ $text-muted: var(--text-color-secondary, #6b7280);
       background: rgba(0, 0, 0, 0.02);
       border-bottom: 1px solid $border;
     }
+
     th {
       text-align: left;
       padding: 0.75rem 1.25rem;
@@ -119,37 +121,46 @@ $text-muted: var(--text-color-secondary, #6b7280);
       text-transform: uppercase;
       color: $text-muted;
     }
+
     .col-monto {
       text-align: right;
     }
   }
+
   tbody tr {
     border-bottom: 1px solid rgba(0, 0, 0, 0.05);
     transition: background 0.15s ease;
+
     &:hover {
       background: rgba(0, 0, 0, 0.02);
     }
+
     &.fila-total {
       border-bottom: none;
       border-top: 2px solid $accent-border;
       font-weight: 600;
       background: $accent-soft;
+
       &:hover {
         background: $accent-soft;
       }
+
       td {
         padding-top: 0.85rem;
         padding-bottom: 0.85rem;
       }
     }
   }
+
   td {
     padding: 0.7rem 1.25rem;
     color: $text;
+
     &.col-monto {
       text-align: right;
       font-variant-numeric: tabular-nums;
     }
+
     &.total {
       font-weight: 700;
       font-size: 1.15rem;
@@ -206,7 +217,7 @@ $text-muted: var(--text-color-secondary, #6b7280);
   flex-direction: column;
   min-height: 0;
 
-  .p-datatable-thead > tr > th {
+  .p-datatable-thead>tr>th {
     font-weight: 600;
     font-size: 0.75rem;
     letter-spacing: 0.03em;
@@ -216,13 +227,15 @@ $text-muted: var(--text-color-secondary, #6b7280);
     padding: 0.75rem 1rem;
     background: rgba(0, 0, 0, 0.02);
   }
-  .p-datatable-tbody > tr > td {
+
+  .p-datatable-tbody>tr>td {
     padding: 0.7rem 1rem;
     font-size: 0.875rem;
     border-color: rgba(0, 0, 0, 0.06);
     transition: background 0.15s ease;
   }
-  .p-datatable-tbody > tr:hover > td {
+
+  .p-datatable-tbody>tr:hover>td {
     background: rgba(0, 0, 0, 0.02);
   }
 }
@@ -240,6 +253,19 @@ $text-muted: var(--text-color-secondary, #6b7280);
   }
 }
 
-.welcome-card {
-  max-width: 640px;
+// --- Dashboard principal (Capacidad, Caja, Transacciones)
+.dashboard-sections {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.dashboard-section {
+  min-width: 0;
+}
+
+.cash-register-section {
+  flex: 0 0 auto;
 }
