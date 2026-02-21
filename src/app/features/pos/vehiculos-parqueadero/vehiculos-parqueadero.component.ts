@@ -287,10 +287,28 @@ export class VehiculosParqueaderoComponent implements OnInit, OnDestroy {
     }
   }
 
+  /**
+   * Parsea una fecha en formato ISO (YYYY-MM-DD) o con hora como fecha local,
+   * evitando el desfase de un día que produce new Date(string) al interpretar solo fecha como UTC.
+   */
+  private parseDateAsLocal(dateString: string): Date | null {
+    const dateMatch = dateString.trim().match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (dateMatch) {
+      const y = parseInt(dateMatch[1], 10);
+      const m = parseInt(dateMatch[2], 10) - 1;
+      const d = parseInt(dateMatch[3], 10);
+      const date = new Date(y, m, d);
+      return isNaN(date.getTime()) ? null : date;
+    }
+    const date = new Date(dateString);
+    return isNaN(date.getTime()) ? null : date;
+  }
+
   formatDate(dateString: string | undefined): string {
     if (!dateString) return 'N/A';
     try {
-      const date = new Date(dateString);
+      const date = this.parseDateAsLocal(dateString);
+      if (!date) return dateString;
       return date.toLocaleDateString('es-CO', {
         day: '2-digit',
         month: '2-digit',
@@ -309,24 +327,11 @@ export class VehiculosParqueaderoComponent implements OnInit, OnDestroy {
       const startTime = vehicle.startTime;
       const startDay = vehicle.startDay || vehicle.operationDate;
 
-      // Si tenemos fecha y hora, combinarlas
+      // Si tenemos fecha y hora, combinarlas (parsear como fecha local para evitar desfase de un día)
       if (startDay) {
-        // Intentar parsear la fecha
         let datePart: Date;
-        try {
-          datePart = new Date(startDay);
-          if (isNaN(datePart.getTime())) {
-            // Si no es una fecha válida, intentar parsear manualmente
-            const dateMatch = startDay.match(/(\d{4})-(\d{2})-(\d{2})/);
-            if (dateMatch) {
-              datePart = new Date(parseInt(dateMatch[1]), parseInt(dateMatch[2]) - 1, parseInt(dateMatch[3]));
-            } else {
-              datePart = new Date();
-            }
-          }
-        } catch {
-          datePart = new Date();
-        }
+        const parsed = this.parseDateAsLocal(startDay);
+        datePart = parsed ?? new Date();
 
         // Parsear la hora
         const timeParts = startTime.match(/(\d{1,2}):(\d{2}):(\d{2})\s*(AM|PM)?/i);
