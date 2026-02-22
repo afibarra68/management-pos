@@ -1,0 +1,42 @@
+/* Layout: reutiliza .sidebar y menú de styles.scss (navbar principal). Solo estilos de contenedor y área principal. */
+.extern-layout {
+  display: flex;
+  min-height: 100vh;
+  position: relative;
+}
+
+.extern-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 100vh;
+  margin-left: 260px;
+  transition: margin-left 0.2s ease;
+
+  .extern-layout.sidebar-collapsed & {
+    margin-left: 60px;
+  }
+
+  @media (max-width: 768px) {
+    margin-left: 0 !important;
+  }
+}
+
+.extern-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1rem;
+  height: 64px;
+  background-color: #ffffff;
+  border-bottom: 1px solid #e0e0e0;
+  flex-shrink: 0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+
+  .header-left .system-name {
+    font-weight: 700;
+    font-size: 16px;
+    color: #1a1a1a;
+  }
+}

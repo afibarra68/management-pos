@@ -29,6 +29,7 @@ import { environment } from '../../../environments/environment';
     TagModule
   ],
   templateUrl: './vehiculos-parqueadero.component.html',
+  styleUrls: ['./vehiculos-parqueadero.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class VehiculosParqueaderoComponent implements OnInit, OnDestroy {
@@ -47,6 +48,11 @@ export class VehiculosParqueaderoComponent implements OnInit, OnDestroy {
   filteredVehicles = signal<OpenTransaction[]>([]);
   /** Total de registros devuelto por el backend (para el paginador). */
   totalRecords = signal(0);
+  /** Enums ETipoVehiculo para filtrar el conteo por tipo. */
+  vehicleTypeEnums = signal<EnumResource[]>([]);
+  /** Conteo por tipo de vehículo (solo estado abierto), filtrado por ETipoVehiculo. */
+  countByTypeList = signal<{ typeName: string; count: number }[]>([]);
+  loadingCounts = signal(false);
   searchTerm = signal<string>('');
   currentShift = signal<DShiftAssignment | null>(null);
   reprintingId = signal<number | null>(null);
@@ -59,11 +65,32 @@ export class VehiculosParqueaderoComponent implements OnInit, OnDestroy {
     return userData?.appUserId || null;
   });
 
+  /** Nombre del usuario para la barra de datos (mismo uso que orden-llegada-carton-america). */
+  userName = computed(() => {
+    const d = this.authService.getUserData();
+    const first = d?.firstName ?? '';
+    const last = d?.lastName ?? '';
+    return `${first} ${last}`.trim() || 'Usuario';
+  });
+
   ngOnInit(): void {
+    this.loadVehicleTypeEnums();
     this.loadCurrentShift();
     this.setupSearchDebounce();
     this.loadPage(0, this.paginatorRows());
+    this.loadCountByType();
     this.setupEventListeners();
+  }
+
+  /** Carga los enums ETipoVehiculo y refresca el conteo por tipo. */
+  private loadVehicleTypeEnums(): void {
+    this.enumService.getEnumByName('ETipoVehiculo')
+      .pipe(takeUntil(this.destroy$), catchError(() => of([])))
+      .subscribe(enums => {
+        this.vehicleTypeEnums.set(enums || []);
+        this.cdr.markForCheck();
+        this.loadCountByType();
+      });
   }
 
   ngOnDestroy(): void {
@@ -87,9 +114,11 @@ export class VehiculosParqueaderoComponent implements OnInit, OnDestroy {
   private setupEventListeners(): void {
     window.addEventListener('vehicleRegistered', () => {
       this.loadPage(Math.floor(this.paginatorFirst() / this.paginatorRows()), this.paginatorRows());
+      this.loadCountByType();
     });
     window.addEventListener('transactionClosed', () => {
       this.loadPage(Math.floor(this.paginatorFirst() / this.paginatorRows()), this.paginatorRows());
+      this.loadCountByType();
     });
   }
 
@@ -193,6 +222,81 @@ export class VehiculosParqueaderoComponent implements OnInit, OnDestroy {
   refresh(): void {
     this.paginatorFirst.set(0);
     this.loadPage(0, this.paginatorRows());
+    this.loadCountByType();
+  }
+
+  /**
+   * Carga todos los vehículos en estado abierto (hasta un límite) y agrega conteo por tipo,
+   * filtrado por los enums ETipoVehiculo (solo tipos que existan en el enum).
+   */
+  private loadCountByType(): void {
+    const userData = this.authService.getUserData();
+    const companyId = userData?.companyId;
+    if (!companyId) return;
+
+    this.loadingCounts.set(true);
+    this.cdr.markForCheck();
+
+    this.openTransactionService
+      .getPage({ companyId, page: 0, size: 2000 })
+      .pipe(
+        takeUntil(this.destroy$),
+        finalize(() => {
+          this.loadingCounts.set(false);
+          this.cdr.markForCheck();
+        }),
+        catchError(() => of(null))
+      )
+      .subscribe({
+        next: (response) => {
+          const enums = this.vehicleTypeEnums();
+          if (!response?.content) {
+            this.countByTypeList.set(this.buildCountListByEnums(new Map(), enums));
+            return;
+          }
+          const countsById = new Map<string, number>();
+          for (const v of response.content) {
+            const typeId = this.getVehicleTypeId(v);
+            if (typeId != null) {
+              countsById.set(typeId, (countsById.get(typeId) ?? 0) + 1);
+            }
+          }
+          this.countByTypeList.set(this.buildCountListByEnums(countsById, enums));
+        }
+      });
+  }
+
+  /** Obtiene el id del tipo de vehículo (para cruzar con ETipoVehiculo). */
+  private getVehicleTypeId(vehicle: OpenTransaction): string | null {
+    const t = vehicle.basicVehicleType ?? vehicle.tipoVehiculo;
+    if (t == null) return null;
+    if (typeof t === 'string') return t;
+    return (t as EnumResource).id ?? null;
+  }
+
+  /** Arma la lista de conteo solo para los enums ETipoVehiculo con al menos un vehículo. Cartón América al final; el resto por count desc. */
+  private buildCountListByEnums(countsById: Map<string, number>, enums: EnumResource[]): { typeName: string; count: number }[] {
+    const list = enums
+      .map(e => ({ typeName: e.description || e.id, count: countsById.get(e.id) ?? 0 }))
+      .filter(x => x.count > 0);
+    const hasCartonAmerica = (name: string) => (name || '').toLowerCase().includes('carton') && (name || '').toLowerCase().includes('america');
+    return list.sort((a, b) => {
+      const aCarton = hasCartonAmerica(a.typeName);
+      const bCarton = hasCartonAmerica(b.typeName);
+      if (aCarton !== bCarton) return aCarton ? 1 : -1;
+      return b.count - a.count;
+    });
+  }
+
+  /** Icono alusivo al tipo de vehículo (PrimeIcons). */
+  getIconForVehicleType(typeName: string): string {
+    const t = (typeName || '').toLowerCase();
+    if (t.includes('tractomula') || t.includes('tractocamión') || t.includes('tracto')) return 'pi pi-truck';
+    if (t.includes('camión') || t.includes('camion')) return 'pi pi-truck';
+    if (t.includes('moto')) return 'pi pi-bolt';
+    if (t.includes('bicicleta') || t.includes('bici')) return 'pi pi-bolt';
+    if (t.includes('carro') || t.includes('automóvil') || t.includes('automovil') || t.includes('sedan')) return 'pi pi-car';
+    return 'pi pi-car';
   }
 
   /**

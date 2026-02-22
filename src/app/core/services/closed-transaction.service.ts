@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
@@ -32,6 +32,9 @@ export interface ClosedTransaction {
   sellerName?: string | null;
   contractor?: number | null;
   buildTicket?: BuildTicket;
+  vehiclePlate?: string | null;
+  tipoVehiculo?: string | { key?: string } | null;
+  notes?: string | null;
 }
 
 @Injectable({
@@ -55,6 +58,48 @@ export class ClosedTransactionService {
 
   getAll(): Observable<ClosedTransaction[]> {
     return this.http.get<ClosedTransaction[]>(this.apiUrl);
+  }
+
+  /**
+   * Lista transacciones cerradas (vehículos que han salido) con filtro por rango de fechas.
+   * endDateFrom/endDateTo en formato YYYY-MM-DD. Para un solo día usar la misma fecha en ambos.
+   */
+  getByDateRange(params: {
+    endDateFrom?: string;
+    endDateTo?: string;
+    companyCompanyId?: number;
+    vehiclePlate?: string;
+    tipoVehiculo?: string;
+    /** Varios tipos: array o string con comas. Ignorado si consultCartonAmerica=true. */
+    tipoVehiculoIn?: string | string[];
+    /** Si true, el backend filtra por tipos Cartón América (no hace falta enviar tipoVehiculoIn). */
+    consultCartonAmerica?: boolean;
+    page?: number;
+    size?: number;
+  }): Observable<{ content: ClosedTransaction[]; totalElements: number; totalPages: number }> {
+    let httpParams = new HttpParams();
+    if (params.endDateFrom != null) httpParams = httpParams.set('endDateFrom', params.endDateFrom);
+    if (params.endDateTo != null) httpParams = httpParams.set('endDateTo', params.endDateTo);
+    if (params.companyCompanyId != null) httpParams = httpParams.set('companyCompanyId', String(params.companyCompanyId));
+    if (params.vehiclePlate != null && params.vehiclePlate !== '') httpParams = httpParams.set('vehiclePlate', params.vehiclePlate);
+    if (params.consultCartonAmerica === true) {
+      httpParams = httpParams.set('consultCartonAmerica', 'true');
+    } else {
+      if (params.tipoVehiculoIn != null) {
+        const arr = Array.isArray(params.tipoVehiculoIn)
+          ? params.tipoVehiculoIn.filter((s): s is string => s != null && s !== '')
+          : (params.tipoVehiculoIn as string).split(',').map(s => s.trim()).filter(s => s !== '');
+        if (arr.length > 0) arr.forEach(v => { httpParams = httpParams.append('tipoVehiculoIn', v); });
+      }
+      if (params.tipoVehiculo != null && params.tipoVehiculo !== '') {
+        httpParams = httpParams.set('tipoVehiculo', params.tipoVehiculo);
+      }
+    }
+    if (params.page != null) httpParams = httpParams.set('page', String(params.page));
+    if (params.size != null) httpParams = httpParams.set('size', String(params.size));
+    return this.http.get<{ content: ClosedTransaction[]; totalElements: number; totalPages: number }>(this.apiUrl, {
+      params: httpParams
+    });
   }
 
   closeTransaction(openTransactionId: number): Observable<ClosedTransaction> {

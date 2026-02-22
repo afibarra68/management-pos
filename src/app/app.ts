@@ -58,13 +58,14 @@ export class App implements OnInit, OnDestroy {
     }
   }
 
-  // Computed signal para mostrar/ocultar sidebar (ocultar también cuando obligatorio cambio de contraseña)
+  // Computed signal para mostrar/ocultar sidebar (ocultar en auth, cambio contraseña y área consulta)
   readonly showSidebar = computed(() => {
     const auth = this.isAuthenticated();
     const route = this.currentRoute();
     const isAuthPage = route.startsWith('/auth') || route === '/login';
     const onlyChangePassword = this.requirePasswordChange.shouldShowOnlyChangePassword(route);
-    return auth && !isAuthPage && !onlyChangePassword;
+    const isDatosVitalesOrExtern = route.startsWith('/dash_informativo');
+    return auth && !isAuthPage && !onlyChangePassword && !isDatosVitalesOrExtern;
   });
 
   toggleDarkMode(): void {

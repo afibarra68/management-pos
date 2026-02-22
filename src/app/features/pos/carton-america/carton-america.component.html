@@ -1,0 +1,102 @@
+<div class="carton-america-container">
+  <div class="data-bar">
+    <div class="data-bar-top">
+      <div class="data-bar-brand">
+        <i class="pi pi-truck"></i>
+        <h1>Carton America</h1>
+      </div>
+      <div class="data-bar-actions">
+        <p-button label="Actualizar" icon="pi pi-refresh" (onClick)="load()" [loading]="loading()"
+          styleClass="p-button-outlined p-button-sm"></p-button>
+      </div>
+    </div>
+    <p class="data-bar-desc">
+      Vehículos en parqueadero ordenados por fecha y hora de ingreso — Usuario: <strong>{{ userName() }}</strong>
+    </p>
+    <div class="data-bar-meta">
+      @if (companyName()) {
+      <div class="data-bar-meta-item">
+        <span class="data-bar-label">Proveedor de datos:</span>
+        <span class="data-bar-value">{{ companyName() }}</span>
+      </div>
+      }
+      <div class="data-bar-meta-item data-bar-cantidad">
+        <span class="data-bar-label">Cantidad:</span>
+        <span class="data-bar-value">{{ cantidad() }} vehículos</span>
+      </div>
+    </div>
+  </div>
+
+  @if (error()) {
+  <p-message severity="error" [text]="error()!" [closable]="true"></p-message>
+  }
+
+  @if (loading()) {
+  <div class="loading-state">
+    <i class="pi pi-spin pi-spinner" style="font-size: 2rem;"></i>
+    <p>Cargando...</p>
+  </div>
+  }
+
+  @if (!loading() && !error()) {
+  <p-card>
+    @if (list().length === 0) {
+    <div class="empty-state">
+      <i class="pi pi-inbox" style="font-size: 3rem; color: var(--gray-400);"></i>
+      <p>No hay vehículos en parqueadero</p>
+    </div>
+    } @else {
+    <div class="filter-bar">
+      <label class="filter-label" for="filter-placa">Filtrar por placa</label>
+      <div class="filter-row">
+        <span class="filter-input-wrapper">
+          <input id="filter-placa" type="text" pInputText [value]="filterPlaca()"
+            (input)="filterPlaca.set($any($event.target).value)"
+            placeholder="Ej: ABC123" class="filter-input" />
+        </span>
+        <span class="filter-hint" [class.active]="filterPlaca()">
+          {{ filteredList().length }} de {{ list().length }} vehículos
+        </span>
+      </div>
+    </div>
+    @if (filteredList().length === 0) {
+    <div class="empty-state filter-empty">
+      <i class="pi pi-filter-slash" style="font-size: 2.5rem; color: var(--gray-400);"></i>
+      <p>Ningún vehículo coincide con la placa</p>
+    </div>
+    } @else {
+    <p-table [value]="filteredList()" [paginator]="true" [rows]="100" [totalRecords]="filteredList().length"
+      [showCurrentPageReport]="true" [showPageLinks]="true" [alwaysShowPaginator]="true"
+      currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} vehículos"
+      styleClass="p-datatable-sm p-datatable-striped">
+      <ng-template pTemplate="header">
+        <tr>
+          <th style="width: 100px;">Orden de llegada</th>
+          <th>Placa</th>
+          <th>Tipo de vehículo</th>
+          <th>Fecha y hora de ingreso</th>
+          <th>Datos informativos del vehículo</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-row>
+        <tr>
+          <td><strong>{{ row.ordenDeLlegada }}</strong></td>
+          <td><strong>{{ row.vehiclePlate || '-' }}</strong></td>
+          <td>{{ row.tipoVehiculoLabel || '-' }}</td>
+          <td>{{ formatDateTime(row.operationDate) }}</td>
+          <td class="notes-cell">{{ row.notes || '-' }}</td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="summary">
+        <div class="table-actions">
+          <p-button icon="pi pi-file-pdf" label="Exportar" [disabled]="loading() || filteredList().length === 0"
+            (onClick)="exportToPdf()" styleClass="p-button-secondary">
+          </p-button>
+        </div>
+      </ng-template>
+    </p-table>
+    }
+    }
+  </p-card>
+  }
+</div>

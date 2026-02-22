@@ -36,6 +36,7 @@ import { Subject, takeUntil, finalize, catchError, of } from 'rxjs';
     ToastModule
   ],
   templateUrl: './registrar-salida.component.html',
+  styleUrl: './registrar-salida.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class RegistrarSalidaComponent implements OnInit, OnDestroy {

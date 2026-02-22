@@ -1,0 +1,95 @@
+<div class="salida-vehiculos-container">
+  <div class="data-bar">
+    <div class="data-bar-top">
+      <div class="data-bar-brand">
+        <i class="pi pi-car"></i>
+        <h1>Visualización de datos — Salida de vehículos</h1>
+      </div>
+      <div class="data-bar-actions">
+        <p-button label="Actualizar" icon="pi pi-refresh" (onClick)="load()" [loading]="loading()"
+          styleClass="p-button-outlined p-button-sm"></p-button>
+      </div>
+    </div>
+    <p class="data-bar-desc">
+      Solo Camión Cartón América, Doble troque Cartón América y Tractomula Cartón América — Usuario: <strong>{{ userName() }}</strong>
+    </p>
+    <div class="data-bar-meta">
+      @if (companyName()) {
+      <div class="data-bar-meta-item">
+        <span class="data-bar-label">Proveedor de datos:</span>
+        <span class="data-bar-value">{{ companyName() }}</span>
+      </div>
+      }
+      <div class="data-bar-meta-item data-bar-cantidad">
+        <span class="data-bar-label">Cantidad:</span>
+        <span class="data-bar-value">{{ totalRecords() }} registros</span>
+      </div>
+    </div>
+  </div>
+
+  @if (error()) {
+  <p-message severity="error" [text]="error()!" [closable]="true"></p-message>
+  }
+
+  <p-card>
+    <div class="filter-bar">
+      <div class="filter-row">
+        <label class="filter-label" for="filter-date">Fecha</label>
+        <p-datePicker id="filter-date" inputId="filter-date"
+          [ngModel]="selectedDate()"
+          (ngModelChange)="onDateSelect($event)"
+          dateFormat="dd/mm/yy"
+          [showIcon]="true"
+          [showButtonBar]="true"
+          placeholder="Seleccione la fecha"
+          styleClass="filter-datepicker" />
+      </div>
+      <div class="filter-row">
+        <label class="filter-label" for="filter-placa">Filtrar por placa</label>
+        <span class="filter-input-wrapper">
+          <input id="filter-placa" type="text" pInputText [ngModel]="filterPlaca()"
+            (ngModelChange)="filterPlaca.set($event)" placeholder="Ej: ABC123" class="filter-input" />
+        </span>
+        <p-button label="Buscar" icon="pi pi-search" (onClick)="onFilterPlaca()" styleClass="p-button-sm"></p-button>
+      </div>
+    </div>
+
+    @if (loading()) {
+    <div class="loading-state">
+      <i class="pi pi-spin pi-spinner" style="font-size: 2rem;"></i>
+      <p>Cargando...</p>
+    </div>
+    } @else {
+    @if (list().length === 0) {
+    <div class="empty-state">
+      <i class="pi pi-inbox" style="font-size: 3rem; color: var(--gray-400);"></i>
+      <p>No hay salidas registradas para esta fecha</p>
+    </div>
+    } @else {
+    <p-table [value]="list()" [paginator]="true" [first]="paginatorFirst()" [rows]="pageSize" [totalRecords]="totalRecords()" [lazy]="true"
+      (onLazyLoad)="onPageChange($event)" [showCurrentPageReport]="true" [showPageLinks]="true"
+      [alwaysShowPaginator]="true" currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} registros"
+      styleClass="p-datatable-sm p-datatable-striped">
+      <ng-template pTemplate="header">
+        <tr>
+          <th style="width: 100px;">Placa</th>
+          <th>Tipo de vehículo</th>
+          <th>Hora de llegada</th>
+          <th>Hora de salida</th>
+          <th>Notas</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-row>
+        <tr>
+          <td>{{ row?.vehiclePlate ?? '—' }}</td>
+          <td>{{ formatTipoVehiculo(row?.tipoVehiculo) }}</td>
+          <td>{{ formatArrival(row?.startDay, row?.startTime) }}</td>
+          <td>{{ formatDateTime(row?.operationDate) }}</td>
+          <td class="notes-cell">{{ row?.notes ?? '—' }}</td>
+        </tr>
+      </ng-template>
+    </p-table>
+    }
+    }
+  </p-card>
+</div>

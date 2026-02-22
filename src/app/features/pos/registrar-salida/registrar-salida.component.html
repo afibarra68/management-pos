@@ -1,14 +1,26 @@
 <div class="registrar-salida-container">
-  <!-- Contenido Principal -->
-  <div class="main-content">
-    <div class="form-header">
-      <h1>Registrar Salida</h1>
-      <p class="subtitle">Busque el vehículo por placa para procesar su salida</p>
-      @if (currentShift) {
-      <p class="shift-info"><strong>Turno:</strong> {{ getShiftDisplayText() }}</p>
-      }
+  <!-- Card título (mismo estilo que vehiculos-parqueadero / orden-llegada) -->
+  <div class="data-bar">
+    <div class="data-bar-top">
+      <div class="data-bar-brand">
+        <i class="pi pi-sign-out"></i>
+        <h1>Registrar Salida</h1>
+      </div>
     </div>
+    <p class="data-bar-desc">
+      Busque el vehículo por placa para registrar su salida del parqueadero.
+    </p>
+    @if (currentShift) {
+    <div class="data-bar-meta">
+      <div class="data-bar-meta-item data-bar-cantidad">
+        <span class="data-bar-label">Turno:</span>
+        <span class="data-bar-value">{{ getShiftDisplayText() }}</span>
+      </div>
+    </div>
+    }
+  </div>
 
+  <div class="main-content">
     <form [formGroup]="form" (ngSubmit)="buscarVehiculo()" class="form-container">
       <!-- Bloque: Búsqueda de Vehículo -->
       <div class="form-block">
@@ -155,7 +167,6 @@
                 <span class="tirilla-cut tirilla-cut-bottom" aria-hidden="true"></span>
               </div>
             </div>
-            <p class="ticket-preview-question">¿Desea imprimir la tirilla?</p>
           </div>
         </div>
       </div>

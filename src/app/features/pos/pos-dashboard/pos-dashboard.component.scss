@@ -25,15 +25,6 @@
       background-color: #1a1a1a;
       border-color: #333333;
 
-      ::ng-deep {
-
-        .p-card-body,
-        .p-card-content {
-          background-color: #1a1a1a !important;
-          color: #ffffff !important;
-        }
-      }
-
       .stat-label {
         color: #cccccc !important;
       }
@@ -45,15 +36,7 @@
 
     .actions-buttons {
       .action-card {
-        ::ng-deep {
-
-          .p-card-body,
-          .p-card-content {
-            background-color: #1a1a1a !important;
-            color: #ffffff !important;
-          }
-
-          .card-content {
+        ::ng-deep .card-content {
 
             h2,
             p {
@@ -159,22 +142,6 @@
         }
       }
 
-      ::ng-deep .p-card-body {
-        padding: 1rem;
-        height: 100%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: var(--surface-card);
-        background-color: var(--surface-card);
-      }
-
-
-      ::ng-deep .p-card-content {
-        padding: 0;
-        width: 100%;
-      }
-
       .card-content {
         text-align: center;
         display: flex;
@@ -244,10 +211,6 @@
 
     &:hover {
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-    }
-
-    ::ng-deep .p-card-body {
-      padding: 1.5rem;
     }
 
     .stat-content {
@@ -347,28 +310,7 @@
       border-bottom: 1px solid #e0e0e0;
     }
 
-    ::ng-deep {
-      .p-card {
-        height: 100%;
-        display: flex;
-        flex-direction: column;
-      }
-
-      .p-card-body {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        padding: 1.5rem;
-      }
-
-      .p-card-content {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        padding: 0;
-      }
-
-      .p-datatable {
+    ::ng-deep .p-datatable {
         flex: 1;
         display: flex;
         flex-direction: column;
@@ -385,7 +327,6 @@
         .p-datatable-tbody>tr>td {
           color: #1a1a1a;
         }
-      }
     }
   }
 
@@ -470,10 +411,6 @@
     }
 
     .stat-card {
-      ::ng-deep .p-card-body {
-        padding: 1rem;
-      }
-
       .stat-content {
         gap: 1rem;
       }
@@ -505,11 +442,6 @@
         margin-bottom: 0.75rem;
       }
 
-      ::ng-deep {
-        .p-card-body {
-          padding: 1rem;
-        }
-      }
     }
   }
 }
@@ -524,16 +456,6 @@
       background: #ffffff !important;
       background-color: #ffffff !important;
       border-color: var(--primary-color) !important;
-    }
-
-    .p-card-body {
-      background: #ffffff !important;
-      background-color: #ffffff !important;
-    }
-
-    .p-card-content {
-      background: #ffffff !important;
-      background-color: #ffffff !important;
     }
 
     .card-content {

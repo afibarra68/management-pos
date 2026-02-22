@@ -1,0 +1,39 @@
+<div class="consulta-layout" [class.sidebar-collapsed]="collapsed()">
+  <aside class="consulta-sidebar" [class.collapsed]="collapsed()" [class.mobile-open]="mobileMenuOpen()">
+    <div class="sidebar-header">
+      @if (!collapsed()) {
+      <h2 class="sidebar-title">Carton America</h2>
+      }
+      <button type="button" class="toggle-btn" (click)="toggleSidebar()" aria-label="Menú">
+        <i class="pi pi-bars"></i>
+      </button>
+    </div>
+    <nav class="sidebar-nav">
+      <ul class="menu-list">
+        @for (item of menuItems; track item.routerLink) {
+        <li class="menu-item">
+          <a [routerLink]="item.routerLink" routerLinkActive="active" [routerLinkActiveOptions]="{exact: item.routerLink === 'dash_informativo'}"
+            class="menu-link" (click)="closeMobileMenu()">
+            <i [class]="item.icon" class="menu-icon"></i>
+            @if (!collapsed()) {
+            <span class="menu-label">{{ item.label }}</span>
+            }
+          </a>
+        </li>
+        }
+      </ul>
+    </nav>
+  </aside>
+  <div class="consulta-main">
+    <header class="consulta-header">
+      <span class="system-name">{{ companyName() }}</span>
+      <app-user-control></app-user-control>
+    </header>
+    <main class="consulta-content">
+      <router-outlet></router-outlet>
+    </main>
+  </div>
+  @if (showMobileOverlay()) {
+  <div class="mobile-overlay" (click)="closeMobileMenu()"></div>
+  }
+</div>

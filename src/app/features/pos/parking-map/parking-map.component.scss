@@ -24,15 +24,6 @@
       background-color: #1a1a1a;
       border-color: #333333;
 
-      ::ng-deep {
-
-        .p-card-body,
-        .p-card-content {
-          background-color: #1a1a1a !important;
-          color: #ffffff !important;
-        }
-      }
-
       .summary-label {
         color: #cccccc !important;
       }
@@ -120,10 +111,6 @@
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
       }
 
-      ::ng-deep .p-card-body {
-        padding: 1.5rem;
-      }
-
       .summary-content {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -177,10 +164,6 @@
 
       &:hover {
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-      }
-
-      ::ng-deep .p-card-body {
-        padding: 1.5rem;
       }
 
       .card-header {

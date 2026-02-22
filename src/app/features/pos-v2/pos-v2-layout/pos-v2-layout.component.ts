@@ -9,11 +9,6 @@ import { ButtonModule } from 'primeng/button';
   imports: [CommonModule, RouterModule, ButtonModule],
   template: `
     <div class="pos-v2-layout">
-      <div class="back-bar">
-        <p-button label="Volver al Dashboard" icon="pi pi-arrow-left" routerLink="/v2pos"
-          styleClass="p-button-secondary">
-        </p-button>
-      </div>
       <div class="outlet-wrap">
         <router-outlet></router-outlet>
       </div>

@@ -31,6 +31,7 @@ interface CashRegisterSummary {
     MessageModule
   ],
   templateUrl: './cash-register-view.component.html',
+  styleUrl: './cash-register-view.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class CashRegisterViewComponent implements OnInit, OnDestroy {

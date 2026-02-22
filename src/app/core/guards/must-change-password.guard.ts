@@ -25,7 +25,7 @@ export const mustChangePasswordGuard: CanActivateFn = (route, state) => {
     return true; // Ya está en cambio de contraseña → permitir
   }
 
-  router.navigate([requirePasswordChange.changePasswordRoute], {
+  router.navigate([requirePasswordChange.getChangePasswordRoute()], {
     queryParams: { mustChange: 'true' },
     replaceUrl: true
   });

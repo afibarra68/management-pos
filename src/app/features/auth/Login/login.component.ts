@@ -33,6 +33,7 @@ import { environment } from '../../../environments/environment';
     RouterModule
   ],
   templateUrl: './login.component.html',
+  styleUrls: ['./login.component.scss'],
 })
 export class LoginComponent implements OnInit, OnDestroy, AfterViewInit {
   form: FormGroup;
@@ -50,7 +51,7 @@ export class LoginComponent implements OnInit, OnDestroy, AfterViewInit {
   ) {
     // Verificar autenticación en el constructor para redirigir antes de renderizar
     if (isPlatformBrowser(this.platformId) && this.auth.isAuthenticated()) {
-      const returnUrl = this.route.snapshot.queryParams['returnUrl'] || environment.defaultPosPath;
+      const returnUrl = this.route.snapshot.queryParams['returnUrl'] || this.getDefaultLandingPath();
       this.router.navigate([returnUrl], { replaceUrl: true });
     }
 
@@ -64,7 +65,7 @@ export class LoginComponent implements OnInit, OnDestroy, AfterViewInit {
     if (isPlatformBrowser(this.platformId)) {
       // Verificar nuevamente en caso de que el constructor no haya redirigido
       if (this.auth.isAuthenticated()) {
-        const returnUrl = this.route.snapshot.queryParams['returnUrl'] || environment.defaultPosPath;
+        const returnUrl = this.route.snapshot.queryParams['returnUrl'] || this.getDefaultLandingPath();
         this.router.navigate([returnUrl], { replaceUrl: true });
         return;
       }
@@ -101,6 +102,22 @@ export class LoginComponent implements OnInit, OnDestroy, AfterViewInit {
     return username.trim().length > 0 && password.trim().length > 0 && !this.loading;
   }
 
+  private static readonly POS_FULL_ACCESS = ['PARKING_ATTENDANT', 'SUPER_USER', 'SUPER_ADMIN', 'ADMINISTRATOR_PRINCIPAL', 'ADMIN_APP', 'AUDIT_SELLER'];
+
+  private isObserverOnly(roles: string[] | undefined): boolean {
+    if (!roles?.includes('GESTOR_EXTERNO_OBSERVE')) return false;
+    return !roles.some(r => LoginComponent.POS_FULL_ACCESS.includes(r));
+  }
+
+  private getLandingPathForRoles(roles: string[] | undefined): string {
+    return this.isObserverOnly(roles) ? '/dash_informativo' : (environment.defaultPosPath ?? '/pos');
+  }
+
+  private getDefaultLandingPath(): string {
+    const roles = this.auth.getUserData()?.roles ?? [];
+    return this.getLandingPathForRoles(roles);
+  }
+
   submit(): void {
     if (this.form.invalid) return;
     this.loading = true;
@@ -111,12 +128,13 @@ export class LoginComponent implements OnInit, OnDestroy, AfterViewInit {
         this.loading = false;
         // Si debe cambiar la contraseña, redirigir al componente de cambio de contraseña
         if (response.mustChangePassword) {
-          this.router.navigate(['/pos/change-password'], {
+          const changePwPath = this.isObserverOnly(response.roles) ? '/dash_informativo/change-password' : '/pos/change-password';
+          this.router.navigate([changePwPath], {
             queryParams: { mustChange: 'true' },
             replaceUrl: true
           });
         } else {
-          const returnUrl = this.route.snapshot.queryParams['returnUrl'] || environment.defaultPosPath;
+          const returnUrl = this.route.snapshot.queryParams['returnUrl'] || this.getLandingPathForRoles(response.roles);
           this.router.navigateByUrl(returnUrl, { replaceUrl: true });
         }
       },

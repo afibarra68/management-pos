@@ -2,13 +2,118 @@
 // Colores neutros con acentos mínimos (azul/gris)
 // Responsivo desde 320x480px sin scroll
 
+/* Barra azul título (mismo card que vehiculos-parqueadero / orden-llegada) */
+.data-bar {
+  background: linear-gradient(135deg, #1e3a5f 0%, #0d47a1 100%);
+  color: #fff;
+  border-radius: 12px;
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1.25rem;
+  box-shadow: 0 4px 14px rgba(13, 71, 161, 0.25);
+}
+
+.data-bar-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.data-bar-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-shrink: 0;
+
+  i {
+    font-size: 1.75rem;
+    opacity: 0.95;
+  }
+
+  h1 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+  }
+}
+
+.data-bar-desc {
+  margin: 0 0 1rem 0;
+  font-size: 0.95rem;
+  opacity: 0.95;
+  line-height: 1.45;
+
+  strong {
+    font-weight: 600;
+    color: #fff;
+  }
+}
+
+.data-bar-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1.25rem 2rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.data-bar-meta-item {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+
+  &.data-bar-cantidad {
+    margin-left: auto;
+    background: rgba(255, 255, 255, 0.15);
+    padding: 0.35rem 0.75rem;
+    border-radius: 8px;
+    font-weight: 600;
+  }
+}
+
+.data-bar-label {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  opacity: 0.85;
+}
+
+.data-bar-value {
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+@media (max-width: 768px) {
+  .data-bar {
+    padding: 1rem;
+  }
+  .data-bar-top {
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+  .data-bar-brand h1 {
+    font-size: 1.25rem;
+  }
+  .data-bar-desc {
+    font-size: 0.875rem;
+  }
+  .data-bar-meta {
+    gap: 0.75rem 1rem;
+  }
+}
+
 .registrar-salida-container {
   display: flex;
   flex-direction: column;
   height: 100vh;
   max-height: 100vh;
   width: 100%;
-  background-color: #f5f5f5;
+  padding: 1rem 1rem 0 1rem;
+  box-sizing: border-box;
+  background-color: transparent;
   overflow: hidden;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   font-size: 14px;
@@ -21,20 +126,6 @@
   :host-context(.dark-mode) & {
     background-color: #0a0a0a;
     color: #ffffff;
-
-    .form-header {
-      h1 {
-        color: #ffffff;
-      }
-
-      .subtitle {
-        color: #cccccc;
-      }
-
-      .shift-info {
-        color: #cccccc;
-      }
-    }
 
     .form-block {
       background-color: #1a1a1a;
@@ -254,10 +345,10 @@
   max-width: 100%;
 }
 
-// Bloques de Formulario
+// Bloques de Formulario — sin fondo en modo claro
 .form-block {
-  background-color: #ffffff;
-  border: 1px solid #e0e0e0;
+  background-color: transparent;
+  border: 1px solid rgba(0, 0, 0, 0.12);
   border-radius: 8px;
   overflow: hidden;
   transition: box-shadow 0.2s ease, background-color 0.3s ease, border-color 0.3s ease;
@@ -268,8 +359,8 @@
 
   .block-header {
     padding: 12px 16px;
-    border-bottom: 1px solid #e0e0e0;
-    background-color: #f9f9f9;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+    background-color: transparent;
     display: flex;
     justify-content: space-between;
     align-items: center;

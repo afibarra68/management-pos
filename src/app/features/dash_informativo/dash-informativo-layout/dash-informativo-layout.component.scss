@@ -1,0 +1,156 @@
+/* Layout: reutiliza .sidebar y menú de styles.scss (igual que el principal / extern). Solo estilos del contenedor y área principal. */
+.dash-informativo-layout {
+  display: flex;
+  min-height: 100vh;
+  position: relative;
+}
+
+/* Icono a la izquierda del título en el header del sidebar Clientes */
+.dash-informativo-layout .sidebar .sidebar-header .sidebar-brand {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.75rem;
+
+  .sidebar-title {
+    align-items: flex-start;
+    text-align: left;
+  }
+}
+
+/* Centrar y agrandar iconos del menú en el sidebar Clientes */
+.dash-informativo-layout .sidebar .menu-link {
+  justify-content: center;
+  align-items: center;
+  gap: 0.75rem;
+
+  .menu-icon {
+    font-size: 2rem;
+    margin: 0;
+    flex-shrink: 0;
+  }
+
+  .menu-label {
+    text-align: center;
+  }
+}
+
+.dash-informativo-layout .sidebar .menu-list.collapsed .menu-link .menu-icon {
+  font-size: 2rem;
+}
+
+.dash-informativo-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 100vh;
+  margin-left: 260px;
+  transition: margin-left 0.2s ease;
+
+  .dash-informativo-layout.sidebar-collapsed & {
+    margin-left: 60px;
+  }
+
+  @media (max-width: 768px) {
+    margin-left: 0 !important;
+  }
+}
+
+/* Mismo navbar que Administrativo: fondo verde, texto blanco, hora en caja, usuario en amarillo */
+.dash-informativo-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1rem;
+  height: 64px;
+  flex-shrink: 0;
+  gap: 1rem;
+  background: linear-gradient(90deg,
+    #1a4d3e 0%,
+    #2d5a4a 20%,
+    #3d6b5a 35%,
+    #4a7a62 50%,
+    #5a8a6a 65%,
+    #ffc107 80%,
+    #e6a800 100%
+  );
+  border-bottom: 1px solid rgba(255, 255, 255, 0.25);
+  box-shadow: 0 1px 8px rgba(0, 0, 0, 0.15);
+
+  .header-left {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+
+    .system-name {
+      font-weight: 700;
+      font-size: 16px;
+      color: #ffffff;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    }
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    margin-left: auto;
+    flex-shrink: 0;
+    gap: 0.75rem;
+
+    .current-time {
+      font-size: 13px;
+      color: #ffffff;
+      font-weight: 500;
+      padding: 4px 8px;
+      background-color: rgba(255, 255, 255, 0.25);
+      border-radius: 4px;
+      white-space: nowrap;
+    }
+
+    /* Usuario con fondo amarillo como Administrativo */
+    app-user-control ::ng-deep .user-trigger {
+      background-color: #ffc107;
+      color: #1a1a1a;
+      border-color: rgba(0, 0, 0, 0.15);
+
+      &:hover {
+        background-color: #e6a800;
+        border-color: rgba(0, 0, 0, 0.2);
+      }
+
+      .user-name {
+        color: #1a1a1a;
+      }
+
+      .user-avatar {
+        background-color: #1976d2;
+        color: #ffffff;
+      }
+
+      .trigger-chevron {
+        color: #1a1a1a;
+      }
+    }
+  }
+
+  @media (max-width: 768px) {
+    padding: 0 0.75rem;
+    gap: 0.5rem;
+
+    .header-left .system-name {
+      font-size: 14px;
+    }
+
+    .header-right .current-time {
+      font-size: 11px;
+      padding: 3px 6px;
+    }
+  }
+}
+
+.mobile-menu-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 99;
+}

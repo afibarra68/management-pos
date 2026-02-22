@@ -1,9 +1,9 @@
+/* Mismos valores de ancho y padding que orden-llegada-carton-america en todas las resoluciones */
 .vehiculos-parqueadero-container {
-  padding: 2rem;
-  height: 100%;
-  max-width: 1400px;
-  margin: 0 auto;
+  padding: 1rem;
   width: 100%;
+  min-height: 0;
+  box-sizing: border-box;
 
   // Modo oscuro
   :host-context(.dark-mode) & {
@@ -78,6 +78,48 @@
       }
     }
 
+    .count-by-type-loading {
+      color: #b8d4ec !important;
+    }
+
+    .count-by-type-card {
+      background-color: #1a1a1a !important;
+      border-color: #333333 !important;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+
+      &:hover {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+      }
+    }
+
+    .data-bar .count-by-type-card.data-bar-cantidad-style {
+      background: rgba(255, 255, 255, 0.15) !important;
+      border-color: transparent !important;
+      box-shadow: none !important;
+
+      .data-bar-label,
+      .data-bar-value {
+        color: #fff !important;
+      }
+    }
+
+    .count-by-type-icon {
+      background: linear-gradient(135deg, #1e3a5f 0%, #2d6a9e 100%);
+      color: #93c5fd;
+    }
+
+    .count-by-type-name {
+      color: #b8d4ec !important;
+    }
+
+    .count-by-type-value {
+      color: #e8f4fc !important;
+    }
+
+    .count-by-type-unit {
+      color: #93c5fd !important;
+    }
+
     .actions-section {
       .search-bar {
         .p-input-icon-left {
@@ -110,10 +152,6 @@
       .p-card {
         background-color: #1e2530 !important;
         border-color: #2a3441 !important;
-
-        .p-card-body {
-          background-color: #1e2530 !important;
-        }
       }
 
       // Estilos para la tabla
@@ -228,6 +266,187 @@
     }
   }
 
+  /* Barra azul (igual que orden-llegada-carton-america) */
+  .data-bar {
+    background: linear-gradient(135deg, #1e3a5f 0%, #0d47a1 100%);
+    color: #fff;
+    border-radius: 12px;
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1.25rem;
+    box-shadow: 0 4px 14px rgba(13, 71, 161, 0.25);
+  }
+
+  .data-bar-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .data-bar-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-shrink: 0;
+
+    i {
+      font-size: 1.75rem;
+      opacity: 0.95;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+  }
+
+  .data-bar-actions {
+    margin-left: auto;
+    flex-shrink: 0;
+
+    ::ng-deep .p-button-outlined {
+      border-color: rgba(255, 255, 255, 0.6);
+      color: #fff;
+
+      &:hover:not(:disabled) {
+        background: rgba(255, 255, 255, 0.15);
+        border-color: #fff;
+        color: #fff;
+      }
+    }
+  }
+
+  .data-bar-desc {
+    margin: 0 0 1rem 0;
+    font-size: 0.95rem;
+    opacity: 0.95;
+    line-height: 1.45;
+
+    strong {
+      font-weight: 600;
+      color: #fff;
+    }
+  }
+
+  .data-bar-meta {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 1rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+    overflow-x: auto;
+    min-width: 0;
+  }
+
+  .data-bar-meta-item {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+
+    &.data-bar-cantidad {
+      margin-left: auto;
+      flex-shrink: 0;
+      background: rgba(255, 255, 255, 0.15);
+      padding: 0.35rem 0.75rem;
+      border-radius: 8px;
+      font-weight: 600;
+    }
+  }
+
+  .data-bar-label {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    opacity: 0.85;
+  }
+
+  .data-bar-value {
+    font-size: 0.95rem;
+    font-weight: 500;
+  }
+
+  .data-bar-meta .count-by-type-loading {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 0.9rem;
+  }
+
+  // Cards de conteo por tipo con el mismo estilo que "Cantidad" (misma fila .data-bar-meta)
+  .data-bar-meta .count-by-type-card.data-bar-cantidad-style {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+    background: rgba(255, 255, 255, 0.15);
+    padding: 0.5rem 0.75rem;
+    border-radius: 8px;
+    font-weight: 600;
+    min-width: 0;
+    flex-shrink: 0;
+
+    .data-bar-label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      opacity: 0.9;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 100%;
+    }
+
+    .data-bar-value {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #fff;
+    }
+
+    .count-by-type-icon-inline {
+      font-size: 0.9rem;
+      opacity: 0.95;
+      flex-shrink: 0;
+    }
+  }
+
+  // Conteo por tipo (fuera de data-bar por si se usa en otro contexto)
+  .count-by-type-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-top: 1rem;
+  }
+
+  .count-by-type-loading {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    color: var(--text-color-secondary);
+    font-size: 0.9rem;
+  }
+
+  .count-by-type-card {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 1.25rem;
+    min-width: 180px;
+    background: var(--surface-card, #ffffff);
+    border: 1px solid var(--surface-border, #e5e7eb);
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  }
+
   .header {
     margin-bottom: 2rem;
     display: flex;
@@ -324,10 +543,6 @@
     margin-bottom: 2rem;
 
     .summary-card {
-      ::ng-deep .p-card-body {
-        padding: 1.5rem;
-      }
-
       .summary-content {
         display: flex;
         gap: 2rem;
@@ -396,6 +611,7 @@
     justify-content: center;
     padding: 4rem 2rem;
     gap: 1rem;
+    min-height: 280px;
     color: var(--text-color-secondary);
 
     i {
@@ -410,6 +626,7 @@
     justify-content: center;
     padding: 4rem 2rem;
     gap: 1rem;
+    min-height: 280px;
     text-align: center;
     color: var(--text-color-secondary);
 
@@ -456,10 +673,37 @@
   }
 }
 
-// Responsive para resoluciones pequeñas
+/* Resoluciones: mismos valores que orden-llegada-carton-america (breakpoint 768px) */
 @media (max-width: 768px) {
   .vehiculos-parqueadero-container {
-    padding: 1rem 0.75rem;
+    padding: 1rem;
+
+    .data-bar {
+      padding: 1rem;
+    }
+
+    .data-bar-top {
+      flex-wrap: wrap;
+      gap: 0.75rem;
+    }
+
+    .data-bar-brand h1 {
+      font-size: 1.25rem;
+    }
+
+    .data-bar-desc {
+      font-size: 0.875rem;
+    }
+
+    .data-bar-meta {
+      gap: 0.75rem 1rem;
+    }
+
+    .loading-state,
+    .empty-state {
+      min-height: min(280px, 50vh);
+      padding: 3rem 1rem;
+    }
 
     .header {
       flex-direction: column;
@@ -494,10 +738,6 @@
 
     .summary-section {
       .summary-card {
-        ::ng-deep .p-card-body {
-          padding: 1rem;
-        }
-
         .summary-content {
           .summary-item {
             flex-direction: column;

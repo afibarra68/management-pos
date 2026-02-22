@@ -9,16 +9,16 @@
           class="menu-link"
           [title]="(collapsed() && !isMobile()) ? item.label : ''"
           (click)="onMenuClick()">
+          @if (item.badge && (!collapsed() || isMobile())) {
+            <span [class]="item.badgeClass || 'menu-badge'">
+              {{ item.badge }}
+            </span>
+          }
           @if (item.icon) {
             <i [class]="item.icon" class="menu-icon"></i>
           }
           @if (!collapsed() || isMobile()) {
             <span class="menu-label">{{ item.label }}</span>
-          }
-          @if (item.badge && (!collapsed() || isMobile())) {
-            <span [class]="item.badgeClass || 'menu-badge'">
-              {{ item.badge }}
-            </span>
           }
         </a>
       } @else {
@@ -35,7 +35,7 @@
           }
           @if (hasSubmenu(item) && (!collapsed() || isMobile())) {
             <i 
-              class="pi pi-chevron-right menu-arrow" 
+              class="pi pi-chevron-down menu-arrow" 
               [class.rotated]="isExpanded(item)">
             </i>
           }

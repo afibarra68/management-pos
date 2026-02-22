@@ -61,6 +61,17 @@
           </tbody>
         </table>
       </div>
+      <div class="cierre-confirmacion">
+        <p class="cierre-confirmacion-pregunta">¿Está de acuerdo con cerrar el turno?</p>
+        @if (closingBeforeScheduledTime) {
+          <p class="cierre-confirmacion-aviso">
+            Va a cerrar el turno antes del horario programado.
+            @if (shiftDisplayText) {
+              <span class="cierre-confirmacion-horario">({{ shiftDisplayText }})</span>
+            }
+          </p>
+        }
+      </div>
       <div class="liquidacion-actions">
         <p-button label="Finalizar turno" icon="pi pi-check" (onClick)="onConfirmar()" [loading]="closingShift"
           [disabled]="closingShift" styleClass="p-button-warning">

@@ -1,13 +1,26 @@
 <div class="registrar-placa-container">
-  <!-- Contenido Principal -->
-  <div class="main-content">
-    <div class="form-header">
-      <h1>Registrar Ingreso de Vehículo</h1>
-      @if (currentShift) {
-      <p class="shift-info"><strong>Turno:</strong> {{ getShiftDisplayText() }}</p>
-      }
+  <!-- Card título (mismo estilo que vehiculos-parqueadero / orden-llegada) -->
+  <div class="data-bar">
+    <div class="data-bar-top">
+      <div class="data-bar-brand">
+        <i class="pi pi-car"></i>
+        <h1>Registrar Ingreso de Vehículo</h1>
+      </div>
     </div>
+    <p class="data-bar-desc">
+      Ingrese la placa y tipo de vehículo para registrar el ingreso al parqueadero.
+    </p>
+    @if (currentShift) {
+    <div class="data-bar-meta">
+      <div class="data-bar-meta-item data-bar-cantidad">
+        <span class="data-bar-label">Turno:</span>
+        <span class="data-bar-value">{{ getShiftDisplayText() }}</span>
+      </div>
+    </div>
+    }
+  </div>
 
+  <div class="main-content">
     <form [formGroup]="form" (ngSubmit)="submit()" class="form-container">
       <!-- Bloque: Información del Vehículo -->
       <div class="form-block">
@@ -147,7 +160,7 @@
                 <span class="tirilla-cut tirilla-cut-bottom" aria-hidden="true"></span>
               </div>
             </div>
-            <p class="ticket-preview-question">¿Desea imprimir la tirilla?</p>
+
           </div>
         </div>
       </div>

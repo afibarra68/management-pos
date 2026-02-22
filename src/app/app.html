@@ -3,14 +3,15 @@
   <header class="app-header" [class.hidden]="!showSidebar()" [class.with-sidebar]="showSidebar()"
     [class.sidebar-collapsed]="showSidebar() && sidebarCollapsed()">
     <div class="header-left">
-      <span class="system-name">{{ companyName() || 'Management POS' }}</span>
+      <span class="system-name">{{ companyName() || 'Cajeros Parqueadero' }}</span>
     </div>
     <div class="header-right">
       <span class="current-time">{{ currentTime() }}</span>
       <app-user-control [darkMode]="darkMode()" (toggleDarkMode)="toggleDarkMode()"></app-user-control>
     </div>
   </header>
-  <div class="content-wrapper" [class.with-sidebar]="showSidebar()" [class.sidebar-collapsed]="sidebarCollapsed()">
+  <div class="content-wrapper" [class.with-sidebar]="showSidebar()" [class.sidebar-collapsed]="sidebarCollapsed()"
+    [class.no-global-header]="!showSidebar()">
     <main class="main-content">
       <router-outlet />
     </main>

@@ -36,6 +36,7 @@ import { Subject, takeUntil, finalize, catchError, of } from 'rxjs';
     SharedModule
   ],
   templateUrl: './registrar-placa.component.html',
+  styleUrl: './registrar-placa.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class RegistrarPlacaComponent implements OnInit, OnDestroy {

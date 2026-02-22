@@ -1,5 +1,5 @@
-import { Component, inject, afterNextRender, OnDestroy, Input, Output, EventEmitter } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, inject, afterNextRender, OnDestroy, OnInit, Input, Output, EventEmitter, PLATFORM_ID } from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { Router, NavigationEnd } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { NotificationService } from '../../services/notification.service';
@@ -16,10 +16,11 @@ import { filter, Subscription } from 'rxjs';
   templateUrl: './user-control.component.html',
   styleUrl: './user-control.component.scss',
 })
-export class UserControlComponent implements OnDestroy {
+export class UserControlComponent implements OnInit, OnDestroy {
   private authService = inject(AuthService);
   private router = inject(Router);
   private notificationService = inject(NotificationService);
+  private platformId = inject(PLATFORM_ID);
 
   /** Estado del modo oscuro (desde el padre). */
   @Input() darkMode = false;
@@ -33,18 +34,21 @@ export class UserControlComponent implements OnDestroy {
   private routerSubscription?: Subscription;
 
   constructor() {
-    // Cargar datos del usuario solo en el navegador
+    // Suscribirse a cambios de ruta para actualizar datos del usuario (después del primer render)
     afterNextRender(() => {
-      this.loadUserData();
-
-      // Suscribirse a cambios de ruta para actualizar datos del usuario
-      // Esto asegura que los datos se actualicen después del login
       this.routerSubscription = this.router.events
         .pipe(filter(event => event instanceof NavigationEnd))
         .subscribe(() => {
           this.loadUserData();
         });
     });
+  }
+
+  ngOnInit(): void {
+    // Cargar datos del usuario al iniciar para que el navbar muestre el usuario de inmediato (dash_informativo, consulta, extern)
+    if (isPlatformBrowser(this.platformId)) {
+      this.loadUserData();
+    }
   }
 
   ngOnDestroy(): void {
@@ -61,7 +65,19 @@ export class UserControlComponent implements OnDestroy {
     this.companyNit = data?.companyNumberIdentity ?? data?.companyDescription ?? '';
   }
 
+  /** Usuario solo externo (GESTOR_EXTERNO_OBSERVE sin roles POS): no tiene turno, no se pide cierre de turno. */
+  private get isExternalUserOnly(): boolean {
+    const roles = this.authService.getUserData()?.roles ?? [];
+    if (!roles.includes('GESTOR_EXTERNO_OBSERVE')) return false;
+    return !roles.some((r: string) => UserControlComponent.POS_FULL_ACCESS.includes(r));
+  }
+
   logout(): void {
+    if (this.isExternalUserOnly) {
+      this.userData = null;
+      this.authService.logout();
+      return;
+    }
     this.authService.logoutRequest(environment.serviceCode).subscribe({
       next: () => {
         this.userData = null;
@@ -95,7 +111,8 @@ export class UserControlComponent implements OnDestroy {
   }
 
   navigateToChangePassword(): void {
-    this.router.navigate(['/pos/change-password']);
+    const path = this.canSeeOperaciones ? '/pos/change-password' : '/dash_informativo/change-password';
+    this.router.navigate([path]);
   }
 
   navigateToChangePasswordAndClose(popover: Popover): void {
@@ -112,6 +129,15 @@ export class UserControlComponent implements OnDestroy {
   navigateToOperacionesAndClose(popover: Popover): void {
     popover.hide();
     this.router.navigate([environment.defaultPosPath]);
+  }
+
+  /** Rol observer (GESTOR_EXTERNO_OBSERVE) no debe ver operaciones; solo datos vitales. */
+  private static readonly POS_FULL_ACCESS = ['PARKING_ATTENDANT', 'SUPER_USER', 'SUPER_ADMIN', 'ADMINISTRATOR_PRINCIPAL', 'ADMIN_APP', 'AUDIT_SELLER'];
+
+  get canSeeOperaciones(): boolean {
+    const roles = this.authService.getUserData()?.roles ?? [];
+    if (!roles.includes('GESTOR_EXTERNO_OBSERVE')) return true;
+    return roles.some((r: string) => UserControlComponent.POS_FULL_ACCESS.includes(r));
   }
 
   onToggleDarkMode(): void {

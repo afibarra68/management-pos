@@ -41,6 +41,10 @@ export class PosV2DashboardContentComponent {
   @Input() mostrandoLiquidacion = false;
   @Input() liquidacionData: LiquidacionCajaData | null = null;
   @Input() closingShift = false;
+  /** Si se está cerrando antes del horario programado (muestra advertencia). */
+  @Input() closingBeforeScheduledTime = false;
+  /** Texto del horario del turno (ej. "Turno tarde (02:00 PM - 10:00 PM)"). */
+  @Input() shiftDisplayText = '';
 
   @Output() confirmarCerrarTurno = new EventEmitter<void>();
 

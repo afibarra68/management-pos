@@ -1,0 +1,277 @@
+// Colores del fondo de la app (teal → amarillo → dorado)
+$teal-dark: #1a4d3e;
+$teal-mid: #2d5a4a;
+$teal: #3d6b5a;
+$teal-light: #4a7a62;
+$teal-lighter: #5a8a6a;
+$yellow: #ffc107;
+$gold: #e6a800;
+
+:host {
+  display: block;
+  position: absolute;
+  inset: 0;
+  min-height: 100vh;
+  width: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+  background: linear-gradient(135deg, $teal-dark 0%, $teal-mid 25%, $teal 50%, $teal-lighter 75%, $yellow 90%, $gold 100%);
+}
+
+// Pantalla completa: contenido centrado (vertical y horizontal)
+.login-page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  width: 100%;
+  position: relative;
+  padding: 2rem;
+}
+
+// Fondo a pantalla completa: gradiente + formas decorativas
+.login-page__bg {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  z-index: 0;
+}
+
+.login-page__gradient {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(160deg,
+    rgba($teal-dark, 0.95) 0%,
+    rgba($teal-mid, 0.9) 30%,
+    rgba($teal-light, 0.85) 60%,
+    rgba($yellow, 0.25) 100%);
+  z-index: 0;
+}
+
+// Bloque centrado en pantalla: título + card
+.login-center {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 420px;
+}
+
+// Formas decorativas (círculos y rectángulos redondeados)
+.login-page__shapes {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.shape {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  &.shape--circle.shape--1 {
+    width: 280px;
+    height: 280px;
+    top: 10%;
+    left: -80px;
+  }
+  &.shape--circle.shape--2 {
+    width: 180px;
+    height: 180px;
+    bottom: 20%;
+    right: -40px;
+    background: rgba(255, 255, 255, 0.06);
+  }
+  &.shape--circle.shape--3 {
+    width: 100px;
+    height: 100px;
+    top: 50%;
+    right: 15%;
+    background: rgba($yellow, 0.2);
+  }
+  &.shape--rounded {
+    border-radius: 24px;
+    background: rgba(255, 255, 255, 0.05);
+  }
+  &.shape--rounded.shape--4 {
+    width: 120px;
+    height: 120px;
+    bottom: 25%;
+    left: 10%;
+    transform: rotate(-15deg);
+  }
+  &.shape--rounded.shape--5 {
+    width: 80px;
+    height: 80px;
+    top: 25%;
+    right: 25%;
+    transform: rotate(10deg);
+    background: rgba($yellow, 0.15);
+  }
+}
+
+// Encabezado fusionado dentro de la card (icono + títulos)
+.login-card-header {
+  text-align: center;
+  padding: 0.25rem 0 1rem;
+}
+
+.login-card-header .login-page__icon {
+  width: 72px;
+  height: 72px;
+  margin: 0 auto 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, $teal-mid 0%, $teal 100%);
+  border-radius: 50%;
+  border: none;
+  box-shadow: 0 4px 12px rgba(26, 77, 62, 0.3);
+  i {
+    font-size: 2rem;
+    color: #fff;
+  }
+}
+
+.login-card-header .login-page__title {
+  margin: 0 0 0.25rem;
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: $teal-dark;
+  letter-spacing: 0.02em;
+  text-shadow: none;
+}
+
+.login-card-header .login-page__text {
+  margin: 0 0 1rem;
+  font-size: 0.9rem;
+  color: #64748b;
+  opacity: 1;
+}
+
+.login-header-title {
+  margin: 0 0 0.35rem;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+.login-subtitle {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #64748b;
+}
+
+.login-container {
+  width: 100%;
+  max-width: 380px;
+}
+
+// Card del formulario: fondo blanco para destacar sobre el gradiente
+::ng-deep .login-card.p-card {
+  border: none;
+  border-radius: 16px;
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+  background: #fff;
+}
+
+::ng-deep .login-card .p-card-body {
+  padding: 1.75rem 1.5rem;
+}
+
+::ng-deep .login-card .p-card-content {
+  padding: 0;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.form-field {
+  width: 100%;
+
+  .field-label {
+    display: block;
+    margin-bottom: 0.4rem;
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: #334155;
+  }
+
+  .p-input-icon-left,
+  .p-input-icon-left input {
+    width: 100% !important;
+    min-width: 0;
+  }
+
+  ::ng-deep .p-password,
+  ::ng-deep .p-password input {
+    width: 100% !important;
+    min-width: 0;
+  }
+
+  ::ng-deep .p-password.p-inputwrapper {
+    width: 100% !important;
+  }
+
+  .p-error {
+    display: block;
+    margin-top: 0.35rem;
+    font-size: 0.8rem;
+  }
+}
+
+.form-actions {
+  margin-top: 0.5rem;
+}
+
+// Botón Entrar — gradiente teal/amarillo acorde al fondo
+::ng-deep .form-actions .p-button,
+::ng-deep .form-actions button.p-button {
+  width: 100% !important;
+  background: linear-gradient(135deg, $teal-mid 0%, $teal 50%, $teal-light 100%) !important;
+  border: none !important;
+  color: #fff !important;
+  font-weight: 600 !important;
+  padding: 0.75rem 1rem !important;
+  border-radius: 10px !important;
+  box-shadow: 0 4px 14px rgba(26, 77, 62, 0.35) !important;
+
+  &:hover:not(:disabled) {
+    background: linear-gradient(135deg, $teal-dark 0%, $teal-mid 100%) !important;
+    box-shadow: 0 6px 18px rgba(26, 77, 62, 0.4) !important;
+  }
+}
+
+// Responsive: mismo centrado, menos padding
+@media (max-width: 480px) {
+  .login-page {
+    padding: 1rem;
+  }
+
+  .login-card-header .login-page__icon {
+    width: 56px;
+    height: 56px;
+
+    i {
+      font-size: 1.5rem;
+    }
+  }
+
+  .login-card-header .login-page__title {
+    font-size: 1.2rem;
+  }
+
+  .login-card-header .login-page__text {
+    font-size: 0.85rem;
+  }
+
+  .login-header-title {
+    font-size: 1.1rem;
+  }
+}

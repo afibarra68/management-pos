@@ -1,11 +1,24 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, inject, signal, computed } from '@angular/core';
 import { MenuItem } from '../models/menu-item.model';
+import { AuthService } from './auth.service';
+
+/** Roles que tienen acceso completo al menú POS (no solo consulta). */
+const POS_FULL_ACCESS_ROLES = [
+  'PARKING_ATTENDANT',
+  'SUPER_USER',
+  'SUPER_ADMIN',
+  'ADMINISTRATOR_PRINCIPAL',
+  'ADMIN_APP',
+  'AUDIT_SELLER'
+] as const;
 
 @Injectable({
   providedIn: 'root'
 })
 export class MenuService {
-  private menuItems = signal<MenuItem[]>([
+  private auth = inject(AuthService);
+
+  private baseMenuItems = signal<MenuItem[]>([
     {
       label: 'Ingresar Vehículo',
       icon: 'pi pi-sign-in',
@@ -29,36 +42,38 @@ export class MenuService {
       icon: 'pi pi-truck',
       routerLink: '/pos/orden-llegada-carton-america',
       visible: true
-    },
-    {
-      label: 'Capacidad',
-      icon: 'pi pi-th-large',
-      routerLink: '/pos/mapa-puestos',
-      visible: true
-    },
-    {
-      label: 'Ingreso a Caja por Otro Concepto',
-      icon: 'pi pi-money-bill',
-      routerLink: '/pos/ingreso-caja-otro-concepto',
-      visible: true
     }
-    // Aquí se pueden agregar más items del menú dinámicamente
   ]);
 
+  /** Si el usuario solo tiene rol GESTOR_EXTERNO_OBSERVE, solo puede ver Datos Vitales (solo consulta). */
+  private isObserverOnly(roles: string[]): boolean {
+    if (!roles.includes('GESTOR_EXTERNO_OBSERVE')) return false;
+    return !roles.some(r => (POS_FULL_ACCESS_ROLES as readonly string[]).includes(r));
+  }
+
+  private filteredMenuItems = computed(() => {
+    const items = this.baseMenuItems().filter(item => item.visible !== false);
+    const roles = this.auth.getUserData()?.roles ?? [];
+    if (this.isObserverOnly(roles)) {
+      return []; // Gestor externo usa /consulta (otro main), no ve menú POS
+    }
+    return items;
+  });
+
   getMenuItems() {
-    return this.menuItems.asReadonly();
+    return this.filteredMenuItems;
   }
 
   addMenuItem(item: MenuItem) {
-    this.menuItems.update(items => [...items, item]);
+    this.baseMenuItems.update(items => [...items, item]);
   }
 
   removeMenuItem(label: string) {
-    this.menuItems.update(items => items.filter(item => item.label !== label));
+    this.baseMenuItems.update(items => items.filter(item => item.label !== label));
   }
 
   clearMenu() {
-    this.menuItems.set([]);
+    this.baseMenuItems.set([]);
   }
 
   /**
@@ -67,7 +82,7 @@ export class MenuService {
    * @param subItem Nuevo sub-item a agregar
    */
   addSubItem(parentId: string, subItem: MenuItem): void {
-    this.menuItems.update(items => {
+    this.baseMenuItems.update(items => {
       return items.map(item => {
         if (item.id === parentId) {
           const updatedItems = item.items ? [...item.items, subItem] : [subItem];
@@ -84,7 +99,7 @@ export class MenuService {
    * @param subItemLabel Label del sub-item a remover
    */
   removeSubItem(parentId: string, subItemLabel: string): void {
-    this.menuItems.update(items => {
+    this.baseMenuItems.update(items => {
       return items.map(item => {
         if (item.id === parentId && item.items) {
           const updatedItems = item.items.filter(subItem => subItem.label !== subItemLabel);
@@ -100,7 +115,7 @@ export class MenuService {
    * @param itemId ID del item
    */
   toggleMenuItem(itemId: string): void {
-    this.menuItems.update(items => {
+    this.baseMenuItems.update(items => {
       return items.map(item => {
         if (item.id === itemId) {
           return { ...item, expanded: !item.expanded };
@@ -115,7 +130,7 @@ export class MenuService {
    * @param itemId ID del item
    */
   expandMenuItem(itemId: string): void {
-    this.menuItems.update(items => {
+    this.baseMenuItems.update(items => {
       return items.map(item => {
         if (item.id === itemId) {
           return { ...item, expanded: true };
@@ -130,7 +145,7 @@ export class MenuService {
    * @param itemId ID del item
    */
   collapseMenuItem(itemId: string): void {
-    this.menuItems.update(items => {
+    this.baseMenuItems.update(items => {
       return items.map(item => {
         if (item.id === itemId) {
           return { ...item, expanded: false };

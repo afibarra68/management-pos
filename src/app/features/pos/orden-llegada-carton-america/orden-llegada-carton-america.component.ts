@@ -40,6 +40,8 @@ export class OrdenLlegadaCartonAmericaComponent implements OnInit {
   companyName = signal<string>('');
   /** Cantidad total de vehículos (calculada a partir de la lista). */
   cantidad = signal<number>(0);
+  /** Nombre del usuario actual para la barra de datos */
+  userName = signal<string>('');
 
   showEditDialog = signal(false);
   editingRow = signal<CartonAmericaOrdenLlegada | null>(null);
@@ -54,6 +56,9 @@ export class OrdenLlegadaCartonAmericaComponent implements OnInit {
   private loadCompanyInfo(): void {
     const userData = this.authService.getUserData();
     this.companyName.set(userData?.companyName ?? userData?.companyDescription ?? '');
+    const first = userData?.firstName ?? '';
+    const last = userData?.lastName ?? '';
+    this.userName.set(`${first} ${last}`.trim() || '—');
   }
 
   load(): void {
@@ -302,8 +307,7 @@ export class OrdenLlegadaCartonAmericaComponent implements OnInit {
   </div>
 
   <div class="header">
-    <h1>Cartón América - Orden de llegada</h1>
-    <p class="subtitle">Vehículos en parqueadero (camión, doble troque, tractomula) ordenados por fecha y hora de ingreso</p>
+    <h1>Cartón América</h1>
   </div>
 
   <div class="info-section">

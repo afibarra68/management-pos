@@ -18,9 +18,11 @@
         }
       </div>
       <div class="user-menu-config">
+        @if (canSeeOperaciones) {
         <button type="button" class="menu-btn config-btn" (click)="navigateToOperacionesAndClose(userMenu)">
           <i class="pi pi-list"></i> Ver Operaciones
         </button>
+        }
         <button type="button" class="menu-btn config-btn" (click)="navigateToChangePasswordAndClose(userMenu)">
           <i class="pi pi-key"></i> Cambiar Contraseña
         </button>

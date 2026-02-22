@@ -38,6 +38,8 @@ export class PosV2DashboardComponent implements OnInit, OnDestroy {
   mostrandoLiquidacion = false;
   liquidacionData: LiquidacionCajaData | null = null;
   historyIdForClose: number | null = null;
+  /** True si se va a cerrar el turno antes del horario programado (para mostrar advertencia). */
+  closingBeforeScheduledTime = false;
 
   /** Estadísticas del día (Total Operaciones). */
   stats: ClosedTransactionStats | null = null;
@@ -128,6 +130,51 @@ export class PosV2DashboardComponent implements OnInit, OnDestroy {
     return typeName;
   }
 
+  /**
+   * Comprueba si la hora actual ya llegó o pasó la hora de fin del turno (validación local).
+   * Si el backend devuelve canCloseShiftNow false por timezone o precisión, permitir cerrar cuando localmente ya es hora.
+   */
+  private isShiftEndTimeReached(params: ParamVenta): boolean {
+    const history = params?.dshiftConnectionHistory;
+    const shift = history?.shift;
+    if (!shift) return false;
+    const shiftType = shift.shiftType as { endTime?: string } | undefined;
+    const endTimeStr = shift.endTime || shiftType?.endTime || '';
+    if (!endTimeStr) return true;
+    const actualShiftDate = history?.actualShiftDate;
+    const dateStr = actualShiftDate ? String(actualShiftDate).trim() : '';
+    const today = new Date();
+    const year = dateStr ? parseInt(dateStr.slice(0, 4), 10) : today.getFullYear();
+    const month = dateStr ? parseInt(dateStr.slice(5, 7), 10) - 1 : today.getMonth();
+    const day = dateStr ? parseInt(dateStr.slice(8, 10), 10) : today.getDate();
+    const parsed = this.parseTimeToMinutes(endTimeStr);
+    if (parsed == null) return true;
+    const [endHours, endMinutes] = parsed;
+    const endDate = new Date(year, month, day, endHours, endMinutes, 59, 999);
+    return today.getTime() >= endDate.getTime();
+  }
+
+  /** Parsea "22:00", "10:00 PM", "10:00:00 PM" a [hours, minutes] en 24h. */
+  private parseTimeToMinutes(timeStr: string): [number, number] | null {
+    const s = timeStr.trim();
+    const match24 = s.match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?\s*$/);
+    if (match24) {
+      const h = parseInt(match24[1], 10);
+      const m = parseInt(match24[2], 10);
+      if (h >= 0 && h <= 23 && m >= 0 && m <= 59) return [h, m];
+    }
+    const match12 = s.match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(AM|PM)$/i);
+    if (match12) {
+      let h = parseInt(match12[1], 10);
+      const m = parseInt(match12[2], 10);
+      const pm = match12[4].toUpperCase() === 'PM';
+      if (h === 12) h = pm ? 12 : 0;
+      else if (pm) h += 12;
+      if (h >= 0 && h <= 23 && m >= 0 && m <= 59) return [h, m];
+    }
+    return null;
+  }
+
   formatCurrency(amount: number, currency?: string): string {
     return new Intl.NumberFormat('es-CO', { style: 'currency', currency: currency || 'COP' }).format(amount ?? 0);
   }
@@ -141,7 +188,7 @@ export class PosV2DashboardComponent implements OnInit, OnDestroy {
           this.notificationService.warn('No hay un turno activo para terminar');
           return of(null);
         }
-        if (params?.canCloseShiftNow === false) {
+        if (params?.canCloseShiftNow === false && !this.isShiftEndTimeReached(params)) {
           this.notificationService.warn(
             'No se puede cerrar el turno antes de la hora de fin. Espere a que finalice el turno.'
           );
@@ -149,7 +196,7 @@ export class PosV2DashboardComponent implements OnInit, OnDestroy {
         }
         this.loadingCash = true;
         return this.cashRegisterService.getCashInfoByShiftHistory(historyId).pipe(
-          switchMap(data => of({ data, historyId, history }))
+          switchMap(data => of({ data, historyId, history, params }))
         );
       }),
       finalize(() => {
@@ -162,7 +209,7 @@ export class PosV2DashboardComponent implements OnInit, OnDestroy {
     ).subscribe({
       next: result => {
         if (result == null) return;
-        const { data, historyId, history } = result;
+        const { data, historyId, history, params } = result;
         this.liquidacionData = {
           registers: data.registers,
           total: data.total,
@@ -170,6 +217,7 @@ export class PosV2DashboardComponent implements OnInit, OnDestroy {
           shiftInfo: this.buildShiftInfoForReport(history)
         };
         this.historyIdForClose = historyId;
+        this.closingBeforeScheduledTime = !this.isShiftEndTimeReached(params);
         this.mostrandoLiquidacion = true;
       }
     });
@@ -196,6 +244,7 @@ export class PosV2DashboardComponent implements OnInit, OnDestroy {
           this.mostrandoLiquidacion = false;
           this.liquidacionData = null;
           this.historyIdForClose = null;
+          this.closingBeforeScheduledTime = false;
           window.dispatchEvent(new Event('shiftClosed'));
           if (dataToReport) {
             this.abrirReporteCierreTurno(dataToReport);
