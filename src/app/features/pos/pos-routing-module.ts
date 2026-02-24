@@ -22,10 +22,7 @@ const routes: Routes = [
     path: 'registrar-salida',
     component: RegistrarSalidaComponent
   },
-  {
-    path: 'mapa-puestos',
-    component: ParkingMapComponent
-  },
+
   {
     path: 'vehiculos-parqueadero',
     component: VehiculosParqueaderoComponent

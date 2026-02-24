@@ -115,6 +115,20 @@ export class ClosedTransactionService {
   }
 
   /**
+   * Lista transacciones cerradas del día de hoy en zona horaria de la empresa.
+   * Usa GET /closed-transactions/today para que "hoy" sea correcto según la empresa.
+   */
+  getToday(params?: { page?: number; size?: number }): Observable<{ content: ClosedTransaction[]; totalElements: number; totalPages: number }> {
+    let httpParams = new HttpParams();
+    if (params?.page != null) httpParams = httpParams.set('page', String(params.page));
+    if (params?.size != null) httpParams = httpParams.set('size', String(params.size));
+    return this.http.get<{ content: ClosedTransaction[]; totalElements: number; totalPages: number }>(
+      `${this.apiUrl}/today`,
+      { params: httpParams }
+    );
+  }
+
+  /**
    * Obtiene los parámetros de configuración para un servicio específico.
    * Incluye información completa del turno activo (ShiftConnectionHistory con Shift y ShiftType).
    * Usa sessionStorage para no consultar el API en cada llamada (se invalida al cerrar sesión).

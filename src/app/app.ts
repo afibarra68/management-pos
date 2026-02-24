@@ -1,4 +1,4 @@
-import { Component, signal, inject, afterNextRender, computed, ChangeDetectionStrategy, OnDestroy, OnInit } from '@angular/core';
+import { Component, signal, inject, afterNextRender, computed, ChangeDetectionStrategy, OnDestroy, OnInit, ChangeDetectorRef } from '@angular/core';
 import { RouterOutlet, Router, NavigationEnd } from '@angular/router';
 import { SidebarComponent } from './core/components/sidebar/sidebar.component';
 import { UserControlComponent } from './core/components/user-control/user-control.component';
@@ -25,6 +25,7 @@ export class App implements OnInit, OnDestroy {
   private authService = inject(AuthService);
   private sidebarService = inject(SidebarService);
   private requirePasswordChange = inject(RequirePasswordChangeService);
+  private cdr = inject(ChangeDetectorRef);
 
   // Modo oscuro global
   darkMode = signal(false);
@@ -176,8 +177,13 @@ export class App implements OnInit, OnDestroy {
         this.loadCompanyName();
       };
 
+      const refreshSidebarAndDetect = () => {
+        updateSidebarState();
+        this.cdr.markForCheck();
+      };
+
       // Verificar estado inicial
-      updateSidebarState();
+      refreshSidebarAndDetect();
 
       // Cargar preferencia de modo oscuro
       this.loadDarkModePreference();
@@ -195,9 +201,11 @@ export class App implements OnInit, OnDestroy {
           distinctUntilChanged((prev: NavigationEnd, curr: NavigationEnd) => prev.url === curr.url)
         )
         .subscribe(() => {
-          updateSidebarState();
+          refreshSidebarAndDetect();
           // Cerrar el menú móvil al navegar
           this.sidebarService.closeMobileMenu();
+          // Tras login, el estado (auth/url) puede quedar listo en el siguiente tick; re-aplicar para que el sidebar se muestre correctamente
+          setTimeout(() => refreshSidebarAndDetect(), 0);
         });
     });
   }

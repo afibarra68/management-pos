@@ -258,9 +258,15 @@ export class OpenTransactionService {
     );
   }
 
-  findByVehiclePlate(vehiclePlate: string): Observable<OpenTransaction> {
+  /**
+   * Busca una transacción por placa.
+   * @param vehiclePlate Placa del vehículo
+   * @param forExit true = registro de salida (OPEN); false = consulta para ingreso/autocompletar (última CLOSED)
+   */
+  findByVehiclePlate(vehiclePlate: string, forExit: boolean = true): Observable<OpenTransaction> {
+    const plate = (vehiclePlate || '').trim().toUpperCase();
     return this.http.get<OpenTransaction>(`${this.apiUrl}/by-plate`, {
-      params: { vehiclePlate }
+      params: { vehiclePlate: plate, forExit: forExit ? 'true' : 'false' }
     });
   }
 

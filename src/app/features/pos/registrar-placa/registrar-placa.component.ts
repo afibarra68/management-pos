@@ -552,7 +552,7 @@ export class RegistrarPlacaComponent implements OnInit, OnDestroy {
       return;
     }
 
-    this.openTransactionService.findByVehiclePlate(vehiclePlate)
+    this.openTransactionService.findByVehiclePlate(vehiclePlate, false)
       .pipe(
         takeUntil(this.destroy$),
         catchError(() => {

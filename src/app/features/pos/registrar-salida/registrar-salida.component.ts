@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, signal, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -6,13 +6,14 @@ import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { MessageModule } from 'primeng/message';
 import { DialogModule } from 'primeng/dialog';
+import { TableModule } from 'primeng/table';
 import { FormsModule } from '@angular/forms';
 import { ToastModule } from 'primeng/toast';
 import { SharedModule } from '../../../shared/shared-module';
 import { OpenTransactionService, ParamVenta } from '../../../core/services/open-transaction.service';
 import { OpenTransaction } from '../../../core/services/open-transaction.service';
 import { EnumResource } from '../../../core/services/enum.service';
-import { ClosedTransactionService, FinalizeTransaction } from '../../../core/services/closed-transaction.service';
+import { ClosedTransactionService, ClosedTransaction, FinalizeTransaction } from '../../../core/services/closed-transaction.service';
 import { MessageService } from 'primeng/api';
 import { NotificationService } from '../../../core/services/notification.service';
 import { PrintService } from '../../../core/services/print.service';
@@ -32,6 +33,7 @@ import { Subject, takeUntil, finalize, catchError, of } from 'rxjs';
     InputTextModule,
     MessageModule,
     DialogModule,
+    TableModule,
     SharedModule,
     ToastModule
   ],
@@ -70,6 +72,13 @@ export class RegistrarSalidaComponent implements OnInit, OnDestroy {
   pendingBuildTicket: any = null;
   pendingTotalAmount: number | null = null;
 
+  // Reimprimir tirilla de salida (como en vehiculos-parqueadero / pos-dashboard)
+  reprintingId = signal<number | null>(null);
+  reprintList: ClosedTransaction[] = [];
+  loadingReprint = false;
+  reprintError: string | null = null;
+  reprintPlate = '';
+
   constructor() {
     this.form = this.fb.group({
       vehiclePlate: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(8)]]
@@ -78,7 +87,6 @@ export class RegistrarSalidaComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.loadParams();
-    this.loadCurrentShift();
   }
 
   ngOnDestroy(): void {
@@ -127,7 +135,10 @@ export class RegistrarSalidaComponent implements OnInit, OnDestroy {
         next: (params: ParamVenta | null) => {
           if (params) {
             this.params = params;
+            this.loadCurrentShift();
           }
+          // Cargar salidas recientes después de tener params/sesión para no quedar en Cargando
+          this.loadUltimasReimpresiones();
         }
       });
   }
@@ -189,7 +200,7 @@ export class RegistrarSalidaComponent implements OnInit, OnDestroy {
 
     const placa = this.form.value.vehiclePlate.toUpperCase().trim();
 
-    this.openTransactionService.findByVehiclePlate(placa)
+    this.openTransactionService.findByVehiclePlate(placa, true)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (transaction) => {
@@ -346,6 +357,7 @@ export class RegistrarSalidaComponent implements OnInit, OnDestroy {
     if (ticket) {
       this.printTicket(ticket);
     }
+    this.loadUltimasReimpresiones();
   }
 
   /**
@@ -356,6 +368,7 @@ export class RegistrarSalidaComponent implements OnInit, OnDestroy {
     this.pendingBuildTicket = null;
     this.pendingTotalAmount = null;
     this.cdr.markForCheck();
+    this.loadUltimasReimpresiones();
   }
 
   /**
@@ -372,6 +385,169 @@ export class RegistrarSalidaComponent implements OnInit, OnDestroy {
         next: () => { },
         error: (err) => { }
       });
+  }
+
+  // --- Reimprimir tirilla de salida (misma lógica que pos-dashboard / vehiculos-parqueadero) ---
+
+  /**
+   * Carga las últimas 10 transacciones cerradas de la empresa (sin consultar).
+   * Filtro solo por empresa. Opcional: filtrar por placa en el cliente.
+   */
+  loadUltimasReimpresiones(): void {
+    const companyId = this.authService.getUserData()?.companyId ?? this.params?.collaboratorId;
+    if (companyId == null) {
+      this.reprintError = 'No se pudo obtener la empresa del usuario.';
+      this.loadingReprint = false;
+      this.cdr.markForCheck();
+      return;
+    }
+
+    this.loadingReprint = true;
+    this.reprintError = null;
+    this.cdr.markForCheck();
+
+    this.closedTransactionService.getByDateRange({
+      companyCompanyId: companyId,
+      page: 0,
+      size: 10
+    })
+      .pipe(
+        takeUntil(this.destroy$),
+        catchError((err: unknown) => {
+          const msg = (err as { error?: { readableMsg?: string; message?: string }; message?: string })?.error?.readableMsg
+            ?? (err as { error?: { message?: string } })?.error?.message
+            ?? (err as { message?: string })?.message
+            ?? 'Error al cargar transacciones';
+          this.reprintError = msg;
+          this.reprintList = [];
+          return of({ content: [] as ClosedTransaction[], totalElements: 0, totalPages: 0 });
+        }),
+        finalize(() => {
+          this.loadingReprint = false;
+          this.cdr.markForCheck();
+        })
+      )
+      .subscribe({
+        next: (res) => {
+          const list = res?.content ?? [];
+          this.reprintList = Array.isArray(list) ? list : [];
+          this.reprintError = null;
+          this.cdr.markForCheck();
+        }
+      });
+  }
+
+  /**
+   * Lista a mostrar: últimas 10 filtradas por placa (opcional) en el cliente.
+   */
+  get reprintListFiltered(): ClosedTransaction[] {
+    const plate = this.reprintPlate?.trim().toUpperCase() || '';
+    if (!plate) return this.reprintList;
+    return this.reprintList.filter(tx =>
+      (tx.vehiclePlate ?? '').toUpperCase().includes(plate)
+    );
+  }
+
+  /**
+   * Reimprime la tirilla de salida de una transacción cerrada (igual que en pos-dashboard).
+   */
+  reimprimirTicketSalida(closedTransactionId: number): void {
+    if (!closedTransactionId) {
+      this.notificationService.error('ID de transacción inválido');
+      return;
+    }
+
+    this.reprintingId.set(closedTransactionId);
+    this.cdr.markForCheck();
+
+    this.closedTransactionService.getReprintTicketData(closedTransactionId)
+      .pipe(
+        takeUntil(this.destroy$),
+        catchError((err: unknown) => {
+          this.handleError(err, 'Error al obtener datos para reimprimir');
+          return of(null);
+        }),
+        finalize(() => {
+          this.reprintingId.set(null);
+          this.cdr.markForCheck();
+        })
+      )
+      .subscribe({
+        next: (buildTicket) => {
+          if (!buildTicket?.template) {
+            this.notificationService.error('No se recibieron datos de impresión');
+            return;
+          }
+          this.printService.printTicket(buildTicket)
+            .pipe(
+              takeUntil(this.destroy$),
+              catchError((printErr: unknown) => {
+                const msg = (printErr as { error?: string; message?: string })?.error
+                  ?? (printErr as { message?: string })?.message
+                  ?? 'Error al enviar a la impresora';
+                this.notificationService.error(msg);
+                return of(null);
+              })
+            )
+            .subscribe({
+              next: () => this.notificationService.success('Ticket reimpreso y enviado a la impresora correctamente')
+            });
+        }
+      });
+  }
+
+  /**
+   * Fecha / Hora salida: combina endDate y endTime.
+   * endTime puede venir como "09:13:32 PM" (12h) o "21:13:32" (24h).
+   */
+  formatEndDateTime(endDate: string | undefined | null, endTime: string | undefined | null): string {
+    if (!endDate) return 'N/A';
+    const timePart = (endTime ?? '').trim();
+    const dateFormatted = this.formatDateOnly(endDate);
+    if (!timePart) return dateFormatted;
+    if (/AM|PM/i.test(timePart)) {
+      return `${dateFormatted} ${timePart}`;
+    }
+    const dateTimeStr = `${endDate}T${timePart.length <= 5 ? timePart + ':00' : timePart}`;
+    try {
+      const d = new Date(dateTimeStr);
+      if (!isNaN(d.getTime())) {
+        return dateFormatted + ' ' + d.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
+      }
+    } catch {
+      return `${dateFormatted} ${timePart}`;
+    }
+    return `${dateFormatted} ${timePart}`;
+  }
+
+  private formatDateOnly(value: string): string {
+    if (!value) return 'N/A';
+    try {
+      const d = new Date(value + 'T12:00:00');
+      if (!isNaN(d.getTime())) {
+        return d.toLocaleDateString('es-CO', { day: '2-digit', month: '2-digit', year: 'numeric' });
+      }
+    } catch {
+      return value;
+    }
+    return value;
+  }
+
+  formatDateReprint(value: string | undefined | null): string {
+    if (!value) return 'N/A';
+    try {
+      const d = new Date(value);
+      if (isNaN(d.getTime())) return value;
+      return d.toLocaleDateString('es-CO', { day: '2-digit', month: '2-digit', year: 'numeric' })
+        + ' ' + d.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
+    } catch {
+      return value;
+    }
+  }
+
+  formatCurrencyReprint(amount: number | undefined | null, currency?: number): string {
+    if (amount == null) return 'N/A';
+    return '$ ' + Number(amount).toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
   }
 
 }

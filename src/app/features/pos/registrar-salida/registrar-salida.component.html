@@ -58,6 +58,69 @@
         </button>
       </div>
     </form>
+
+    <div class="form-container reprint-block">
+      <div class="form-block reprint-results">
+        <div class="block-header">
+          <span class="block-title">Salidas Recientes</span>
+        </div>
+        <div class="block-content">
+          <!-- Filtro de consulta dentro del modal de lista -->
+          <div class="reprint-filter">
+            <div class="form-group">
+              <label for="reprintPlate">Filtrar por placa (opcional)</label>
+              <input id="reprintPlate" type="text" [(ngModel)]="reprintPlate" maxlength="8"
+                placeholder="ABC123" (input)="reprintPlate = reprintPlate.toUpperCase()">
+            </div>
+            <button type="button" class="btn-primary" (click)="loadUltimasReimpresiones()"
+              [disabled]="loadingReprint">
+              {{ loadingReprint ? 'Cargando...' : 'Actualizar' }}
+            </button>
+          </div>
+          @if (reprintError) {
+            <small class="error-text">{{ reprintError }}</small>
+          }
+          @if (loadingReprint && reprintList.length === 0) {
+            <p class="reprint-loading"><i class="pi pi-spin pi-spinner"></i> Cargando...</p>
+          } @else {
+            <p-table [value]="reprintListFiltered" styleClass="p-datatable-sm reprint-table"
+              [tableStyle]="{ 'min-width': '100%' }">
+              <ng-template pTemplate="header">
+                <tr>
+                  <th>Placa</th>
+                  <th>Fecha / Hora salida</th>
+                  <th>Tiempo estacionado</th>
+                  <th>Monto</th>
+                  <th style="width: 120px;">Acciones</th>
+                </tr>
+              </ng-template>
+              <ng-template pTemplate="body" let-tx>
+                <tr>
+                  <td><strong>{{ tx.vehiclePlate || 'N/A' }}</strong></td>
+                  <td>{{ formatEndDateTime(tx.endDate, tx.endTime) || formatDateReprint(tx.operationDate) }}</td>
+                  <td>{{ tx.timeElapsed ?? 'N/A' }}</td>
+                  <td>{{ formatCurrencyReprint(tx.totalAmount, tx.currency) }}</td>
+                  <td>
+                    <p-button icon="pi pi-print" label="Reimprimir" [outlined]="true" size="small"
+                      (onClick)="reimprimirTicketSalida(tx.closedTransactionId!)"
+                      [loading]="reprintingId() === tx.closedTransactionId"
+                      [disabled]="reprintingId() !== null" styleClass="p-button-sm">
+                    </p-button>
+                  </td>
+                </tr>
+              </ng-template>
+              <ng-template pTemplate="emptymessage">
+                <tr>
+                  <td colspan="5" class="text-center">
+                    {{ reprintPlate.trim() ? 'Ninguna transacción coincide con la placa.' : 'No hay transacciones cerradas.' }}
+                  </td>
+                </tr>
+              </ng-template>
+            </p-table>
+          }
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- Modal de Confirmación -->
