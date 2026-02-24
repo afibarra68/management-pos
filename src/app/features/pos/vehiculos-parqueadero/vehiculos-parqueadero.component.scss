@@ -772,3 +772,87 @@
     }
   }
 }
+
+/* Modal Editar operación */
+.edit-operation-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+
+  .edit-form-row {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+
+    &.edit-form-row-half {
+      flex-direction: row;
+      gap: 1rem;
+
+      .edit-form-field {
+        flex: 1;
+        min-width: 0;
+      }
+    }
+  }
+
+  .edit-form-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+
+    label {
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--text-color, #333);
+    }
+
+    input[type="text"],
+    input[type="date"],
+    input[type="time"],
+    select,
+    textarea {
+      width: 100%;
+      padding: 0.5rem 0.75rem;
+      border: 1px solid var(--surface-border, #dee2e6);
+      border-radius: 6px;
+      font-size: 0.875rem;
+      box-sizing: border-box;
+
+      &:focus {
+        outline: none;
+        border-color: var(--primary-color, #3b82f6);
+        box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+      }
+    }
+
+    select {
+      cursor: pointer;
+      appearance: auto;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 60px;
+    }
+
+    .edit-form-error {
+      font-size: 0.75rem;
+      color: var(--red-500, #ef4444);
+    }
+
+    &.edit-form-checkbox {
+      flex-direction: row;
+      align-items: center;
+      gap: 0.5rem;
+
+      label {
+        margin-bottom: 0;
+        cursor: pointer;
+      }
+    }
+  }
+}
+
+:host ::ng-deep .edit-operation-dialog .p-dialog-content {
+  padding-bottom: 0.5rem;
+}

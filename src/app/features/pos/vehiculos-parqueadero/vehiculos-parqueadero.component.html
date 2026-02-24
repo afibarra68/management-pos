@@ -114,6 +114,9 @@
             </p-tag>
           </td>
           <td>
+            <p-button label="Editar" icon="pi pi-pencil" (onClick)="openEditModal(vehicle)"
+              styleClass="p-button-sm p-button-outlined p-button-info p-mr-1">
+            </p-button>
             <p-button label="Reimprimir" icon="pi pi-print" (onClick)="reprintTicket(vehicle)"
               [loading]="reprintingId() === vehicle.openTransactionId" [disabled]="reprintingId() !== null"
               styleClass="p-button-sm p-button-outlined">
@@ -137,3 +140,54 @@
   </p-card>
   }
 </div>
+
+<!-- Modal editar operación -->
+<p-dialog header="Editar operación" [visible]="editModalVisible()" [modal]="true" [style]="{ width: '420px' }"
+  [closable]="true" (onHide)="closeEditModal()" [closeOnEscape]="true" [draggable]="false" [resizable]="false"
+  styleClass="edit-operation-dialog">
+  <form [formGroup]="editForm" class="edit-operation-form">
+    <div class="edit-form-field">
+      <label for="editPlate">Placa *</label>
+      <input id="editPlate" type="text" pInputText formControlName="vehiclePlate" maxlength="8"
+        (input)="editForm.get('vehiclePlate')?.setValue(($any($event.target).value || '').toUpperCase(), { emitEvent: true })">
+      @if (editForm.get('vehiclePlate')?.invalid && editForm.get('vehiclePlate')?.touched) {
+        <small class="edit-form-error">Placa requerida (2-8 caracteres)</small>
+      }
+    </div>
+    <div class="edit-form-field">
+      <label for="editTipo">Tipo de vehículo *</label>
+      <select id="editTipo" formControlName="tipoVehiculoId">
+        <option value="">Seleccione...</option>
+        @for (opt of editTipoOptions; track opt.value) {
+          <option [value]="opt.value">{{ opt.label }}</option>
+        }
+      </select>
+      @if (editForm.get('tipoVehiculoId')?.invalid && editForm.get('tipoVehiculoId')?.touched) {
+        <small class="edit-form-error">Seleccione el tipo de vehículo</small>
+      }
+    </div>
+    <div class="edit-form-row edit-form-row-half">
+      <div class="edit-form-field">
+        <label for="editStartDay">Fecha ingreso *</label>
+        <input id="editStartDay" type="date" formControlName="startDay">
+      </div>
+      <div class="edit-form-field">
+        <label for="editStartTime">Hora ingreso</label>
+        <input id="editStartTime" type="time" formControlName="startTime">
+      </div>
+    </div>
+    <div class="edit-form-field">
+      <label for="editNotes">Notas</label>
+      <textarea id="editNotes" pInputText formControlName="notes" rows="2"></textarea>
+    </div>
+    <div class="edit-form-field edit-form-checkbox">
+      <p-checkbox formControlName="bySubscription" [binary]="true" inputId="editBySub"></p-checkbox>
+      <label for="editBySub">Por suscripción</label>
+    </div>
+  </form>
+  <ng-template pTemplate="footer">
+    <p-button label="Cancelar" icon="pi pi-times" (onClick)="closeEditModal()" styleClass="p-button-text"></p-button>
+    <p-button label="Guardar" icon="pi pi-check" (onClick)="saveEdit()" [loading]="savingEdit()"
+      [disabled]="editForm.invalid || savingEdit()" styleClass="p-button-primary"></p-button>
+  </ng-template>
+</p-dialog>

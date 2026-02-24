@@ -1,17 +1,21 @@
 import { Component, OnInit, OnDestroy, inject, signal, computed, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CardModule } from 'primeng/card';
 import { TableModule } from 'primeng/table';
 import { MessageModule } from 'primeng/message';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { TagModule } from 'primeng/tag';
+import { DialogModule } from 'primeng/dialog';
+import { CheckboxModule } from 'primeng/checkbox';
 import { OpenTransactionService, OpenTransaction, ParamVenta } from '../../../core/services/open-transaction.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { EnumService, EnumResource } from '../../../core/services/enum.service';
 import { ShiftService, DShiftAssignment } from '../../../core/services/shift.service';
 import { ClosedTransactionService } from '../../../core/services/closed-transaction.service';
 import { PrintService } from '../../../core/services/print.service';
+import { UtilsService } from '../../../core/services/utils.service';
 import { Subject, takeUntil, finalize, catchError, of } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
@@ -21,12 +25,15 @@ import { environment } from '../../../environments/environment';
   standalone: true,
   imports: [
     CommonModule,
+    ReactiveFormsModule,
     CardModule,
     TableModule,
     MessageModule,
     ButtonModule,
     InputTextModule,
-    TagModule
+    TagModule,
+    DialogModule,
+    CheckboxModule
   ],
   templateUrl: './vehiculos-parqueadero.component.html',
   styleUrls: ['./vehiculos-parqueadero.component.scss'],
@@ -40,6 +47,8 @@ export class VehiculosParqueaderoComponent implements OnInit, OnDestroy {
   private authService = inject(AuthService);
   private enumService = inject(EnumService);
   private shiftService = inject(ShiftService);
+  private utilsService = inject(UtilsService);
+  private fb = inject(FormBuilder);
   private cdr = inject(ChangeDetectorRef);
 
   loading = signal(false);
@@ -60,6 +69,12 @@ export class VehiculosParqueaderoComponent implements OnInit, OnDestroy {
   paginatorRows = signal(10);
   private searchTerm$ = new Subject<string>();
 
+  /** Modal editar operación */
+  editModalVisible = signal(false);
+  vehicleToEdit = signal<OpenTransaction | null>(null);
+  savingEdit = signal(false);
+  editForm!: FormGroup;
+
   sellerId = computed(() => {
     const userData = this.authService.getUserData();
     return userData?.appUserId || null;
@@ -72,6 +87,25 @@ export class VehiculosParqueaderoComponent implements OnInit, OnDestroy {
     const last = d?.lastName ?? '';
     return `${first} ${last}`.trim() || 'Usuario';
   });
+
+  constructor() {
+    this.editForm = this.fb.group({
+      vehiclePlate: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(8)]],
+      tipoVehiculoId: ['', Validators.required],
+      startDay: ['', Validators.required],
+      startTime: [''],
+      notes: [''],
+      bySubscription: [false]
+    });
+  }
+
+  /** Opciones para el select de tipo de vehículo en el modal editar. */
+  get editTipoOptions(): { label: string; value: string }[] {
+    return this.vehicleTypeEnums().map(e => ({
+      label: e.description || e.id || '',
+      value: e.id || ''
+    })).filter(o => o.value);
+  }
 
   ngOnInit(): void {
     this.loadVehicleTypeEnums();
@@ -357,6 +391,118 @@ export class VehiculosParqueaderoComponent implements OnInit, OnDestroy {
             });
         }
       });
+  }
+
+  /** Abre el modal de edición con los datos del vehículo. */
+  openEditModal(vehicle: OpenTransaction): void {
+    const id = this.getVehicleTypeId(vehicle);
+    this.vehicleToEdit.set(vehicle);
+    const startDay = vehicle.startDay || vehicle.operationDate || '';
+    const dayForInput = this.toDateInputValue(startDay);
+    const startTime = vehicle.startTime || '';
+    const timeForInput = this.toTimeInputValue(startTime);
+    this.editForm.patchValue({
+      vehiclePlate: (vehicle.vehiclePlate || '').trim(),
+      tipoVehiculoId: id || '',
+      startDay: dayForInput,
+      startTime: timeForInput,
+      notes: vehicle.notes || '',
+      bySubscription: !!vehicle.bySubscription
+    });
+    this.editModalVisible.set(true);
+    this.cdr.markForCheck();
+  }
+
+  /** Cierra el modal de edición sin guardar. */
+  closeEditModal(): void {
+    this.editModalVisible.set(false);
+    this.vehicleToEdit.set(null);
+    this.editForm.reset({ vehiclePlate: '', tipoVehiculoId: '', startDay: '', startTime: '', notes: '', bySubscription: false });
+    this.cdr.markForCheck();
+  }
+
+  /** Convierte fecha string (YYYY-MM-DD o ISO) a valor para input[type=date]. */
+  private toDateInputValue(dateStr: string): string {
+    if (!dateStr || !dateStr.trim()) return '';
+    const parsed = this.parseDateAsLocal(dateStr);
+    if (!parsed) return dateStr.substring(0, 10);
+    const y = parsed.getFullYear();
+    const m = String(parsed.getMonth() + 1).padStart(2, '0');
+    const d = String(parsed.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  }
+
+  /** Convierte hora string a HH:mm para input[type=time]. */
+  private toTimeInputValue(timeStr: string): string {
+    if (!timeStr || !timeStr.trim()) return '';
+    const match = timeStr.match(/(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(AM|PM)?/i);
+    if (!match) return '';
+    let h = parseInt(match[1], 10);
+    const min = match[2];
+    const sec = match[3] || '00';
+    const ampm = match[4];
+    if (ampm) {
+      if (ampm.toUpperCase() === 'PM' && h !== 12) h += 12;
+      else if (ampm.toUpperCase() === 'AM' && h === 12) h = 0;
+    }
+    return `${String(h).padStart(2, '0')}:${min}:${sec}`.substring(0, 5);
+  }
+
+  /** Guarda los cambios de la operación tras confirmación. */
+  saveEdit(): void {
+    const vehicle = this.vehicleToEdit();
+    if (!vehicle?.openTransactionId) return;
+    if (this.editForm.invalid) {
+      this.editForm.markAllAsTouched();
+      this.cdr.markForCheck();
+      return;
+    }
+    const v = this.editForm.value;
+    this.utilsService.confirm({
+      message: '¿Confirma guardar los cambios en esta operación?',
+      header: 'Confirmar edición'
+    }).pipe(takeUntil(this.destroy$)).subscribe(confirmed => {
+      if (!confirmed) return;
+      this.savingEdit.set(true);
+      this.cdr.markForCheck();
+      const payload: OpenTransaction = {
+        ...vehicle,
+        openTransactionId: vehicle.openTransactionId,
+        vehiclePlate: (v.vehiclePlate || '').trim().toUpperCase(),
+        tipoVehiculo: v.tipoVehiculoId ? { id: v.tipoVehiculoId, description: this.editTipoOptions.find(o => o.value === v.tipoVehiculoId)?.label ?? '' } : undefined,
+        basicVehicleType: v.tipoVehiculoId ? { id: v.tipoVehiculoId, description: this.editTipoOptions.find(o => o.value === v.tipoVehiculoId)?.label ?? '' } : undefined,
+        startDay: v.startDay || undefined,
+        startTime: v.startTime ? (v.startTime.length >= 5 ? v.startTime + ':00' : v.startTime) : undefined,
+        operationDate: v.startDay && v.startTime
+          ? `${v.startDay} ${String(v.startTime).substring(0, 5)}`
+          : vehicle.operationDate,
+        notes: v.notes ?? undefined,
+        bySubscription: !!v.bySubscription
+      };
+      this.openTransactionService.update(payload)
+        .pipe(
+          takeUntil(this.destroy$),
+          finalize(() => {
+            this.savingEdit.set(false);
+            this.cdr.markForCheck();
+          }),
+          catchError((err: unknown) => {
+            const msg = (err as { error?: { readableMsg?: string; message?: string } })?.error?.readableMsg
+              ?? (err as { error?: { message?: string } })?.error?.message ?? 'Error al actualizar';
+            this.error.set(msg);
+            this.cdr.markForCheck();
+            return of(null);
+          })
+        )
+        .subscribe(updated => {
+          if (updated) {
+            this.utilsService.showSuccess('Operación actualizada correctamente');
+            this.closeEditModal();
+            this.loadPage(Math.floor(this.paginatorFirst() / this.paginatorRows()), this.paginatorRows());
+            this.loadCountByType();
+          }
+        });
+    });
   }
 
   getVehicleTypeDisplay(enumResource: EnumResource | string | null | undefined): string {
