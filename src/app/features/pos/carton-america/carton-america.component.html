@@ -89,7 +89,7 @@
       </ng-template>
       <ng-template pTemplate="summary">
         <div class="table-actions">
-          <p-button icon="pi pi-file-pdf" label="Exportar" [disabled]="loading() || filteredList().length === 0"
+          <p-button icon="pi pi-file-pdf" label="Exportar PDF" [disabled]="loading() || filteredList().length === 0"
             (onClick)="exportToPdf()" styleClass="p-button-secondary">
           </p-button>
         </div>

@@ -1,15 +1,22 @@
-import { Component, OnInit, inject, signal, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, signal, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators, AbstractControl } from '@angular/forms';
 import { CardModule } from 'primeng/card';
 import { TableModule } from 'primeng/table';
 import { MessageModule } from 'primeng/message';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
-import { OpenTransactionService, CartonAmericaOrdenLlegada } from '../../../core/services/open-transaction.service';
+import { InputTextModule } from 'primeng/inputtext';
+import { CheckboxModule } from 'primeng/checkbox';
+import { TooltipModule } from 'primeng/tooltip';
+import { OpenTransactionService, CartonAmericaOrdenLlegada, OpenTransaction } from '../../../core/services/open-transaction.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { NotificationService } from '../../../core/services/notification.service';
-import { finalize } from 'rxjs/operators';
+import { PdfExportService } from '../../../core/services/pdf-export.service';
+import { EnumService, EnumResource } from '../../../core/services/enum.service';
+import { UtilsService } from '../../../core/services/utils.service';
+import { Subject } from 'rxjs';
+import { finalize, takeUntil } from 'rxjs/operators';
 
 @Component({
   selector: 'app-orden-llegada-carton-america',
@@ -17,20 +24,30 @@ import { finalize } from 'rxjs/operators';
   imports: [
     CommonModule,
     FormsModule,
+    ReactiveFormsModule,
     CardModule,
     TableModule,
     MessageModule,
     ButtonModule,
-    DialogModule
+    DialogModule,
+    InputTextModule,
+    CheckboxModule,
+    TooltipModule
   ],
   templateUrl: './orden-llegada-carton-america.component.html',
   styleUrls: ['./orden-llegada-carton-america.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class OrdenLlegadaCartonAmericaComponent implements OnInit {
+export class OrdenLlegadaCartonAmericaComponent implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
   private openTransactionService = inject(OpenTransactionService);
   private authService = inject(AuthService);
   private notificationService = inject(NotificationService);
+  private pdfExportService = inject(PdfExportService);
+  private enumService = inject(EnumService);
+  private utilsService = inject(UtilsService);
+  private cdr = inject(ChangeDetectorRef);
+  private fb = inject(FormBuilder);
 
   loading = signal(false);
   saving = signal(false);
@@ -43,14 +60,251 @@ export class OrdenLlegadaCartonAmericaComponent implements OnInit {
   /** Nombre del usuario actual para la barra de datos */
   userName = signal<string>('');
 
+  /** Separa las notas por '/' para visualización estructurada. */
+  getNotesParts(notes: string | undefined): string[] {
+    if (!notes || !notes.trim()) return [];
+    return notes.split('/').map(p => p.trim()).filter(p => p.length > 0);
+  }
+
+  /** Notas ligeras para columna Detalle: primeras partes, truncadas. */
+  getNotesLight(notes: string | undefined, maxParts = 2, maxLen = 40): string {
+    const parts = this.getNotesParts(notes);
+    if (parts.length === 0) return '-';
+    const joined = parts.slice(0, maxParts).join(' · ');
+    return joined.length > maxLen ? joined.slice(0, maxLen) + '…' : joined;
+  }
+
+  /** Detalle en dos líneas: L1 Carga (proveedor, cantidad, ciudad), L2 Conductor (documento, nombre, tel). */
+  getNotesTwoLines(notes: string | undefined): { line1: string; line2: string } {
+    const parts = this.getNotesParts(notes);
+    if (parts.length === 0) return { line1: '-', line2: '' };
+    const line1Parts = [parts[0], parts[1], parts[2]].filter(p => p);
+    const line1 = line1Parts.length ? line1Parts.join(' · ') : '-';
+    const docPart = parts[3] || '';
+    const line2Parts = [docPart, parts[4], parts[5]].filter(p => p);
+    const line2 = line2Parts.length ? line2Parts.join(' · ') : '';
+    return { line1: line1 || '-', line2 };
+  }
+
+  /** Estructura sectorizada: proveedor, cantidad paquetes, ciudad, tipo documento, documento conductor, nombre, teléfono. */
+  getDetalleSectores(notes: string | undefined): {
+    proveedor: string;
+    cantidadPaquetes: string;
+    ciudad: string;
+    tipoDocumento: string;
+    documentoConductor: string;
+    nombreConductor: string;
+    telefono: string;
+    rawParts: string[];
+  } {
+    const parts = this.getNotesParts(notes);
+    const parte3 = parts[3] ?? '';
+    const sep = parte3.indexOf(' - ');
+    const [tipoDoc, docCond] = sep >= 0
+      ? [parte3.substring(0, sep).trim(), parte3.substring(sep + 3).trim()]
+      : [parte3, ''];
+    return {
+      proveedor: parts[0] ?? '-',
+      cantidadPaquetes: parts[1] ?? '-',
+      ciudad: parts[2] ?? '-',
+      tipoDocumento: tipoDoc || '-',
+      documentoConductor: docCond || '-',
+      nombreConductor: parts[4] ?? '-',
+      telefono: parts[5] ?? '-',
+      rawParts: parts
+    };
+  }
+
   showEditDialog = signal(false);
   editingRow = signal<CartonAmericaOrdenLlegada | null>(null);
-  /** Valor para input datetime-local (YYYY-MM-DDTHH:mm) */
-  editDateTimeValue = signal<string>('');
+  vehicleToEdit = signal<OpenTransaction | null>(null);
+  vehicleTypeEnums = signal<EnumResource[]>([]);
+  savingEdit = signal(false);
+  showDetalleDialog = signal(false);
+  detalleRow = signal<CartonAmericaOrdenLlegada | null>(null);
+
+  editForm!: FormGroup;
+  cartonAmericaNotesForm!: FormGroup;
+
+  static readonly CARTON_AMERICA_TIPO_IDS = ['DBLTR_C_AMER', 'TRACQ_C_AMER', 'CAMION_C_AMERICA'];
+
+  get editTipoOptions(): { label: string; value: string }[] {
+    return this.vehicleTypeEnums().map(e => ({ label: e.description || e.id || '', value: e.id || '' })).filter(o => o.value);
+  }
+
+  /** Indica si el tipo de vehículo seleccionado es Cartón América. */
+  get isCartonAmericaTipo(): boolean {
+    const id = this.editForm?.get('tipoVehiculoId')?.value;
+    if (!id) return false;
+    const idStr = String(id);
+    if (OrdenLlegadaCartonAmericaComponent.CARTON_AMERICA_TIPO_IDS.includes(idStr)) return true;
+    const label = (this.editTipoOptions.find(o => String(o.value) === idStr)?.label ?? '').toLowerCase();
+    return label.includes('carton') && label.includes('america');
+  }
+
+  constructor() {
+    this.editForm = this.fb.group({
+      vehiclePlate: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(8)]],
+      tipoVehiculoId: ['', Validators.required],
+      startDay: ['', Validators.required],
+      startTime: [''],
+      notes: [''],
+      bySubscription: [false]
+    });
+    this.cartonAmericaNotesForm = this.fb.group({
+      proveedor: ['', [this.notesProveedorValidator]],
+      cantidadPaquetes: ['', [this.notesCantidadPaquetesValidator]],
+      ciudad: ['', [this.notesCiudadValidator]],
+      tipoDocumento: ['', [this.notesTipoDocumentoValidator]],
+      documentoConductor: [''],
+      nombreConductor: ['', [this.notesNombreConductorValidator]],
+      telefono: ['', [this.notesTelefonoValidator]]
+    });
+    this.setupCartonAmericaNotesSync();
+  }
+
+  private notesProveedorValidator = (c: AbstractControl): { [key: string]: boolean } | null => {
+    const v = (c.value || '').trim();
+    if (!v) return null;
+    if (/^\d+$/.test(v)) return { notesProveedor: true };
+    if (!/^[A-Za-z0-9ÁáÉéÍíÓóÚúÑñ\s\-.,]+$/.test(v)) return { notesProveedor: true };
+    return null;
+  };
+  private notesCantidadPaquetesValidator = (c: AbstractControl): { [key: string]: boolean } | null => {
+    const v = (c.value || '').trim();
+    if (!v) return null;
+    return /^\d+$/.test(v) ? null : { notesCantidadPaquetes: true };
+  };
+  private notesCiudadValidator = (c: AbstractControl): { [key: string]: boolean } | null => {
+    const v = (c.value || '').trim();
+    if (!v) return null;
+    return /^[A-Za-zÁáÉéÍíÓóÚúÑñ\s\-']+$/.test(v) ? null : { notesCiudad: true };
+  };
+  private notesTipoDocumentoValidator = (c: AbstractControl): { [key: string]: boolean } | null => {
+    const v = (c.value || '').trim();
+    if (!v) return null;
+    return /^[A-Za-z]{1,3}$/.test(v) ? null : { notesTipoDocumento: true };
+  };
+  private notesNombreConductorValidator = (c: AbstractControl): { [key: string]: boolean } | null => {
+    const v = (c.value || '').trim();
+    if (!v) return null;
+    const parts = v.split(/\s+/).filter((p: string) => p);
+    return parts.length >= 1 && parts.length <= 4 && parts.every((p: string) => /^[A-Za-zÁáÉéÍíÓóÚúÑñ]+$/.test(p))
+      ? null : { notesNombreConductor: true };
+  };
+  private notesTelefonoValidator = (c: AbstractControl): { [key: string]: boolean } | null => {
+    const v = (c.value || '').trim();
+    if (!v) return null;
+    return /^\d+$/.test(v) ? null : { notesTelefono: true };
+  };
+
+  private setupCartonAmericaNotesSync(): void {
+    this.cartonAmericaNotesForm.valueChanges.pipe(takeUntil(this.destroy$)).subscribe(val => {
+      if (!this.isCartonAmericaTipo) return;
+      const tipo = (val.tipoDocumento || '').trim();
+      const doc = (val.documentoConductor || '').trim();
+      const parteTipoDoc = tipo && doc ? `${tipo} - ${doc}` : (tipo || doc);
+      const parts = [
+        (val.proveedor || '').trim(),
+        (val.cantidadPaquetes || '').trim(),
+        (val.ciudad || '').trim(),
+        parteTipoDoc,
+        (val.nombreConductor || '').trim(),
+        (val.telefono || '').trim()
+      ];
+      this.editForm.patchValue({ notes: parts.filter(p => p).join(' / ') }, { emitEvent: false });
+    });
+    this.editForm.get('tipoVehiculoId')?.valueChanges.pipe(takeUntil(this.destroy$)).subscribe(() => this.syncCartonAmericaNotesFromNotes());
+  }
+
+  private syncCartonAmericaNotesFromNotes(): void {
+    if (!this.isCartonAmericaTipo) {
+      this.cartonAmericaNotesForm.reset({
+        proveedor: '', cantidadPaquetes: '', ciudad: '',
+        tipoDocumento: '', documentoConductor: '', nombreConductor: '', telefono: ''
+      }, { emitEvent: false });
+      this.cdr.markForCheck();
+      return;
+    }
+    const notes = this.editForm.get('notes')?.value || '';
+    const parts = this.getNotesParts(notes);
+    const parte3 = parts[3] ?? '';
+    const sep = parte3.indexOf(' - ');
+    const [tipoDoc, docCond] = sep >= 0 ? [parte3.substring(0, sep).trim(), parte3.substring(sep + 3).trim()] : [parte3, ''];
+    this.cartonAmericaNotesForm.patchValue({
+      proveedor: parts[0] ?? '',
+      cantidadPaquetes: parts[1] ?? '',
+      ciudad: parts[2] ?? '',
+      tipoDocumento: tipoDoc,
+      documentoConductor: docCond,
+      nombreConductor: parts[4] ?? '',
+      telefono: parts[5] ?? ''
+    }, { emitEvent: false });
+    Object.keys(this.cartonAmericaNotesForm.controls).forEach(k => this.cartonAmericaNotesForm.get(k)?.updateValueAndValidity());
+    this.cdr.markForCheck();
+  }
+
+  onCartonNotesFieldInput(event: Event, controlName: string): void {
+    const target = event.target as HTMLInputElement;
+    const upper = (target.value || '').toUpperCase();
+    if (target.value !== upper) this.cartonAmericaNotesForm.get(controlName)?.setValue(upper);
+  }
+
+  private getVehicleTypeId(vehicle: OpenTransaction): string | null {
+    const t = vehicle.basicVehicleType ?? vehicle.tipoVehiculo;
+    if (t == null) return null;
+    if (typeof t === 'string') return t;
+    return (t as EnumResource).id ?? null;
+  }
+
+  private parseDateAsLocal(dateString: string): Date | null {
+    const m = dateString.trim().match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (m) {
+      const date = new Date(parseInt(m[1], 10), parseInt(m[2], 10) - 1, parseInt(m[3], 10));
+      return isNaN(date.getTime()) ? null : date;
+    }
+    const d = new Date(dateString);
+    return isNaN(d.getTime()) ? null : d;
+  }
+
+  private toDateInputValue(dateStr: string): string {
+    if (!dateStr?.trim()) return '';
+    const parsed = this.parseDateAsLocal(dateStr);
+    if (!parsed) return dateStr.substring(0, 10);
+    const y = parsed.getFullYear();
+    const m = String(parsed.getMonth() + 1).padStart(2, '0');
+    const d = String(parsed.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  }
+
+  private toTimeInputValue(timeStr: string): string {
+    if (!timeStr?.trim()) return '';
+    const match = timeStr.match(/(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(AM|PM)?/i);
+    if (!match) return '';
+    let h = parseInt(match[1], 10);
+    const min = match[2];
+    if (match[4]) {
+      if (match[4].toUpperCase() === 'PM' && h !== 12) h += 12;
+      else if (match[4].toUpperCase() === 'AM' && h === 12) h = 0;
+    }
+    return `${String(h).padStart(2, '0')}:${min}:00`.substring(0, 5);
+  }
 
   ngOnInit(): void {
     this.loadCompanyInfo();
+    this.loadVehicleTypeEnums();
     this.load();
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  private loadVehicleTypeEnums(): void {
+    this.enumService.getEnumByName('ETipoVehiculo').subscribe(enums => {
+      this.vehicleTypeEnums.set(enums || []);
+    });
   }
 
   private loadCompanyInfo(): void {
@@ -89,42 +343,69 @@ export class OrdenLlegadaCartonAmericaComponent implements OnInit {
     }).format(d);
   }
 
-  /** Convierte operationDate (ISO) a valor para input datetime-local */
-  toDateTimeLocal(iso: string | undefined): string {
-    if (!iso) return '';
-    const d = new Date(iso);
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    const h = String(d.getHours()).padStart(2, '0');
-    const min = String(d.getMinutes()).padStart(2, '0');
-    return `${y}-${m}-${day}T${h}:${min}`;
-  }
-
   openEditDialog(row: CartonAmericaOrdenLlegada): void {
     this.editingRow.set(row);
-    this.editDateTimeValue.set(this.toDateTimeLocal(row.operationDate));
+    if (!row.openTransactionId) {
+      this.notificationService.error('No se puede editar: ID no disponible', 'Error');
+      return;
+    }
+    // Usar datos de la tabla (getById devuelve 403 Forbidden)
+    this.vehicleToEdit.set({
+      openTransactionId: row.openTransactionId,
+      vehiclePlate: row.vehiclePlate,
+      startDay: row.startDay,
+      startTime: row.startTime,
+      operationDate: row.operationDate,
+      notes: row.notes
+    });
+    const tipoId = this.findTipoIdByLabel(row.tipoVehiculoLabel);
+    const startDay = row.startDay || row.operationDate || '';
+    this.editForm.patchValue({
+      vehiclePlate: (row.vehiclePlate || '').trim(),
+      tipoVehiculoId: tipoId || '',
+      startDay: this.toDateInputValue(startDay),
+      startTime: this.toTimeInputValue(row.startTime || ''),
+      notes: row.notes || '',
+      bySubscription: false
+    });
+    this.syncCartonAmericaNotesFromNotes();
     this.showEditDialog.set(true);
+  }
+
+  private findTipoIdByLabel(label: string | undefined): string | null {
+    if (!label?.trim()) return null;
+    const q = label.trim().toLowerCase();
+    const opt = this.editTipoOptions.find(o => (o.label || '').toLowerCase() === q || (o.label || '').toLowerCase().includes(q));
+    return opt?.value ?? null;
   }
 
   closeEditDialog(): void {
     this.showEditDialog.set(false);
     this.editingRow.set(null);
+    this.vehicleToEdit.set(null);
+    this.editForm.reset({ vehiclePlate: '', tipoVehiculoId: '', startDay: '', startTime: '', notes: '', bySubscription: false });
+    this.cartonAmericaNotesForm.reset({
+      proveedor: '', cantidadPaquetes: '', ciudad: '',
+      tipoDocumento: '', documentoConductor: '', nombreConductor: '', telefono: ''
+    });
   }
 
-  /** Formato de fecha y hora local para el nombre del archivo al guardar (ej: 2025-02-08_14-30-00). */
-  private getExportFileNameDateTime(): string {
-    const now = new Date();
-    const y = now.getFullYear();
-    const m = String(now.getMonth() + 1).padStart(2, '0');
-    const d = String(now.getDate()).padStart(2, '0');
-    const h = String(now.getHours()).padStart(2, '0');
-    const min = String(now.getMinutes()).padStart(2, '0');
-    const s = String(now.getSeconds()).padStart(2, '0');
-    return `${y}-${m}-${d}_${h}-${min}-${s}`;
+  openDetalleDialog(row: CartonAmericaOrdenLlegada): void {
+    this.detalleRow.set(row);
+    this.showDetalleDialog.set(true);
   }
 
-  /** Exporta la lista actual a PDF (formato como administrativo: HTML + ventana de impresión). */
+  openEditFromDetalle(row: CartonAmericaOrdenLlegada): void {
+    this.closeDetalleDialog();
+    this.openEditDialog(row);
+  }
+
+  closeDetalleDialog(): void {
+    this.showDetalleDialog.set(false);
+    this.detalleRow.set(null);
+  }
+
+  /** Exporta la lista actual a PDF (descarga directa). */
   exportToPdf(): void {
     const rows = this.list();
     if (rows.length === 0) {
@@ -132,253 +413,77 @@ export class OrdenLlegadaCartonAmericaComponent implements OnInit {
       return;
     }
     try {
-      const exportDateTime = this.getExportFileNameDateTime();
-      const htmlContent = this.generateReportHTML(rows, exportDateTime);
-      const printWindow = window.open('', '_blank');
-      if (!printWindow) {
-        this.notificationService.error(
-          'No se pudo abrir la ventana de impresión. Por favor, permite ventanas emergentes.',
-          'Error'
-        );
-        return;
-      }
-      printWindow.document.write(htmlContent);
-      printWindow.document.close();
-      printWindow.document.title = `Orden-Llegada-Carton-America-${exportDateTime}`;
-      printWindow.onload = () => {
-        setTimeout(() => printWindow.print(), 250);
-      };
-      this.notificationService.success('Reporte listo para imprimir/guardar como PDF', 'Éxito');
+      const data = rows.map(row => ({
+        ordenDeLlegada: row.ordenDeLlegada,
+        vehiclePlate: row.vehiclePlate ?? '-',
+        tipoVehiculoLabel: row.tipoVehiculoLabel ?? '-',
+        operationDate: row.operationDate,
+        notes: row.notes ?? '-'
+      }));
+      this.pdfExportService.export({
+        title: 'Cartón América - Orden de llegada',
+        subtitle: 'Vehículos en parqueadero ordenados por fecha y hora de ingreso',
+        companyName: this.companyName() || undefined,
+        columns: [
+          { header: 'Orden de llegada', dataKey: 'ordenDeLlegada' },
+          { header: 'Placa', dataKey: 'vehiclePlate' },
+          { header: 'Tipo de vehículo', dataKey: 'tipoVehiculoLabel' },
+          { header: 'Fecha y hora de ingreso', dataKey: 'operationDate', format: v => PdfExportService.formatDateTime(v as string) },
+          { header: 'Datos informativos del vehículo', dataKey: 'notes' }
+        ],
+        data,
+        filename: PdfExportService.getExportFileName('Orden-Llegada-Carton-America'),
+        primaryColor: '#5C1A1A'
+      });
+      this.notificationService.success('PDF exportado correctamente', 'Éxito');
     } catch (err) {
-      console.error('Error al generar reporte:', err);
-      this.notificationService.error('Error al generar el reporte', 'Error');
+      console.error('Error al generar PDF:', err);
+      this.notificationService.error('Error al generar el PDF', 'Error');
     }
   }
 
-  /**
-   * Genera el HTML del reporte (mismo formato que administrativo: company-header, header, info-section, tabla, footer).
-   */
-  private generateReportHTML(data: CartonAmericaOrdenLlegada[], dateTimeForTitle?: string): string {
-    const companyName = this.companyName() || 'Empresa';
-    const primaryColor = '#5C1A1A';
-    const primaryLightColor = '#7D2A2A';
-    const title = dateTimeForTitle
-      ? `Orden-Llegada-Carton-America-${dateTimeForTitle}`
-      : 'Cartón América - Orden de llegada';
-
-    const tableRows = data
-      .map(
-        (row) => `
-      <tr>
-        <td><strong>${row.ordenDeLlegada ?? '-'}</strong></td>
-        <td><strong>${row.vehiclePlate ?? '-'}</strong></td>
-        <td>${row.tipoVehiculoLabel ?? '-'}</td>
-        <td>${this.formatDateTime(row.operationDate)}</td>
-        <td>${row.notes ?? '-'}</td>
-      </tr>
-    `
-      )
-      .join('');
-
-    return `
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${title}</title>
-  <style>
-    @media print {
-      @page {
-        margin: 1cm;
-        size: A4 landscape;
-      }
-      body {
-        margin: 0;
-        padding: 0;
-      }
-      .no-print {
-        display: none;
-      }
-    }
-    body {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-      padding: 20px;
-      color: #333;
-    }
-    .company-header {
-      text-align: center;
-      margin-bottom: 20px;
-      padding-bottom: 15px;
-      border-bottom: 2px solid ${primaryColor};
-    }
-    .company-header .company-name {
-      font-size: 20px;
-      font-weight: bold;
-      color: ${primaryColor};
-      margin: 0;
-      margin-bottom: 5px;
-    }
-    .header {
-      text-align: center;
-      margin-bottom: 30px;
-      padding-bottom: 15px;
-      border-bottom: 3px solid ${primaryColor};
-    }
-    .header h1 {
-      margin: 0;
-      color: ${primaryColor};
-      font-size: 24px;
-      font-weight: 600;
-    }
-    .header .subtitle {
-      margin: 8px 0 0 0;
-      font-size: 14px;
-      color: #555;
-    }
-    .info-section {
-      margin-bottom: 25px;
-      background: #f8f9fa;
-      padding: 15px;
-      border-radius: 5px;
-      border-left: 4px solid ${primaryLightColor};
-    }
-    .info-row {
-      display: flex;
-      margin-bottom: 8px;
-    }
-    .info-row strong {
-      min-width: 180px;
-      color: #555;
-    }
-    .summary {
-      background: linear-gradient(135deg, #e7f3ff 0%, #d0e7ff 100%);
-      padding: 15px;
-      border-radius: 5px;
-      margin-bottom: 25px;
-      border-left: 4px solid ${primaryColor};
-    }
-    .summary-item {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 8px;
-    }
-    .summary-item span:last-child {
-      font-weight: bold;
-      color: ${primaryColor};
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-bottom: 25px;
-      font-size: 10px;
-    }
-    th {
-      background: linear-gradient(135deg, ${primaryColor} 0%, ${primaryLightColor} 100%);
-      color: white;
-      padding: 10px 8px;
-      text-align: left;
-      font-weight: 600;
-      border: 1px solid ${primaryColor};
-    }
-    td {
-      padding: 8px;
-      border: 1px solid #ddd;
-    }
-    tr:nth-child(even) {
-      background-color: #f8f9fa;
-    }
-    tr:hover {
-      background-color: #e7f3ff;
-    }
-    .footer {
-      margin-top: 30px;
-      text-align: center;
-      font-size: 10px;
-      color: #666;
-      border-top: 1px solid #ddd;
-      padding-top: 10px;
-    }
-  </style>
-</head>
-<body>
-  <div class="company-header">
-    <p class="company-name">${companyName}</p>
-  </div>
-
-  <div class="header">
-    <h1>Cartón América</h1>
-  </div>
-
-  <div class="info-section">
-    <div class="info-row">
-      <strong>Total de vehículos:</strong>
-      <span>${data.length}</span>
-    </div>
-    <div class="info-row">
-      <strong>Fecha de generación:</strong>
-      <span>${new Date().toLocaleString('es-ES')}</span>
-    </div>
-  </div>
-
-  <div class="summary">
-    <div class="summary-item">
-      <span><strong>Total de registros:</strong></span>
-      <span><strong>${data.length}</strong></span>
-    </div>
-  </div>
-
-  <table>
-    <thead>
-      <tr>
-        <th>Orden de llegada</th>
-        <th>Placa</th>
-        <th>Tipo de vehículo</th>
-        <th>Fecha y hora de ingreso</th>
-        <th>Datos informativos del vehículo</th>
-      </tr>
-    </thead>
-    <tbody>
-      ${tableRows}
-    </tbody>
-  </table>
-
-  <div class="footer">
-    <p>Generado el ${new Date().toLocaleString('es-ES')} - ${companyName}</p>
-  </div>
-</body>
-</html>
-    `;
-  }
-
-  saveEditedDateTime(): void {
-    const row = this.editingRow();
-    const raw = this.editDateTimeValue();
-    if (!row?.openTransactionId || !raw?.trim()) {
+  saveEdit(): void {
+    const vehicle = this.vehicleToEdit();
+    if (!vehicle?.openTransactionId) return;
+    if (this.editForm.invalid) {
+      this.editForm.markAllAsTouched();
       return;
     }
-    const d = new Date(raw);
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    const h = String(d.getHours()).padStart(2, '0');
-    const min = String(d.getMinutes()).padStart(2, '0');
-    const operationDate = `${y}-${m}-${day} ${h}:${min}`;
-
-    this.saving.set(true);
-    this.openTransactionService.updateFechaHoraIngreso({
-      openTransactionId: row.openTransactionId,
-      operationDate
-    })
-      .pipe(finalize(() => this.saving.set(false)))
-      .subscribe({
-        next: () => {
-          this.closeEditDialog();
-          this.load();
-        },
-        error: (err) => {
-          this.error.set(err?.error?.message || err?.message || 'Error al actualizar fecha y hora');
-        }
-      });
+    const v = this.editForm.value;
+    this.utilsService.confirm({
+      message: '¿Confirma guardar los cambios en esta operación?',
+      header: 'Confirmar edición'
+    }).pipe(takeUntil(this.destroy$)).subscribe(confirmed => {
+      if (!confirmed) return;
+      this.savingEdit.set(true);
+      const desc = v.tipoVehiculoId ? (this.editTipoOptions.find(o => o.value === v.tipoVehiculoId)?.label ?? '') : '';
+      const tipo = v.tipoVehiculoId ? { id: v.tipoVehiculoId, description: desc } : undefined;
+      const startTime = v.startTime ? (v.startTime.length >= 5 ? v.startTime + ':00' : v.startTime) : undefined;
+      const operationDate = v.startDay && v.startTime ? `${v.startDay} ${String(v.startTime).substring(0, 5)}` : undefined;
+      // Endpoint parcial: solo actualiza estos campos; backend preserva status, amount, etc.
+      const payload = {
+        openTransactionId: vehicle.openTransactionId!,
+        vehiclePlate: (v.vehiclePlate || '').trim().toUpperCase(),
+        tipoVehiculo: tipo,
+        basicVehicleType: tipo,
+        startDay: v.startDay || undefined,
+        startTime,
+        operationDate,
+        notes: v.notes ?? undefined,
+        bySubscription: !!v.bySubscription
+      };
+      this.openTransactionService.updateCartonAmericaOrdenLlegada(payload)
+        .pipe(finalize(() => this.savingEdit.set(false)))
+        .subscribe({
+          next: () => {
+            this.closeEditDialog();
+            this.load();
+            this.notificationService.success('Operación actualizada correctamente', 'Éxito');
+          },
+          error: (err) => {
+            this.error.set(err?.error?.message || err?.message || 'Error al actualizar');
+          }
+        });
+    });
   }
 }

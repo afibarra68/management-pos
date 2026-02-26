@@ -382,6 +382,127 @@
     color: #888888;
     font-style: italic;
   }
+
+  &.field-invalid input,
+  &.field-invalid select {
+    border-color: #dc2626 !important;
+    background-color: #fef2f2 !important;
+  }
+
+  &.field-invalid label {
+    color: #dc2626;
+  }
+
+  &.field-valid input,
+  &.field-valid select,
+  &.field-valid textarea {
+    border-color: #16a34a !important;
+    background-color: #f0fdf4 !important;
+    box-shadow: 0 0 0 2px rgba(22, 163, 74, 0.2) !important;
+  }
+
+  &.field-valid label {
+    color: #16a34a;
+  }
+
+  .carton-america-notes {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding: 0.75rem;
+    background: #f8fafc;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+
+    .notes-pattern-label {
+      margin: 0 0 0.25rem 0;
+      font-size: 0.75rem;
+      color: #6b7280;
+      font-style: italic;
+    }
+
+    .notes-sector h4 {
+      margin: 0 0 0.5rem 0;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #4a9eff;
+    }
+
+    .notes-sector-fields {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-end;
+      gap: 0.25rem 0;
+    }
+
+    .notes-field {
+      display: flex;
+      flex-direction: column;
+      gap: 0.2rem;
+      flex: 1;
+      min-width: 100px;
+
+      &.notes-field-tipo-doc {
+        flex: 0 0 65px;
+        min-width: 65px;
+      }
+
+      &.notes-field-nombre {
+        flex: 2;
+        min-width: 140px;
+      }
+
+      label { font-size: 0.75rem; font-weight: 500; color: #6b7280; }
+
+      input {
+        width: 100%;
+        padding: 0.4rem 0.6rem;
+        border: 1px solid #dee2e6;
+        border-radius: 6px;
+        font-size: 0.875rem;
+        box-sizing: border-box;
+        transition: border-color 0.25s ease, box-shadow 0.25s ease;
+
+        &:focus {
+          outline: none;
+          border-color: #4a9eff;
+        }
+      }
+
+      &.notes-field-valid input {
+        border-color: #16a34a !important;
+        background-color: #f0fdf4 !important;
+        box-shadow: 0 0 0 2px rgba(22, 163, 74, 0.2) !important;
+      }
+
+      &.notes-field-valid label {
+        color: #16a34a;
+      }
+
+      &.notes-field-invalid input {
+        border-color: #dc2626 !important;
+        background-color: #fef2f2 !important;
+      }
+
+      &.notes-field-invalid label {
+        color: #dc2626;
+      }
+
+      .notes-field-error {
+        font-size: 0.7rem;
+        color: #dc2626;
+        margin-top: 0.15rem;
+      }
+    }
+
+    .notes-slash {
+      flex-shrink: 0;
+      padding: 0 0.35rem 0.5rem;
+      font-weight: 600;
+      color: #9ca3af;
+      font-size: 0.9rem;
+    }
+  }
 }
 
 .form-actions {

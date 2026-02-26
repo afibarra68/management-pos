@@ -1,6 +1,6 @@
 import { Component, OnInit, OnDestroy, inject, signal, computed, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { AbstractControl, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CardModule } from 'primeng/card';
 import { TableModule } from 'primeng/table';
 import { MessageModule } from 'primeng/message';
@@ -9,6 +9,8 @@ import { InputTextModule } from 'primeng/inputtext';
 import { TagModule } from 'primeng/tag';
 import { DialogModule } from 'primeng/dialog';
 import { CheckboxModule } from 'primeng/checkbox';
+import { TooltipModule } from 'primeng/tooltip';
+import { Popover, PopoverModule } from 'primeng/popover';
 import { OpenTransactionService, OpenTransaction, ParamVenta } from '../../../core/services/open-transaction.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { EnumService, EnumResource } from '../../../core/services/enum.service';
@@ -16,7 +18,9 @@ import { ShiftService, DShiftAssignment } from '../../../core/services/shift.ser
 import { ClosedTransactionService } from '../../../core/services/closed-transaction.service';
 import { PrintService } from '../../../core/services/print.service';
 import { UtilsService } from '../../../core/services/utils.service';
-import { Subject, takeUntil, finalize, catchError, of } from 'rxjs';
+import { PdfExportService } from '../../../core/services/pdf-export.service';
+import { NotificationService } from '../../../core/services/notification.service';
+import { Subject, takeUntil, finalize, catchError, of, EMPTY } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 
@@ -33,7 +37,9 @@ import { environment } from '../../../environments/environment';
     InputTextModule,
     TagModule,
     DialogModule,
-    CheckboxModule
+    CheckboxModule,
+    TooltipModule,
+    PopoverModule
   ],
   templateUrl: './vehiculos-parqueadero.component.html',
   styleUrls: ['./vehiculos-parqueadero.component.scss'],
@@ -48,6 +54,8 @@ export class VehiculosParqueaderoComponent implements OnInit, OnDestroy {
   private enumService = inject(EnumService);
   private shiftService = inject(ShiftService);
   private utilsService = inject(UtilsService);
+  private pdfExportService = inject(PdfExportService);
+  private notificationService = inject(NotificationService);
   private fb = inject(FormBuilder);
   private cdr = inject(ChangeDetectorRef);
 
@@ -65,6 +73,8 @@ export class VehiculosParqueaderoComponent implements OnInit, OnDestroy {
   searchTerm = signal<string>('');
   currentShift = signal<DShiftAssignment | null>(null);
   reprintingId = signal<number | null>(null);
+  deletingId = signal<number | null>(null);
+  exportPdfLoading = signal(false);
   paginatorFirst = signal(0);
   paginatorRows = signal(10);
   private searchTerm$ = new Subject<string>();
@@ -75,10 +85,23 @@ export class VehiculosParqueaderoComponent implements OnInit, OnDestroy {
   savingEdit = signal(false);
   editForm!: FormGroup;
 
+  /** Overlay "Ver detalles" al hacer click en fila */
+  detalleVehicle = signal<OpenTransaction | null>(null);
+
   sellerId = computed(() => {
     const userData = this.authService.getUserData();
     return userData?.appUserId || null;
   });
+
+  /** Solo estos roles pueden ver el botón Eliminar: ADMIN_APP, ADMINISTRATOR_PRINCIPAL, ADMINISTRADOR_EMPRESA. */
+  get canDeleteVehicle(): boolean {
+    return (
+      this.authService.hasRole('ADMIN_APP') ||
+      this.authService.hasRole('ADMINISTRATOR_PRINCIPAL') ||
+      this.authService.hasRole('ADMINISTRADOR_EMPRESA') ||
+      this.authService.hasRole('administratod_empresa')
+    );
+  }
 
   /** Nombre del usuario para la barra de datos (mismo uso que orden-llegada-carton-america). */
   userName = computed(() => {
@@ -97,7 +120,132 @@ export class VehiculosParqueaderoComponent implements OnInit, OnDestroy {
       notes: [''],
       bySubscription: [false]
     });
+    this.cartonAmericaNotesForm = this.fb.group({
+      proveedor: ['', [this.notesProveedorValidator]],
+      cantidadPaquetes: ['', [this.notesCantidadPaquetesValidator]],
+      ciudad: ['', [this.notesCiudadValidator]],
+      tipoDocumento: ['', [this.notesTipoDocumentoValidator]],
+      documentoConductor: [''],
+      nombreConductor: ['', [this.notesNombreConductorValidator]],
+      telefono: ['', [this.notesTelefonoValidator]]
+    });
+    this.setupCartonAmericaNotesSync();
   }
+
+  private setupCartonAmericaNotesSync(): void {
+    this.cartonAmericaNotesForm.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(val => {
+        const tipo = (val.tipoDocumento || '').trim();
+        const doc = (val.documentoConductor || '').trim();
+        const parteTipoDoc = tipo && doc ? `${tipo} - ${doc}` : (tipo || doc);
+        const parts = [
+          (val.proveedor || '').trim(),
+          (val.cantidadPaquetes || '').trim(),
+          (val.ciudad || '').trim(),
+          parteTipoDoc,
+          (val.nombreConductor || '').trim(),
+          (val.telefono || '').trim()
+        ];
+        const notes = parts.filter(p => p).join(' / ');
+        this.editForm.patchValue({ notes }, { emitEvent: false });
+      });
+    this.editForm.get('tipoVehiculoId')?.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => this.syncCartonAmericaNotesFromNotes());
+  }
+
+  /** Validadores para notas Cartón América (opcionales: vacío = válido). */
+  private notesProveedorValidator = (c: AbstractControl): { [key: string]: boolean } | null => {
+    const v = (c.value || '').trim();
+    if (!v) return null;
+    if (/^\d+$/.test(v)) return { notesProveedor: true }; // nunca solo números
+    if (!/^[A-Za-z0-9ÁáÉéÍíÓóÚúÑñ\s\-.,]+$/.test(v)) return { notesProveedor: true };
+    return null;
+  };
+  private notesCantidadPaquetesValidator = (c: AbstractControl): { [key: string]: boolean } | null => {
+    const v = (c.value || '').trim();
+    if (!v) return null;
+    return /^\d+$/.test(v) ? null : { notesCantidadPaquetes: true };
+  };
+  private notesCiudadValidator = (c: AbstractControl): { [key: string]: boolean } | null => {
+    const v = (c.value || '').trim();
+    if (!v) return null;
+    return /^[A-Za-zÁáÉéÍíÓóÚúÑñ\s\-']+$/.test(v) ? null : { notesCiudad: true };
+  };
+  private notesTipoDocumentoValidator = (c: AbstractControl): { [key: string]: boolean } | null => {
+    const v = (c.value || '').trim();
+    if (!v) return null;
+    return /^[A-Za-z]{1,3}$/.test(v) ? null : { notesTipoDocumento: true };
+  };
+  private notesNombreConductorValidator = (c: AbstractControl): { [key: string]: boolean } | null => {
+    const v = (c.value || '').trim();
+    if (!v) return null;
+    const parts = v.split(/\s+/).filter((p: string) => p);
+    return parts.length >= 1 && parts.length <= 4 && parts.every((p: string) => /^[A-Za-zÁáÉéÍíÓóÚúÑñ]+$/.test(p))
+      ? null : { notesNombreConductor: true };
+  };
+  private notesTelefonoValidator = (c: AbstractControl): { [key: string]: boolean } | null => {
+    const v = (c.value || '').trim();
+    if (!v) return null;
+    return /^\d+$/.test(v) ? null : { notesTelefono: true };
+  };
+
+  /** Convierte a mayúsculas el campo de notas Cartón América en cada input. */
+  onCartonNotesFieldInput(event: Event, controlName: string): void {
+    const target = event.target as HTMLInputElement;
+    const upper = (target.value || '').toUpperCase();
+    if (target.value !== upper) {
+      this.cartonAmericaNotesForm.get(controlName)?.setValue(upper);
+    }
+  }
+
+  /** Parsea notes y rellena cartonAmericaNotesForm. */
+  private syncCartonAmericaNotesFromNotes(): void {
+    if (!this.isCartonAmericaTipo) {
+      this.cartonAmericaNotesForm.reset({
+        proveedor: '', cantidadPaquetes: '', ciudad: '',
+        tipoDocumento: '', documentoConductor: '', nombreConductor: '', telefono: ''
+      }, { emitEvent: false });
+      return;
+    }
+    const notes = this.editForm.get('notes')?.value || '';
+    const parts = this.getNotesParts(notes);
+    const parte3 = parts[3] ?? '';
+    const sep = parte3.indexOf(' - ');
+    const [tipoDoc, docCond] = sep >= 0
+      ? [parte3.substring(0, sep).trim(), parte3.substring(sep + 3).trim()]
+      : [parte3, ''];
+    this.cartonAmericaNotesForm.patchValue({
+      proveedor: parts[0] ?? '',
+      cantidadPaquetes: parts[1] ?? '',
+      ciudad: parts[2] ?? '',
+      tipoDocumento: tipoDoc,
+      documentoConductor: docCond,
+      nombreConductor: parts[4] ?? '',
+      telefono: parts[5] ?? ''
+    }, { emitEvent: false });
+    Object.keys(this.cartonAmericaNotesForm.controls).forEach(k => {
+      this.cartonAmericaNotesForm.get(k)?.updateValueAndValidity();
+    });
+    this.cdr.markForCheck();
+  }
+
+  /** IDs de tipo Cartón América (enum ETipoVehiculo): DBLTR_C_AMER, TRACQ_C_AMER, CAMION_C_AMERICA. */
+  static readonly CARTON_AMERICA_TIPO_IDS = ['DBLTR_C_AMER', 'TRACQ_C_AMER', 'CAMION_C_AMERICA'];
+
+  /** Indica si el tipo de vehículo seleccionado es Cartón América. */
+  get isCartonAmericaTipo(): boolean {
+    const id = this.editForm?.get('tipoVehiculoId')?.value;
+    if (!id) return false;
+    const idStr = String(id);
+    if (VehiculosParqueaderoComponent.CARTON_AMERICA_TIPO_IDS.includes(idStr)) return true;
+    const label = (this.editTipoOptions.find(o => String(o.value) === idStr)?.label ?? '').toLowerCase();
+    return label.includes('carton') && label.includes('america');
+  }
+
+  /** Formulario estructurado para notas Cartón América. */
+  cartonAmericaNotesForm!: FormGroup;
 
   /** Opciones para el select de tipo de vehículo en el modal editar. */
   get editTipoOptions(): { label: string; value: string }[] {
@@ -300,6 +448,14 @@ export class VehiculosParqueaderoComponent implements OnInit, OnDestroy {
       });
   }
 
+  /** Indica si el vehículo es tipo Cartón América (para mostrar secciones Carga/Conductor en el popover). */
+  isCartonAmericaVehicle(vehicle: OpenTransaction): boolean {
+    const id = this.getVehicleTypeId(vehicle);
+    if (id && VehiculosParqueaderoComponent.CARTON_AMERICA_TIPO_IDS.includes(id)) return true;
+    const label = (this.getVehicleTypeDisplay(vehicle.basicVehicleType ?? vehicle.tipoVehiculo) || '').toLowerCase();
+    return label.includes('carton') && label.includes('america');
+  }
+
   /** Obtiene el id del tipo de vehículo (para cruzar con ETipoVehiculo). */
   private getVehicleTypeId(vehicle: OpenTransaction): string | null {
     const t = vehicle.basicVehicleType ?? vehicle.tipoVehiculo;
@@ -393,6 +549,55 @@ export class VehiculosParqueaderoComponent implements OnInit, OnDestroy {
       });
   }
 
+  /** Elimina la transacción abierta (administrativo). */
+  deleteVehicle(vehicle: OpenTransaction): void {
+    const id = vehicle.openTransactionId;
+    if (id == null) {
+      this.error.set('No se puede eliminar: ID no disponible');
+      this.cdr.markForCheck();
+      return;
+    }
+    this.utilsService
+      .confirm({
+        message: `¿Eliminar la operación de la placa ${vehicle.vehiclePlate || 'N/A'}? Esta acción no se puede deshacer.`,
+        header: 'Confirmar eliminación',
+        icon: 'pi pi-exclamation-triangle',
+        acceptButtonStyleClass: 'p-button-danger'
+      })
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((confirmed) => {
+        if (!confirmed) return;
+        this.deletingId.set(id);
+        this.error.set(null);
+        this.cdr.markForCheck();
+        this.openTransactionService
+          .delete(id)
+          .pipe(
+            takeUntil(this.destroy$),
+            finalize(() => {
+              this.deletingId.set(null);
+              this.cdr.markForCheck();
+            }),
+            catchError((err: unknown) => {
+              const msg =
+                (err as { error?: { readableMsg?: string; message?: string } })?.error?.readableMsg ??
+                (err as { error?: { message?: string } })?.error?.message ??
+                'Error al eliminar';
+              this.error.set(msg);
+              this.cdr.markForCheck();
+              return EMPTY;
+            })
+          )
+          .subscribe({
+            next: () => {
+              this.utilsService.showSuccess('Operación eliminada correctamente');
+              this.loadPage(Math.floor(this.paginatorFirst() / this.paginatorRows()), this.paginatorRows());
+              this.loadCountByType();
+            },
+          });
+      });
+  }
+
   /** Abre el modal de edición con los datos del vehículo. */
   openEditModal(vehicle: OpenTransaction): void {
     const id = this.getVehicleTypeId(vehicle);
@@ -409,8 +614,65 @@ export class VehiculosParqueaderoComponent implements OnInit, OnDestroy {
       notes: vehicle.notes || '',
       bySubscription: !!vehicle.bySubscription
     });
+    this.syncCartonAmericaNotesFromNotes();
     this.editModalVisible.set(true);
     this.cdr.markForCheck();
+  }
+
+  /** Abre overlay de detalle al hacer click en fila. */
+  openDetalleOverlay(vehicle: OpenTransaction, event: Event, op: Popover): void {
+    this.detalleVehicle.set(vehicle);
+    op.toggle(event);
+  }
+
+  /** Notas ligeras para vista resumida. */
+  getNotesLight(notes: string | undefined, maxParts = 2, maxLen = 40): string {
+    const parts = this.getNotesParts(notes);
+    if (parts.length === 0) return '-';
+    const joined = parts.slice(0, maxParts).join(' · ');
+    return joined.length > maxLen ? joined.slice(0, maxLen) + '…' : joined;
+  }
+
+  /** Estructura sectorizada de notas (proveedor, ciudad, conductor, etc.). */
+  getDetalleSectores(notes: string | undefined): {
+    proveedor: string;
+    cantidadPaquetes: string;
+    ciudad: string;
+    tipoDocumento: string;
+    documentoConductor: string;
+    nombreConductor: string;
+    telefono: string;
+  } {
+    const parts = this.getNotesParts(notes);
+    const parte3 = parts[3] ?? '';
+    const sep = parte3.indexOf(' - ');
+    const [tipoDoc, docCond] = sep >= 0
+      ? [parte3.substring(0, sep).trim(), parte3.substring(sep + 3).trim()]
+      : [parte3, ''];
+    return {
+      proveedor: parts[0] ?? '-',
+      cantidadPaquetes: parts[1] ?? '-',
+      ciudad: parts[2] ?? '-',
+      tipoDocumento: tipoDoc || '-',
+      documentoConductor: docCond || '-',
+      nombreConductor: parts[4] ?? '-',
+      telefono: parts[5] ?? '-'
+    };
+  }
+
+  formatDateTime(value: string | undefined): string {
+    if (!value) return '-';
+    const d = new Date(value);
+    return new Intl.DateTimeFormat('es-CO', { dateStyle: 'short', timeStyle: 'short' }).format(d);
+  }
+
+  /** Separa las notas por '/' y devuelve cada parte sin espacios extra (para visualización estructurada). */
+  getNotesParts(notes: string | undefined): string[] {
+    if (!notes || !notes.trim()) return [];
+    return notes
+      .split('/')
+      .map(p => p.trim())
+      .filter(p => p.length > 0);
   }
 
   /** Cierra el modal de edición sin guardar. */
@@ -418,6 +680,10 @@ export class VehiculosParqueaderoComponent implements OnInit, OnDestroy {
     this.editModalVisible.set(false);
     this.vehicleToEdit.set(null);
     this.editForm.reset({ vehiclePlate: '', tipoVehiculoId: '', startDay: '', startTime: '', notes: '', bySubscription: false });
+    this.cartonAmericaNotesForm.reset({
+      proveedor: '', cantidadPaquetes: '', ciudad: '',
+      tipoDocumento: '', documentoConductor: '', nombreConductor: '', telefono: ''
+    });
     this.cdr.markForCheck();
   }
 
@@ -635,6 +901,71 @@ export class VehiculosParqueaderoComponent implements OnInit, OnDestroy {
     } catch {
       return 'N/A';
     }
+  }
+
+  /** Exporta vehículos actuales (todos los que coinciden con la búsqueda) a PDF. */
+  exportToPdf(): void {
+    const userData = this.authService.getUserData();
+    const companyId = userData?.companyId;
+    if (!companyId) {
+      this.notificationService.warn('No se pudo obtener la empresa', 'Advertencia');
+      return;
+    }
+    if (this.totalRecords() === 0) {
+      this.notificationService.warn('No hay datos para exportar', 'Advertencia');
+      return;
+    }
+    this.exportPdfLoading.set(true);
+    this.cdr.markForCheck();
+    const plateFilter = this.searchTerm().trim() || undefined;
+    this.openTransactionService
+      .getPage({ companyId, page: 0, size: 5000, vehiclePlate: plateFilter })
+      .pipe(
+        takeUntil(this.destroy$),
+        finalize(() => {
+          this.exportPdfLoading.set(false);
+          this.cdr.markForCheck();
+        }),
+        catchError(() => {
+          this.notificationService.error('Error al cargar datos para exportar', 'Error');
+          return of(null);
+        })
+      )
+      .subscribe({
+        next: (response) => {
+          const content = response?.content ?? [];
+          if (content.length === 0) {
+            this.notificationService.warn('No hay datos para exportar', 'Advertencia');
+            return;
+          }
+          const companyName = (userData?.companyName ?? userData?.companyDescription ?? '') || undefined;
+          const data = content.map(v => ({
+            vehiclePlate: v.vehiclePlate ?? '-',
+            tipoLabel: this.getVehicleTypeDisplay(v.basicVehicleType ?? v.tipoVehiculo),
+            startDay: v.startDay ?? v.operationDate ?? '-',
+            startTime: v.startTime ?? '-',
+            bySubscription: v.bySubscription ? 'Sí' : 'No',
+            notes: v.notes ?? '-'
+          }));
+          this.pdfExportService.export({
+            title: 'Vehículos en Parqueadero',
+            subtitle: 'Reporte de vehículos en parqueadero',
+            companyName,
+            columns: [
+              { header: 'Placa', dataKey: 'vehiclePlate' },
+              { header: 'Tipo de vehículo', dataKey: 'tipoLabel' },
+              { header: 'Fecha ingreso', dataKey: 'startDay' },
+              { header: 'Hora ingreso', dataKey: 'startTime' },
+              { header: 'Por suscripción', dataKey: 'bySubscription' },
+              { header: 'Notas', dataKey: 'notes' }
+            ],
+            data,
+            filename: PdfExportService.getExportFileName('Vehiculos-Parqueadero'),
+            primaryColor: '#1976d2'
+          });
+          this.notificationService.success('PDF exportado correctamente', 'Éxito');
+        }
+      });
   }
 
   getShiftDisplayText(): string {
