@@ -200,6 +200,26 @@
           color: #b8c5d4 !important;
         }
 
+        // Placa / Tipo card en modo oscuro
+        .placa-tipo-card {
+          background: linear-gradient(135deg, #2a3441 0%, #1e2530 100%) !important;
+          border-color: #3d4a5c !important;
+          box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+        }
+        .placa-tipo-placa {
+          color: #ffffff !important;
+        }
+        .placa-tipo-tipo-badge {
+          color: #86efac !important;
+          background: linear-gradient(135deg, #166534 0%, #15803d 100%) !important;
+          border-color: rgba(134, 239, 172, 0.3) !important;
+        }
+        tr:hover .placa-tipo-card {
+          background: linear-gradient(135deg, #3d4a5c 0%, #2a3441 100%) !important;
+          border-color: #4a9eff !important;
+          box-shadow: 0 2px 8px rgba(74, 158, 255, 0.25), 0 0 0 2px rgba(74, 158, 255, 0.15) !important;
+        }
+
         // Estilos para tags dentro de la tabla
         .p-tag {
           &.p-tag-info {
@@ -642,6 +662,100 @@
     }
   }
 
+  .placa-tipo-cell {
+    width: 180px;
+    min-width: 180px;
+    text-align: center;
+    vertical-align: middle;
+
+    .placa-tipo-card {
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.4rem;
+      width: 160px;
+      padding: 0.5rem 0.75rem;
+      margin: 0 auto;
+      background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+      transition: box-shadow 0.2s ease, border-color 0.2s ease, background 0.2s ease, transform 0.2s ease;
+    }
+
+    .placa-tipo-placa {
+      font-size: 0.95rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      color: var(--text-color, #1e293b);
+      font-family: ui-monospace, 'Cascadia Code', 'Source Code Pro', monospace;
+      text-align: center;
+    }
+
+    .placa-tipo-tipo-badge {
+      display: inline-block;
+      font-size: 0.65rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #15803d;
+      background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+      padding: 0.2rem 0.5rem;
+      border-radius: 6px;
+      width: fit-content;
+      line-height: 1.2;
+      border: 1px solid rgba(22, 163, 74, 0.3);
+      box-shadow: 0 1px 0 rgba(255, 255, 255, 0.5) inset;
+    }
+  }
+
+  /* Celda Acciones: los 3 botones grandes, uno al lado del otro */
+  .acciones-cell .acciones-buttons {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 0.5rem;
+
+    ::ng-deep .p-button {
+      margin: 0;
+    }
+  }
+
+  .acciones-buttons {
+    display: inline-flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 0.5rem;
+
+    ::ng-deep .p-button {
+      margin: 0;
+    }
+  }
+
+  /* Botones de acción grandes */
+  :host ::ng-deep .acciones-btn-large.p-button {
+    width: 2.75rem !important;
+    height: 2.75rem !important;
+    min-width: 2.75rem !important;
+    padding: 0 !important;
+
+    .p-button-icon {
+      font-size: 1.25rem !important;
+    }
+  }
+
+  .row-clickable {
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+
+    &:hover .placa-tipo-card {
+      background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+      border-color: #93c5fd;
+      box-shadow: 0 2px 8px rgba(59, 130, 246, 0.2), 0 0 0 2px rgba(59, 130, 246, 0.15);
+      transform: scale(1.03);
+    }
+  }
+
   ::ng-deep {
     .p-datatable {
       .p-datatable-thead>tr>th {
@@ -773,6 +887,67 @@
   }
 }
 
+/* Celda notas: estructura por partes separadas con / */
+.notes-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+
+  .notes-parts-list {
+    margin: 0;
+    padding-left: 1rem;
+    list-style: disc;
+    max-width: 180px;
+
+    .notes-part {
+      font-size: 0.75rem;
+      line-height: 1.35;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+
+  .notes-text {
+    font-size: 0.75rem;
+    max-width: 160px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    line-height: 1.3;
+  }
+
+  .notes-ver-mas {
+    font-size: 0.65rem;
+    color: var(--primary-color, #3b82f6);
+    cursor: help;
+  }
+}
+
+/* Celda combinada Suscripción / Estado */
+.subscription-status-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  align-items: flex-start;
+  font-size: 0.75rem;
+
+  ::ng-deep .p-tag {
+    font-size: 0.7rem;
+    padding: 0.2rem 0.5rem;
+  }
+}
+
+@keyframes field-shake {
+  0%, 100% { transform: translateX(0); }
+  15% { transform: translateX(-6px); }
+  35% { transform: translateX(6px); }
+  55% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}
+
 /* Modal Editar operación */
 .edit-operation-form {
   display: flex;
@@ -817,12 +992,35 @@
       border-radius: 6px;
       font-size: 0.875rem;
       box-sizing: border-box;
+      transition: border-color 0.25s ease, box-shadow 0.25s ease;
 
       &:focus {
         outline: none;
         border-color: var(--primary-color, #3b82f6);
         box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
       }
+    }
+
+    &.field-invalid {
+      animation: field-shake 0.4s ease-in-out;
+
+      input, select, textarea {
+        border-color: #dc2626 !important;
+        background-color: #fef2f2 !important;
+        box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.2) !important;
+      }
+
+      label { color: #dc2626; }
+    }
+
+    &.field-valid {
+      input, select, textarea {
+        border-color: #16a34a !important;
+        background-color: #f0fdf4 !important;
+        box-shadow: 0 0 0 2px rgba(22, 163, 74, 0.2) !important;
+      }
+
+      label { color: #16a34a; }
     }
 
     select {
@@ -833,6 +1031,111 @@
     textarea {
       resize: vertical;
       min-height: 60px;
+    }
+
+    .carton-america-notes {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      padding: 0.75rem;
+      background: var(--p-surface-100, #f8fafc);
+      border-radius: 8px;
+      border: 1px solid var(--p-surface-border, #e5e7eb);
+
+      .notes-pattern-label {
+        margin: 0 0 0.25rem 0;
+        font-size: 0.75rem;
+        color: var(--text-color-secondary, #6b7280);
+        font-style: italic;
+      }
+
+      .notes-sector {
+        h4 {
+          margin: 0 0 0.5rem 0;
+          font-size: 0.85rem;
+          font-weight: 600;
+          color: var(--p-primary-color, #3b82f6);
+        }
+      }
+
+      .notes-sector-fields {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-end;
+        gap: 0.25rem 0;
+      }
+
+      .notes-field {
+        display: flex;
+        flex-direction: column;
+        gap: 0.2rem;
+        flex: 1;
+        min-width: 100px;
+
+        &.notes-field-tipo-doc {
+          flex: 0 0 65px;
+          min-width: 65px;
+        }
+
+        &.notes-field-nombre {
+          flex: 2;
+          min-width: 140px;
+        }
+
+        label {
+          font-size: 0.75rem;
+          font-weight: 500;
+          color: var(--text-color-secondary, #6b7280);
+        }
+
+        input {
+          width: 100%;
+          padding: 0.4rem 0.6rem;
+          border: 1px solid var(--surface-border, #dee2e6);
+          border-radius: 6px;
+          font-size: 0.875rem;
+          box-sizing: border-box;
+          transition: border-color 0.25s ease, box-shadow 0.25s ease;
+
+          &:focus {
+            outline: none;
+            border-color: var(--primary-color, #3b82f6);
+          }
+        }
+
+        &.notes-field-valid input {
+          border-color: #16a34a !important;
+          background-color: #f0fdf4 !important;
+          box-shadow: 0 0 0 2px rgba(22, 163, 74, 0.2) !important;
+        }
+
+        &.notes-field-valid label {
+          color: #16a34a;
+        }
+
+        &.notes-field-invalid input {
+          border-color: #dc2626 !important;
+          background-color: #fef2f2 !important;
+        }
+
+        &.notes-field-invalid label {
+          color: #dc2626;
+        }
+
+        .notes-field-error {
+          font-size: 0.7rem;
+          color: #dc2626;
+          margin-top: 0.15rem;
+        }
+      }
+
+      .notes-slash {
+        flex-shrink: 0;
+        padding: 0 0.35rem 0.5rem;
+        font-weight: 600;
+        color: var(--text-color-secondary, #9ca3af);
+        font-size: 0.9rem;
+      }
     }
 
     .edit-form-error {
@@ -855,4 +1158,65 @@
 
 :host ::ng-deep .edit-operation-dialog .p-dialog-content {
   padding-bottom: 0.5rem;
+}
+
+/* Overlay Ver detalles (contenido del OverlayPanel) */
+.detalle-overlay-content {
+  padding: 0.25rem 0;
+
+  .detalle-overlay-title {
+    margin: 0 0 0.75rem 0;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--p-primary-color, #3b82f6);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+
+    i { font-size: 1rem; }
+  }
+
+  .detalle-overlay-basico {
+    margin-bottom: 0.75rem;
+
+    p { margin: 0 0 0.35rem 0; font-size: 0.9rem; }
+    .detalle-overlay-fecha { margin: 0 !important; font-size: 0.85rem; color: var(--text-color-secondary); }
+  }
+
+  .detalle-overlay-sector {
+    margin-bottom: 0.75rem;
+
+    h5 {
+      margin: 0 0 0.35rem 0;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--p-primary-color, #3b82f6);
+    }
+
+    .detalle-overlay-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      padding: 0.5rem 0.6rem;
+      background: var(--p-surface-100, #f8fafc);
+      border-radius: 6px;
+      font-size: 0.85rem;
+
+      span { margin: 0; }
+    }
+  }
+
+  .detalle-overlay-actions {
+    padding-top: 0.5rem;
+    border-top: 1px solid var(--p-surface-border, #e5e7eb);
+  }
+}
+
+/* Tooltip grande para notas (appendTo=body, necesita ::ng-deep para aplicar) */
+:host ::ng-deep .notes-tooltip-large.p-tooltip {
+  max-width: 400px !important;
+  white-space: pre-wrap;
+  padding: 0.75rem 1rem;
+  font-size: 0.9rem;
+  line-height: 1.5;
 }

@@ -1,6 +1,6 @@
 import { Component, OnInit, OnDestroy, inject, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { AbstractControl, FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
@@ -73,12 +73,162 @@ export class RegistrarPlacaComponent implements OnInit, OnDestroy {
   showTicketPreview = false;
   pendingBuildTicket: any = null;
 
+  /** IDs de tipo Cartón América (DBLTR_C_AMER, TRACQ_C_AMER, CAMION_C_AMERICA). */
+  static readonly CARTON_AMERICA_TIPO_IDS = ['DBLTR_C_AMER', 'TRACQ_C_AMER', 'CAMION_C_AMERICA'];
+
+  /** Formulario estructurado para notas Cartón América (capas separadas por slash). */
+  cartonAmericaNotesForm: FormGroup;
+
+  /** Indica si el tipo seleccionado es Cartón América. */
+  get isCartonAmericaTipo(): boolean {
+    const control = this.easyMode ? this.form?.get('basicVehicleType') : this.form?.get('tipoVehiculo');
+    const val = control?.value;
+    const id = typeof val === 'string' ? val : (val?.id ?? val);
+    if (!id) return false;
+    const idStr = String(id);
+    if (RegistrarPlacaComponent.CARTON_AMERICA_TIPO_IDS.includes(idStr)) return true;
+    const options = this.easyMode ? this.basicVehicleTypeOptions : this.tipoVehiculoOptions;
+    const opt = options.find(o => String(this.getOptionValue(o.value)) === idStr);
+    const label = ((opt as any)?.label ?? '').toLowerCase();
+    return label.includes('carton') && label.includes('america');
+  }
+
   constructor() {
     this.form = this.fb.group({
       vehiclePlate: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(6)]],
       tipoVehiculo: [''],
       basicVehicleType: [''],
       notes: ['']
+    });
+    this.cartonAmericaNotesForm = this.fb.group({
+      proveedor: ['', [this.notesProveedorValidator]],
+      cantidadPaquetes: ['', [this.notesCantidadPaquetesValidator]],
+      ciudad: ['', [this.notesCiudadValidator]],
+      tipoDocumento: ['', [this.notesTipoDocumentoValidator]],
+      documentoConductor: [''],
+      nombreConductor: ['', [this.notesNombreConductorValidator]],
+      telefono: ['', [this.notesTelefonoValidator]]
+    });
+    this.setupCartonAmericaNotesSync();
+  }
+
+  private setupCartonAmericaNotesSync(): void {
+    this.cartonAmericaNotesForm.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(val => {
+        const tipo = (val.tipoDocumento || '').trim();
+        const doc = (val.documentoConductor || '').trim();
+        const parteTipoDoc = tipo && doc ? `${tipo} - ${doc}` : (tipo || doc);
+        const parts = [
+          (val.proveedor || '').trim(),
+          (val.cantidadPaquetes || '').trim(),
+          (val.ciudad || '').trim(),
+          parteTipoDoc,
+          (val.nombreConductor || '').trim(),
+          (val.telefono || '').trim()
+        ];
+        const notes = parts.filter(p => p).join(' / ');
+        this.form.patchValue({ notes }, { emitEvent: false });
+      });
+    this.form.get('tipoVehiculo')?.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => this.syncCartonAmericaNotesFromNotes());
+    this.form.get('basicVehicleType')?.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => this.syncCartonAmericaNotesFromNotes());
+  }
+
+  private getNotesParts(notes: string): string[] {
+    if (!notes || !notes.trim()) return [];
+    return notes.split('/').map(p => p.trim()).filter(p => p.length > 0);
+  }
+
+  private syncCartonAmericaNotesFromNotes(): void {
+    if (!this.isCartonAmericaTipo) {
+      this.cartonAmericaNotesForm.reset({
+        proveedor: '', cantidadPaquetes: '', ciudad: '',
+        tipoDocumento: '', documentoConductor: '', nombreConductor: '', telefono: ''
+      }, { emitEvent: false });
+      return;
+    }
+    const notes = this.form.get('notes')?.value || '';
+    const parts = this.getNotesParts(notes);
+    const parte3 = parts[3] ?? '';
+    const sep = parte3.indexOf(' - ');
+    const [tipoDoc, docCond] = sep >= 0
+      ? [parte3.substring(0, sep).trim(), parte3.substring(sep + 3).trim()]
+      : [parte3, ''];
+    this.cartonAmericaNotesForm.patchValue({
+      proveedor: parts[0] ?? '',
+      cantidadPaquetes: parts[1] ?? '',
+      ciudad: parts[2] ?? '',
+      tipoDocumento: tipoDoc,
+      documentoConductor: docCond,
+      nombreConductor: parts[4] ?? '',
+      telefono: parts[5] ?? ''
+    }, { emitEvent: false });
+    Object.keys(this.cartonAmericaNotesForm.controls).forEach(k => {
+      this.cartonAmericaNotesForm.get(k)?.updateValueAndValidity();
+    });
+    this.cdr.markForCheck();
+  }
+
+  /** Validadores para notas Cartón América (opcionales: vacío = válido). */
+  private notesProveedorValidator = (c: AbstractControl): { [key: string]: boolean } | null => {
+    const v = (c.value || '').trim();
+    if (!v) return null;
+    if (/^\d+$/.test(v)) return { notesProveedor: true };
+    if (!/^[A-Za-z0-9ÁáÉéÍíÓóÚúÑñ\s\-.,]+$/.test(v)) return { notesProveedor: true };
+    return null;
+  };
+  private notesCantidadPaquetesValidator = (c: AbstractControl): { [key: string]: boolean } | null => {
+    const v = (c.value || '').trim();
+    if (!v) return null;
+    return /^\d+$/.test(v) ? null : { notesCantidadPaquetes: true };
+  };
+  private notesCiudadValidator = (c: AbstractControl): { [key: string]: boolean } | null => {
+    const v = (c.value || '').trim();
+    if (!v) return null;
+    return /^[A-Za-zÁáÉéÍíÓóÚúÑñ\s\-']+$/.test(v) ? null : { notesCiudad: true };
+  };
+  private notesTipoDocumentoValidator = (c: AbstractControl): { [key: string]: boolean } | null => {
+    const v = (c.value || '').trim();
+    if (!v) return null;
+    return /^[A-Za-z]{1,3}$/.test(v) ? null : { notesTipoDocumento: true };
+  };
+  private notesNombreConductorValidator = (c: AbstractControl): { [key: string]: boolean } | null => {
+    const v = (c.value || '').trim();
+    if (!v) return null;
+    const parts = v.split(/\s+/).filter((p: string) => p);
+    return parts.length >= 1 && parts.length <= 4 && parts.every((p: string) => /^[A-Za-zÁáÉéÍíÓóÚúÑñ]+$/.test(p))
+      ? null : { notesNombreConductor: true };
+  };
+  private notesTelefonoValidator = (c: AbstractControl): { [key: string]: boolean } | null => {
+    const v = (c.value || '').trim();
+    if (!v) return null;
+    return /^\d+$/.test(v) ? null : { notesTelefono: true };
+  };
+
+  /** Convierte a mayúsculas el campo de notas Cartón América en cada input. */
+  onCartonNotesFieldInput(event: Event, controlName: string): void {
+    const target = event.target as HTMLInputElement;
+    const upper = (target.value || '').toUpperCase();
+    if (target.value !== upper) {
+      this.cartonAmericaNotesForm.get(controlName)?.setValue(upper);
+    }
+  }
+
+  /** Resetea el formulario principal y el de notas Cartón América. */
+  resetForm(): void {
+    this.form.reset({
+      vehiclePlate: '',
+      tipoVehiculo: '',
+      basicVehicleType: '',
+      notes: ''
+    });
+    this.cartonAmericaNotesForm.reset({
+      proveedor: '', cantidadPaquetes: '', ciudad: '',
+      tipoDocumento: '', documentoConductor: '', nombreConductor: '', telefono: ''
     });
   }
 
@@ -364,12 +514,7 @@ export class RegistrarPlacaComponent implements OnInit, OnDestroy {
           );
 
           // Limpiar completamente el formulario
-          this.form.reset({
-            vehiclePlate: '',
-            tipoVehiculo: '',
-            basicVehicleType: '',
-            notes: ''
-          });
+          this.resetForm();
           this.error = null;
           this.success = null;
 

@@ -8,6 +8,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { OpenTransactionService, CartonAmericaOrdenLlegada } from '../../../core/services/open-transaction.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { NotificationService } from '../../../core/services/notification.service';
+import { PdfExportService } from '../../../core/services/pdf-export.service';
 import { finalize } from 'rxjs/operators';
 
 @Component({
@@ -29,6 +30,7 @@ export class CartonAmericaComponent implements OnInit {
   private openTransactionService = inject(OpenTransactionService);
   private authService = inject(AuthService);
   private notificationService = inject(NotificationService);
+  private pdfExportService = inject(PdfExportService);
 
   loading = signal(false);
   error = signal<string | null>(null);
@@ -89,17 +91,6 @@ export class CartonAmericaComponent implements OnInit {
     }).format(d);
   }
 
-  private getExportFileNameDateTime(): string {
-    const now = new Date();
-    const y = now.getFullYear();
-    const m = String(now.getMonth() + 1).padStart(2, '0');
-    const d = String(now.getDate()).padStart(2, '0');
-    const h = String(now.getHours()).padStart(2, '0');
-    const min = String(now.getMinutes()).padStart(2, '0');
-    const s = String(now.getSeconds()).padStart(2, '0');
-    return `${y}-${m}-${d}_${h}-${min}-${s}`;
-  }
-
   exportToPdf(): void {
     const rows = this.filteredList();
     if (rows.length === 0) {
@@ -107,162 +98,32 @@ export class CartonAmericaComponent implements OnInit {
       return;
     }
     try {
-      const exportDateTime = this.getExportFileNameDateTime();
-      const htmlContent = this.generateReportHTML(rows, exportDateTime);
-      const printWindow = window.open('', '_blank');
-      if (!printWindow) {
-        this.notificationService.error(
-          'No se pudo abrir la ventana de impresión. Por favor, permite ventanas emergentes.',
-          'Error'
-        );
-        return;
-      }
-      printWindow.document.write(htmlContent);
-      printWindow.document.close();
-      printWindow.document.title = `Carton America-${exportDateTime}`;
-      printWindow.onload = () => {
-        setTimeout(() => printWindow.print(), 250);
-      };
-      this.notificationService.success('Reporte listo para imprimir/guardar como PDF', 'Éxito');
+      const data = rows.map(row => ({
+        ordenDeLlegada: row.ordenDeLlegada,
+        vehiclePlate: row.vehiclePlate ?? '-',
+        tipoVehiculoLabel: row.tipoVehiculoLabel ?? '-',
+        operationDate: row.operationDate,
+        notes: row.notes ?? '-'
+      }));
+      this.pdfExportService.export({
+        title: 'Carton America - Acceso cliente',
+        subtitle: 'Vehículos en parqueadero ordenados por fecha y hora de ingreso',
+        companyName: this.companyName() || undefined,
+        columns: [
+          { header: 'Orden de llegada', dataKey: 'ordenDeLlegada' },
+          { header: 'Placa', dataKey: 'vehiclePlate' },
+          { header: 'Tipo de vehículo', dataKey: 'tipoVehiculoLabel' },
+          { header: 'Fecha y hora de ingreso', dataKey: 'operationDate', format: v => PdfExportService.formatDateTime(v as string) },
+          { header: 'Datos informativos del vehículo', dataKey: 'notes' }
+        ],
+        data,
+        filename: PdfExportService.getExportFileName('Carton-America'),
+        primaryColor: '#0d47a1'
+      });
+      this.notificationService.success('PDF exportado correctamente', 'Éxito');
     } catch (err) {
-      console.error('Error al generar reporte:', err);
-      this.notificationService.error('Error al generar el reporte', 'Error');
+      console.error('Error al generar PDF:', err);
+      this.notificationService.error('Error al generar el PDF', 'Error');
     }
-  }
-
-  private generateReportHTML(data: CartonAmericaOrdenLlegada[], dateTimeForTitle?: string): string {
-    const companyName = this.companyName() || 'Empresa';
-    const primaryColor = '#0d47a1';
-    const primaryLightColor = '#1565c0';
-    const title = dateTimeForTitle
-      ? `Carton America-${dateTimeForTitle}`
-      : 'Carton America - Acceso cliente';
-
-    const tableRows = data
-      .map(
-        (row) => `
-      <tr>
-        <td><strong>${row.ordenDeLlegada ?? '-'}</strong></td>
-        <td><strong>${row.vehiclePlate ?? '-'}</strong></td>
-        <td>${row.tipoVehiculoLabel ?? '-'}</td>
-        <td>${this.formatDateTime(row.operationDate)}</td>
-        <td>${row.notes ?? '-'}</td>
-      </tr>
-    `
-      )
-      .join('');
-
-    return `
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${title}</title>
-  <style>
-    @media print {
-      @page { margin: 1cm; size: A4 landscape; }
-      body { margin: 0; padding: 0; }
-      .no-print { display: none; }
-    }
-    body {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-      padding: 20px;
-      color: #333;
-    }
-    .company-header {
-      text-align: center;
-      margin-bottom: 20px;
-      padding-bottom: 15px;
-      border-bottom: 2px solid ${primaryColor};
-    }
-    .company-header .company-name {
-      font-size: 20px;
-      font-weight: bold;
-      color: ${primaryColor};
-      margin: 0;
-      margin-bottom: 5px;
-    }
-    .header {
-      text-align: center;
-      margin-bottom: 30px;
-      padding-bottom: 15px;
-      border-bottom: 3px solid ${primaryColor};
-    }
-    .header h1 { margin: 0; color: ${primaryColor}; font-size: 24px; font-weight: 600; }
-    .header .subtitle { margin: 8px 0 0 0; font-size: 14px; color: #555; }
-    .info-section {
-      margin-bottom: 25px;
-      background: #f8f9fa;
-      padding: 15px;
-      border-radius: 5px;
-      border-left: 4px solid ${primaryLightColor};
-    }
-    .info-row { display: flex; margin-bottom: 8px; }
-    .info-row strong { min-width: 180px; color: #555; }
-    .summary {
-      background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
-      padding: 15px;
-      border-radius: 5px;
-      margin-bottom: 25px;
-      border-left: 4px solid ${primaryColor};
-    }
-    .summary-item { display: flex; justify-content: space-between; margin-bottom: 8px; }
-    .summary-item span:last-child { font-weight: bold; color: ${primaryColor}; }
-    table { width: 100%; border-collapse: collapse; margin-bottom: 25px; font-size: 10px; }
-    th {
-      background: linear-gradient(135deg, ${primaryColor} 0%, ${primaryLightColor} 100%);
-      color: white;
-      padding: 10px 8px;
-      text-align: left;
-      font-weight: 600;
-      border: 1px solid ${primaryColor};
-    }
-    td { padding: 8px; border: 1px solid #ddd; }
-    tr:nth-child(even) { background-color: #f8f9fa; }
-    tr:hover { background-color: #e3f2fd; }
-    .footer {
-      margin-top: 30px;
-      text-align: center;
-      font-size: 10px;
-      color: #666;
-      border-top: 1px solid #ddd;
-      padding-top: 10px;
-    }
-  </style>
-</head>
-<body>
-  <div class="company-header">
-    <p class="company-name">${companyName}</p>
-  </div>
-  <div class="header">
-    <h1>Carton America - Acceso cliente</h1>
-    <p class="subtitle">Vehículos en parqueadero ordenados por fecha y hora de ingreso</p>
-  </div>
-  <div class="info-section">
-    <div class="info-row"><strong>Total de vehículos:</strong><span>${data.length}</span></div>
-    <div class="info-row"><strong>Fecha de generación:</strong><span>${new Date().toLocaleString('es-ES')}</span></div>
-  </div>
-  <div class="summary">
-    <div class="summary-item"><span><strong>Total de registros:</strong></span><span><strong>${data.length}</strong></span></div>
-  </div>
-  <table>
-    <thead>
-      <tr>
-        <th>Orden de llegada</th>
-        <th>Placa</th>
-        <th>Tipo de vehículo</th>
-        <th>Fecha y hora de ingreso</th>
-        <th>Datos informativos del vehículo</th>
-      </tr>
-    </thead>
-    <tbody>${tableRows}</tbody>
-  </table>
-  <div class="footer">
-    <p>Generado el ${new Date().toLocaleString('es-ES')} - ${companyName}</p>
-  </div>
-</body>
-</html>
-    `;
   }
 }

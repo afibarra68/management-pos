@@ -159,6 +159,29 @@ export class OpenTransactionService {
     return this.http.put<OpenTransaction>(this.apiUrl, transaction);
   }
 
+  delete(openTransactionId: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${openTransactionId}`);
+  }
+
+  /**
+   * Actualización parcial desde Orden de llegada Cartón América.
+   * PUT /pos/carton-america/orden-llegada/update
+   * Solo actualiza los campos enviados; el backend preserva status, amount, etc.
+   */
+  updateCartonAmericaOrdenLlegada(payload: {
+    openTransactionId: number;
+    vehiclePlate?: string;
+    tipoVehiculo?: { id: string; description?: string };
+    basicVehicleType?: { id: string; description?: string };
+    startDay?: string;
+    startTime?: string;
+    operationDate?: string;
+    notes?: string;
+    bySubscription?: boolean;
+  }): Observable<OpenTransaction> {
+    return this.http.put<OpenTransaction>(`${this.posApiUrl}/carton-america/orden-llegada/update`, payload);
+  }
+
   /**
    * Actualiza solo fecha y hora de ingreso por UPDATE nativo (modelo POS).
    * PUT /pos/fecha-ingreso — body: { openTransactionId, operationDate }.

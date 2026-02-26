@@ -7,6 +7,9 @@
         <h1>Vehículos en el Parqueadero</h1>
       </div>
       <div class="data-bar-actions">
+        <p-button icon="pi pi-file-pdf" label="Exportar PDF" (onClick)="exportToPdf()"
+          [loading]="exportPdfLoading()" [disabled]="loading() || totalRecords() === 0"
+          styleClass="p-button-outlined p-button-sm p-button-secondary p-mr-1"></p-button>
         <p-button label="Actualizar" icon="pi pi-refresh" (onClick)="refresh()" [loading]="loading()"
           styleClass="p-button-outlined p-button-sm"></p-button>
       </div>
@@ -74,59 +77,61 @@
       styleClass="p-datatable-sm" [rowsPerPageOptions]="[10, 25, 50]" [paginatorPosition]="'bottom'">
       <ng-template pTemplate="header">
         <tr>
-          <th>Placa</th>
-          <th>Tipo de Vehículo</th>
+          <th style="width: 180px;">Placa / Tipo</th>
           <th>Fecha de Ingreso</th>
           <th>Hora de Ingreso</th>
-          <th>Notas</th>
           <th>Suscripción</th>
-          <th>Estado</th>
-          <th style="width: 120px;">Acciones</th>
+          <th style="width: 200px;">Acciones</th>
         </tr>
       </ng-template>
       <ng-template pTemplate="body" let-vehicle>
-        <tr>
-          <td>
-            <strong>{{ vehicle.vehiclePlate || 'N/A' }}</strong>
-          </td>
-          <td>
-            <p-tag [value]="getVehicleTypeDisplay(vehicle.basicVehicleType || vehicle.tipoVehiculo)" severity="info">
-            </p-tag>
+        <tr class="row-clickable" (click)="openDetalleOverlay(vehicle, $event, pop)">
+          <td class="placa-tipo-cell">
+            <div class="placa-tipo-card">
+              <span class="placa-tipo-placa">{{ vehicle.vehiclePlate || 'N/A' }}</span>
+              <span class="placa-tipo-tipo-badge">{{ getVehicleTypeDisplay(vehicle.basicVehicleType || vehicle.tipoVehiculo) }}</span>
+            </div>
           </td>
           <td>{{ formatDate(vehicle.startDay || vehicle.operationDate) }}</td>
           <td>{{ formatTime(vehicle.startTime) }}</td>
           <td>
-            <span class="notes-text">
-              {{ vehicle.notes || '-' }}
-            </span>
+            <div class="subscription-status-cell">
+              @if (vehicle.bySubscription) {
+              <p-tag value="Por Suscripción" severity="success" icon="pi pi-check-circle"></p-tag>
+              } @else {
+              <p-tag value="Pago Normal" severity="info"></p-tag>
+              }
+            </div>
           </td>
-          <td>
-            @if (vehicle.bySubscription) {
-            <p-tag value="Por Suscripción" severity="success" icon="pi pi-check-circle">
-            </p-tag>
-            } @else {
-            <p-tag value="Pago Normal" severity="info">
-            </p-tag>
-            }
-          </td>
-          <td>
-            <p-tag value="En Parqueadero" severity="success">
-            </p-tag>
-          </td>
-          <td>
-            <p-button label="Editar" icon="pi pi-pencil" (onClick)="openEditModal(vehicle)"
-              styleClass="p-button-sm p-button-outlined p-button-info p-mr-1">
-            </p-button>
-            <p-button label="Reimprimir" icon="pi pi-print" (onClick)="reprintTicket(vehicle)"
-              [loading]="reprintingId() === vehicle.openTransactionId" [disabled]="reprintingId() !== null"
-              styleClass="p-button-sm p-button-outlined">
-            </p-button>
+          <td (click)="$event.stopPropagation()" class="acciones-cell">
+            <div class="acciones-buttons">
+              <p-button icon="pi pi-eye" (onClick)="openDetalleOverlay(vehicle, $event, pop)"
+                pTooltip="Ver detalle" tooltipPosition="top"
+                styleClass="p-button-outlined p-button-secondary p-button-icon-only acciones-btn-large">
+              </p-button>
+              <p-button icon="pi pi-pencil" (onClick)="openEditModal(vehicle)"
+                pTooltip="Editar" tooltipPosition="top"
+                styleClass="p-button-outlined p-button-info p-button-icon-only acciones-btn-large">
+              </p-button>
+              <p-button icon="pi pi-print" (onClick)="reprintTicket(vehicle)"
+                [loading]="reprintingId() === vehicle.openTransactionId" [disabled]="reprintingId() !== null"
+                pTooltip="Reimprimir ticket" tooltipPosition="top"
+                styleClass="p-button-outlined p-button-icon-only acciones-btn-large">
+              </p-button>
+              @if (canDeleteVehicle) {
+              <p-button icon="pi pi-trash" (onClick)="deleteVehicle(vehicle)"
+                [loading]="deletingId() === vehicle.openTransactionId" [disabled]="deletingId() !== null"
+                pTooltip="Eliminar" tooltipPosition="top"
+                styleClass="p-button-outlined p-button-danger p-button-icon-only acciones-btn-large">
+              </p-button>
+              }
+            </div>
           </td>
         </tr>
       </ng-template>
       <ng-template pTemplate="emptymessage">
         <tr>
-          <td colspan="8" class="text-center">
+          <td colspan="5" class="text-center">
             @if (searchTerm()) {
             No se encontraron vehículos que coincidan con la búsqueda
             } @else {
@@ -141,44 +146,176 @@
   }
 </div>
 
-<!-- Modal editar operación -->
-<p-dialog header="Editar operación" [visible]="editModalVisible()" [modal]="true" [style]="{ width: '420px' }"
-  [closable]="true" (onHide)="closeEditModal()" [closeOnEscape]="true" [draggable]="false" [resizable]="false"
-  styleClass="edit-operation-dialog">
-  <form [formGroup]="editForm" class="edit-operation-form">
-    <div class="edit-form-field">
-      <label for="editPlate">Placa *</label>
-      <input id="editPlate" type="text" pInputText formControlName="vehiclePlate" maxlength="8"
-        (input)="editForm.get('vehiclePlate')?.setValue(($any($event.target).value || '').toUpperCase(), { emitEvent: true })">
-      @if (editForm.get('vehiclePlate')?.invalid && editForm.get('vehiclePlate')?.touched) {
-        <small class="edit-form-error">Placa requerida (2-8 caracteres)</small>
+<!-- Popover "Ver detalles" al hacer click en fila -->
+<p-popover #pop [style]="{ width: '360px' }">
+  <ng-template pTemplate="content">
+    @if (detalleVehicle(); as v) {
+    @let s = getDetalleSectores(v.notes);
+    <div class="detalle-overlay-content">
+      <h4 class="detalle-overlay-title"><i class="pi pi-eye"></i> Ver detalles</h4>
+      <div class="detalle-overlay-basico">
+        <p><strong>Placa:</strong> {{ v.vehiclePlate || '-' }} &nbsp; <strong>Tipo:</strong> {{ getVehicleTypeDisplay(v.basicVehicleType || v.tipoVehiculo) }}</p>
+        <p class="detalle-overlay-fecha"><strong>Fecha y hora ingreso:</strong> {{ formatDateTime(v.operationDate || (v.startDay && v.startTime ? v.startDay + ' ' + v.startTime : undefined)) }}</p>
+      </div>
+      @if (isCartonAmericaVehicle(v)) {
+      <div class="detalle-overlay-sector">
+        <h5>1. Carga y procedencia</h5>
+        <div class="detalle-overlay-grid">
+          <span><strong>Proveedor:</strong> {{ s.proveedor }}</span>
+          <span><strong>Cantidad paquetes:</strong> {{ s.cantidadPaquetes }}</span>
+          <span><strong>Ciudad:</strong> {{ s.ciudad }}</span>
+        </div>
+      </div>
+      <div class="detalle-overlay-sector">
+        <h5>2. Conductor</h5>
+        <div class="detalle-overlay-grid">
+          <span><strong>Tipo documento:</strong> {{ s.tipoDocumento }}</span>
+          <span><strong>Documento conductor:</strong> {{ s.documentoConductor }}</span>
+          <span><strong>Nombre conductor:</strong> {{ s.nombreConductor }}</span>
+          <span><strong>Teléfono:</strong> {{ s.telefono }}</span>
+        </div>
+      </div>
       }
-    </div>
-    <div class="edit-form-field">
-      <label for="editTipo">Tipo de vehículo *</label>
-      <select id="editTipo" formControlName="tipoVehiculoId">
-        <option value="">Seleccione...</option>
-        @for (opt of editTipoOptions; track opt.value) {
-          <option [value]="opt.value">{{ opt.label }}</option>
+      <div class="detalle-overlay-actions acciones-buttons">
+        <p-button icon="pi pi-pencil" styleClass="p-button-outlined p-button-info p-button-icon-only acciones-btn-large"
+          pTooltip="Editar" tooltipPosition="top"
+          (onClick)="pop.hide(); openEditModal(v)"></p-button>
+        <p-button icon="pi pi-print" styleClass="p-button-outlined p-button-icon-only acciones-btn-large"
+          pTooltip="Reimprimir ticket" tooltipPosition="top"
+          [loading]="reprintingId() === v.openTransactionId" [disabled]="reprintingId() !== null"
+          (onClick)="pop.hide(); reprintTicket(v)"></p-button>
+        @if (canDeleteVehicle) {
+        <p-button icon="pi pi-trash" styleClass="p-button-outlined p-button-danger p-button-icon-only acciones-btn-large"
+          pTooltip="Eliminar" tooltipPosition="top"
+          (onClick)="pop.hide(); deleteVehicle(v)" [loading]="deletingId() === v.openTransactionId" [disabled]="deletingId() !== null"></p-button>
         }
-      </select>
-      @if (editForm.get('tipoVehiculoId')?.invalid && editForm.get('tipoVehiculoId')?.touched) {
-        <small class="edit-form-error">Seleccione el tipo de vehículo</small>
-      }
+      </div>
+    </div>
+    }
+  </ng-template>
+</p-popover>
+
+<!-- Modal editar operación -->
+<p-dialog header="Editar operación" [visible]="editModalVisible()" (visibleChange)="editModalVisible.set($event)"
+  [modal]="true" [style]="{ width: '580px' }" [closable]="true" (onHide)="closeEditModal()"
+  [closeOnEscape]="true" [draggable]="false" [resizable]="false" styleClass="edit-operation-dialog">
+  <form [formGroup]="editForm" class="edit-operation-form">
+    <div class="edit-form-row edit-form-row-half">
+      <div class="edit-form-field"
+        [class.field-invalid]="editForm.get('vehiclePlate')?.invalid && editForm.get('vehiclePlate')?.touched"
+        [class.field-valid]="editForm.get('vehiclePlate')?.valid && (editForm.get('vehiclePlate')?.touched || editForm.get('vehiclePlate')?.dirty)">
+        <label for="editPlate">Placa *</label>
+        <input id="editPlate" type="text" pInputText formControlName="vehiclePlate" maxlength="8"
+          (input)="editForm.get('vehiclePlate')?.setValue(($any($event.target).value || '').toUpperCase(), { emitEvent: true })">
+        @if (editForm.get('vehiclePlate')?.invalid && editForm.get('vehiclePlate')?.touched) {
+          <small class="edit-form-error">Placa requerida (2-8 caracteres)</small>
+        }
+      </div>
+      <div class="edit-form-field"
+        [class.field-invalid]="editForm.get('tipoVehiculoId')?.invalid && editForm.get('tipoVehiculoId')?.touched"
+        [class.field-valid]="editForm.get('tipoVehiculoId')?.valid && (editForm.get('tipoVehiculoId')?.touched || editForm.get('tipoVehiculoId')?.dirty)">
+        <label for="editTipo">Tipo de vehículo *</label>
+        <select id="editTipo" formControlName="tipoVehiculoId">
+          <option value="">Seleccione...</option>
+          @for (opt of editTipoOptions; track opt.value) {
+            <option [value]="opt.value">{{ opt.label }}</option>
+          }
+        </select>
+        @if (editForm.get('tipoVehiculoId')?.invalid && editForm.get('tipoVehiculoId')?.touched) {
+          <small class="edit-form-error">Seleccione el tipo de vehículo</small>
+        }
+      </div>
     </div>
     <div class="edit-form-row edit-form-row-half">
-      <div class="edit-form-field">
+      <div class="edit-form-field"
+        [class.field-invalid]="editForm.get('startDay')?.invalid && editForm.get('startDay')?.touched"
+        [class.field-valid]="editForm.get('startDay')?.valid && (editForm.get('startDay')?.touched || editForm.get('startDay')?.dirty)">
         <label for="editStartDay">Fecha ingreso *</label>
         <input id="editStartDay" type="date" formControlName="startDay">
       </div>
-      <div class="edit-form-field">
+      <div class="edit-form-field"
+        [class.field-valid]="editForm.get('startTime')?.value && (editForm.get('startTime')?.touched || editForm.get('startTime')?.dirty)">
         <label for="editStartTime">Hora ingreso</label>
         <input id="editStartTime" type="time" formControlName="startTime">
       </div>
     </div>
-    <div class="edit-form-field">
+    <div class="edit-form-field"
+      [class.field-valid]="editForm.get('notes')?.value && (editForm.get('notes')?.touched || editForm.get('notes')?.dirty)">
       <label for="editNotes">Notas</label>
-      <textarea id="editNotes" pInputText formControlName="notes" rows="2"></textarea>
+      @if (isCartonAmericaTipo) {
+        <div class="carton-america-notes" [formGroup]="cartonAmericaNotesForm">
+          <p class="notes-pattern-label">Patrón: proveedor / cantidad paquetes / ciudad / tipo documento - documento conductor / nombre conductor / teléfono</p>
+          <div class="notes-sector">
+            <h4>1. Carga y procedencia</h4>
+            <div class="notes-sector-fields">
+              <div class="notes-field" [class.notes-field-valid]="cartonAmericaNotesForm.get('proveedor')?.valid && cartonAmericaNotesForm.get('proveedor')?.value"
+                [class.notes-field-invalid]="cartonAmericaNotesForm.get('proveedor')?.invalid && (cartonAmericaNotesForm.get('proveedor')?.touched || cartonAmericaNotesForm.get('proveedor')?.dirty || cartonAmericaNotesForm.get('proveedor')?.value)">
+                <label>Proveedor</label>
+                <input type="text" pInputText formControlName="proveedor" (input)="onCartonNotesFieldInput($event, 'proveedor')">
+                @if (cartonAmericaNotesForm.get('proveedor')?.invalid && cartonAmericaNotesForm.get('proveedor')?.touched) {
+                  <small class="notes-field-error">Texto y números, nunca solo números</small>
+                }
+              </div>
+              <span class="notes-slash">/</span>
+              <div class="notes-field" [class.notes-field-valid]="cartonAmericaNotesForm.get('cantidadPaquetes')?.valid && cartonAmericaNotesForm.get('cantidadPaquetes')?.value"
+                [class.notes-field-invalid]="cartonAmericaNotesForm.get('cantidadPaquetes')?.invalid && (cartonAmericaNotesForm.get('cantidadPaquetes')?.touched || cartonAmericaNotesForm.get('cantidadPaquetes')?.dirty || cartonAmericaNotesForm.get('cantidadPaquetes')?.value)">
+                <label>Cantidad paquetes</label>
+                <input type="text" pInputText formControlName="cantidadPaquetes" (input)="onCartonNotesFieldInput($event, 'cantidadPaquetes')">
+                @if (cartonAmericaNotesForm.get('cantidadPaquetes')?.invalid && (cartonAmericaNotesForm.get('cantidadPaquetes')?.touched || cartonAmericaNotesForm.get('cantidadPaquetes')?.dirty || cartonAmericaNotesForm.get('cantidadPaquetes')?.value)) {
+                  <small class="notes-field-error">Solo números, sin espacios</small>
+                }
+              </div>
+              <span class="notes-slash">/</span>
+              <div class="notes-field" [class.notes-field-valid]="cartonAmericaNotesForm.get('ciudad')?.valid && cartonAmericaNotesForm.get('ciudad')?.value"
+                [class.notes-field-invalid]="cartonAmericaNotesForm.get('ciudad')?.invalid && (cartonAmericaNotesForm.get('ciudad')?.touched || cartonAmericaNotesForm.get('ciudad')?.dirty || cartonAmericaNotesForm.get('ciudad')?.value)">
+                <label>Ciudad</label>
+                <input type="text" pInputText formControlName="ciudad" (input)="onCartonNotesFieldInput($event, 'ciudad')">
+                @if (cartonAmericaNotesForm.get('ciudad')?.invalid && (cartonAmericaNotesForm.get('ciudad')?.touched || cartonAmericaNotesForm.get('ciudad')?.dirty || cartonAmericaNotesForm.get('ciudad')?.value)) {
+                  <small class="notes-field-error">Solo texto, sin números</small>
+                }
+              </div>
+            </div>
+          </div>
+          <div class="notes-sector">
+            <h4>2. Conductor</h4>
+            <div class="notes-sector-fields">
+              <div class="notes-field notes-field-tipo-doc" [class.notes-field-valid]="cartonAmericaNotesForm.get('tipoDocumento')?.valid && cartonAmericaNotesForm.get('tipoDocumento')?.value"
+                [class.notes-field-invalid]="cartonAmericaNotesForm.get('tipoDocumento')?.invalid && (cartonAmericaNotesForm.get('tipoDocumento')?.touched || cartonAmericaNotesForm.get('tipoDocumento')?.dirty || cartonAmericaNotesForm.get('tipoDocumento')?.value)">
+                <label>Tipo documento</label>
+                <input type="text" pInputText formControlName="tipoDocumento" placeholder="CC, TI, PAS" (input)="onCartonNotesFieldInput($event, 'tipoDocumento')" maxlength="3">
+                @if (cartonAmericaNotesForm.get('tipoDocumento')?.invalid && (cartonAmericaNotesForm.get('tipoDocumento')?.touched || cartonAmericaNotesForm.get('tipoDocumento')?.dirty || cartonAmericaNotesForm.get('tipoDocumento')?.value)) {
+                  <small class="notes-field-error">Máx. 3 letras (CC, TI, PAS)</small>
+                }
+              </div>
+              <span class="notes-slash">-</span>
+              <div class="notes-field" [class.notes-field-valid]="cartonAmericaNotesForm.get('documentoConductor')?.value">
+                <label>Documento conductor</label>
+                <input type="text" pInputText formControlName="documentoConductor" (input)="onCartonNotesFieldInput($event, 'documentoConductor')">
+              </div>
+              <span class="notes-slash">/</span>
+              <div class="notes-field notes-field-nombre" [class.notes-field-valid]="cartonAmericaNotesForm.get('nombreConductor')?.valid && cartonAmericaNotesForm.get('nombreConductor')?.value"
+                [class.notes-field-invalid]="cartonAmericaNotesForm.get('nombreConductor')?.invalid && (cartonAmericaNotesForm.get('nombreConductor')?.touched || cartonAmericaNotesForm.get('nombreConductor')?.dirty || cartonAmericaNotesForm.get('nombreConductor')?.value)">
+                <label>Nombre conductor</label>
+                <input type="text" pInputText formControlName="nombreConductor" (input)="onCartonNotesFieldInput($event, 'nombreConductor')" placeholder="Ej: CARLOS ANTONIO GARCIA">
+                @if (cartonAmericaNotesForm.get('nombreConductor')?.invalid && (cartonAmericaNotesForm.get('nombreConductor')?.touched || cartonAmericaNotesForm.get('nombreConductor')?.dirty || cartonAmericaNotesForm.get('nombreConductor')?.value)) {
+                  <small class="notes-field-error">1 a 4 palabras separadas por espacio</small>
+                }
+              </div>
+              <span class="notes-slash">/</span>
+              <div class="notes-field" [class.notes-field-valid]="cartonAmericaNotesForm.get('telefono')?.valid && cartonAmericaNotesForm.get('telefono')?.value"
+                [class.notes-field-invalid]="cartonAmericaNotesForm.get('telefono')?.invalid && (cartonAmericaNotesForm.get('telefono')?.touched || cartonAmericaNotesForm.get('telefono')?.dirty || cartonAmericaNotesForm.get('telefono')?.value)">
+                <label>Teléfono</label>
+                <input type="text" pInputText formControlName="telefono" (input)="onCartonNotesFieldInput($event, 'telefono')">
+                @if (cartonAmericaNotesForm.get('telefono')?.invalid && (cartonAmericaNotesForm.get('telefono')?.touched || cartonAmericaNotesForm.get('telefono')?.dirty || cartonAmericaNotesForm.get('telefono')?.value)) {
+                  <small class="notes-field-error">Solo números</small>
+                }
+              </div>
+            </div>
+          </div>
+        </div>
+      } @else {
+        <textarea id="editNotes" pInputText formControlName="notes" rows="2"></textarea>
+      }
     </div>
     <div class="edit-form-field edit-form-checkbox">
       <p-checkbox formControlName="bySubscription" [binary]="true" inputId="editBySub"></p-checkbox>
