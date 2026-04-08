@@ -13,6 +13,7 @@ import { TooltipModule } from 'primeng/tooltip';
 import { Popover, PopoverModule } from 'primeng/popover';
 import { OpenTransactionService, OpenTransaction, ParamVenta } from '../../../core/services/open-transaction.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { ConfigCredentialsService } from '../../../core/services/config-credentials.service';
 import { EnumService, EnumResource } from '../../../core/services/enum.service';
 import { ShiftService, DShiftAssignment } from '../../../core/services/shift.service';
 import { ClosedTransactionService } from '../../../core/services/closed-transaction.service';
@@ -51,6 +52,7 @@ export class VehiculosParqueaderoComponent implements OnInit, OnDestroy {
   private closedTransactionService = inject(ClosedTransactionService);
   private printService = inject(PrintService);
   private authService = inject(AuthService);
+  private configCredentials = inject(ConfigCredentialsService);
   private enumService = inject(EnumService);
   private shiftService = inject(ShiftService);
   private utilsService = inject(UtilsService);
@@ -93,14 +95,22 @@ export class VehiculosParqueaderoComponent implements OnInit, OnDestroy {
     return userData?.appUserId || null;
   });
 
-  /** Solo estos roles pueden ver el botón Eliminar: ADMIN_APP, ADMINISTRATOR_PRINCIPAL, ADMINISTRADOR_EMPRESA. */
+  /** Filtro por empresa: solo SUPER_ADMIN y SUPER_USER (lógica centralizada en ConfigCredentialsService). */
+  get canViewCompanyFilter(): boolean {
+    return this.configCredentials.canViewCompanyFilter();
+  }
+
+  /** ID de empresa seleccionado para filtro (solo cuando canViewCompanyFilter). Si es null, se usa companyId del usuario. */
+  selectedCompanyId = signal<number | null>(null);
+
+  /** CompanyId efectivo para las peticiones: filtro seleccionado o empresa del usuario (credentials). */
+  private getEffectiveCompanyId(): number | null {
+    return this.configCredentials.getEffectiveCompanyId(this.selectedCompanyId());
+  }
+
+  /** Eliminar en listas de configuración: según roles tipo credentials (ConfigCredentialsService). */
   get canDeleteVehicle(): boolean {
-    return (
-      this.authService.hasRole('ADMIN_APP') ||
-      this.authService.hasRole('ADMINISTRATOR_PRINCIPAL') ||
-      this.authService.hasRole('ADMINISTRADOR_EMPRESA') ||
-      this.authService.hasRole('administratod_empresa')
-    );
+    return this.configCredentials.canDeleteInConfig();
   }
 
   /** Nombre del usuario para la barra de datos (mismo uso que orden-llegada-carton-america). */

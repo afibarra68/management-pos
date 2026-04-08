@@ -76,6 +76,8 @@ export class ClosedTransactionService {
     consultCartonAmerica?: boolean;
     page?: number;
     size?: number;
+    /** Sort de Spring Pageable. Ej: 'closedTransactionId,desc' o ['operationDate,desc','closedTransactionId,desc'] */
+    sort?: string | string[];
   }): Observable<{ content: ClosedTransaction[]; totalElements: number; totalPages: number }> {
     let httpParams = new HttpParams();
     if (params.endDateFrom != null) httpParams = httpParams.set('endDateFrom', params.endDateFrom);
@@ -97,6 +99,12 @@ export class ClosedTransactionService {
     }
     if (params.page != null) httpParams = httpParams.set('page', String(params.page));
     if (params.size != null) httpParams = httpParams.set('size', String(params.size));
+    if (params.sort != null) {
+      const sorts = Array.isArray(params.sort) ? params.sort : [params.sort];
+      sorts.filter(s => s != null && String(s).trim() !== '').forEach(s => {
+        httpParams = httpParams.append('sort', String(s));
+      });
+    }
     return this.http.get<{ content: ClosedTransaction[]; totalElements: number; totalPages: number }>(this.apiUrl, {
       params: httpParams
     });

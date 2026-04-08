@@ -78,6 +78,12 @@ export class RegistrarSalidaComponent implements OnInit, OnDestroy {
   loadingReprint = false;
   reprintError: string | null = null;
   reprintPlate = '';
+  reprintTotalElements = 0;
+  reprintTotalPages = 0;
+  reprintPage = 0;
+  /** Siempre limitar a 10 cuando consulta backend (Buscar). */
+  reprintSize = 10;
+  reprintLastQueryPlate: string | null = null;
 
   constructor() {
     this.form = this.fb.group({
@@ -137,10 +143,27 @@ export class RegistrarSalidaComponent implements OnInit, OnDestroy {
             this.params = params;
             this.loadCurrentShift();
           }
-          // Cargar salidas recientes después de tener params/sesión para no quedar en Cargando
-          this.loadUltimasReimpresiones();
+          // Cargar salidas recientes al iniciar (misma lógica que "Buscar", siempre backend).
+          this.buscarSalidas();
         }
       });
+  }
+
+  private formatDateYMD(date: Date): string {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  }
+
+  private getRecentDateRange(daysBack = 7): { endDateFrom: string; endDateTo: string } {
+    const to = new Date();
+    const from = new Date();
+    from.setDate(from.getDate() - Math.max(0, daysBack));
+    return {
+      endDateFrom: this.formatDateYMD(from),
+      endDateTo: this.formatDateYMD(to)
+    };
   }
 
   /**
@@ -390,10 +413,11 @@ export class RegistrarSalidaComponent implements OnInit, OnDestroy {
   // --- Reimprimir tirilla de salida (misma lógica que pos-dashboard / vehiculos-parqueadero) ---
 
   /**
-   * Carga las últimas 10 transacciones cerradas de la empresa (sin consultar).
-   * Filtro solo por empresa. Opcional: filtrar por placa en el cliente.
+   * Carga salidas recientes (últimos días) con paginación.
+   * - Sin placa: trae las últimas salidas recientes.
+   * - Con placa (botón "Buscar en backend"): consulta el backend y trae más resultados por placa.
    */
-  loadUltimasReimpresiones(): void {
+  loadUltimasReimpresiones(opts?: { reset?: boolean; useBackendPlateFilter?: boolean }): void {
     const companyId = this.authService.getUserData()?.companyId ?? this.params?.collaboratorId;
     if (companyId == null) {
       this.reprintError = 'No se pudo obtener la empresa del usuario.';
@@ -402,14 +426,29 @@ export class RegistrarSalidaComponent implements OnInit, OnDestroy {
       return;
     }
 
+    const reset = opts?.reset !== false;
+    const useBackendPlateFilter = opts?.useBackendPlateFilter === true;
+    const plate = (this.reprintPlate ?? '').trim().toUpperCase();
+    const queryPlate = useBackendPlateFilter ? plate : '';
+
+    if (reset) {
+      this.reprintPage = 0;
+      this.reprintList = [];
+      this.reprintTotalElements = 0;
+      this.reprintTotalPages = 0;
+      this.reprintLastQueryPlate = queryPlate || null;
+    }
+
     this.loadingReprint = true;
     this.reprintError = null;
     this.cdr.markForCheck();
 
     this.closedTransactionService.getByDateRange({
       companyCompanyId: companyId,
-      page: 0,
-      size: 10
+      vehiclePlate: queryPlate || undefined,
+      page: this.reprintPage,
+      size: this.reprintSize,
+      sort: 'closedTransactionId,desc'
     })
       .pipe(
         takeUntil(this.destroy$),
@@ -419,22 +458,70 @@ export class RegistrarSalidaComponent implements OnInit, OnDestroy {
             ?? (err as { message?: string })?.message
             ?? 'Error al cargar transacciones';
           this.reprintError = msg;
-          this.reprintList = [];
+          if (reset) {
+            this.reprintList = [];
+          }
           return of({ content: [] as ClosedTransaction[], totalElements: 0, totalPages: 0 });
         }),
         finalize(() => {
           this.loadingReprint = false;
-          this.cdr.markForCheck();
+          // Asegurar que el "Cargando..." desaparezca incluso en OnPush
+          try {
+            this.cdr.detectChanges();
+          } catch {
+            this.cdr.markForCheck();
+          }
         })
       )
       .subscribe({
         next: (res) => {
-          const list = res?.content ?? [];
-          this.reprintList = Array.isArray(list) ? list : [];
+          // El backend normalmente retorna Page { content, totalElements, totalPages }.
+          // Pero en algunos entornos/proxys puede venir envuelto o incluso como array directo.
+          const anyRes = res as unknown as any;
+          const list =
+            (Array.isArray(anyRes) ? anyRes : null)
+            ?? (Array.isArray(anyRes?.content) ? anyRes.content : null)
+            ?? (Array.isArray(anyRes?.data?.content) ? anyRes.data.content : null)
+            ?? (Array.isArray(anyRes?.body?.content) ? anyRes.body.content : null)
+            ?? [];
+          const incoming = Array.isArray(list) ? (list as ClosedTransaction[]) : [];
+          const merged = reset ? incoming : [...this.reprintList, ...incoming];
+          // dedupe por closedTransactionId si viene repetido por paginación/orden
+          const seen = new Set<number>();
+          this.reprintList = merged.filter(tx => {
+            const id = tx.closedTransactionId ?? -1;
+            if (id <= 0) return true;
+            if (seen.has(id)) return false;
+            seen.add(id);
+            return true;
+          });
+          this.reprintTotalElements =
+            anyRes?.totalElements
+            ?? anyRes?.data?.totalElements
+            ?? anyRes?.body?.totalElements
+            ?? this.reprintTotalElements;
+          this.reprintTotalPages =
+            anyRes?.totalPages
+            ?? anyRes?.data?.totalPages
+            ?? anyRes?.body?.totalPages
+            ?? this.reprintTotalPages;
           this.reprintError = null;
-          this.cdr.markForCheck();
+          // Si llegó respuesta, no mantener el estado de "cargando"
+          this.loadingReprint = false;
+          // Asegurar render inmediato con OnPush + PrimeNG table
+          try {
+            this.cdr.detectChanges();
+          } catch {
+            this.cdr.markForCheck();
+          }
         }
       });
+  }
+
+  buscarSalidas(): void {
+    // Siempre consulta al backend. Si no hay placa, trae las últimas 10 recientes sin filtro.
+    // Si hay placa (cualquier longitud), aplica filtro por placa en backend.
+    this.loadUltimasReimpresiones({ reset: true, useBackendPlateFilter: true });
   }
 
   /**
