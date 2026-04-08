@@ -464,18 +464,28 @@
   margin-top: 1.5rem;
 }
 .reprint-filter {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: end;
   gap: 1rem;
   margin-bottom: 1rem;
   padding-bottom: 1rem;
   border-bottom: 1px solid rgba(0, 0, 0, 0.08);
   .form-group {
-    flex: 1;
     min-width: 140px;
   }
-  .btn-primary {
+  .reprint-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: center;
+    justify-content: flex-end;
+    /* baja el botón para alinearlo con el input (no con el label) */
+    margin-top: 18px;
+  }
+
+  .btn-primary,
+  .btn-secondary {
     flex-shrink: 0;
     padding: 12px 20px;
     border: none;
@@ -487,11 +497,9 @@
     cursor: pointer;
     border-radius: 6px;
     transition: all 0.2s ease;
-    background-color: #4a9eff;
-    color: #ffffff;
     box-shadow: 0 2px 4px rgba(74, 158, 255, 0.3);
+    min-width: 140px; /* evita “saltos” al cambiar Buscar/Buscando */
     &:hover:not(:disabled) {
-      background-color: #357abd;
       box-shadow: 0 4px 8px rgba(74, 158, 255, 0.4);
       transform: translateY(-1px);
     }
@@ -505,6 +513,23 @@
       box-shadow: none;
     }
   }
+
+  .btn-primary {
+    background-color: #4a9eff;
+    color: #ffffff;
+    &:hover:not(:disabled) {
+      background-color: #357abd;
+    }
+  }
+}
+
+.reprint-filter {
+  /* asegura que el botón no “salte” al llegar estilos/tabla */
+  align-items: center;
+}
+.reprint-meta {
+  margin: -0.5rem 0 0.75rem;
+  color: #666;
 }
 .reprint-results .reprint-table {
   margin-top: 0;
